@@ -2,4 +2,4 @@
 
 IMAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-sudo "$IMAGE_DIR"/pi-gen/build.sh -f "$IMAGE_DIR"/config
+"$IMAGE_DIR"/pi-gen/build-docker.sh -c "$IMAGE_DIR"/config

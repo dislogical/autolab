@@ -2,7 +2,15 @@
 
 IMAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-export DEPLOY_DIR=$IMAGE_DIR/deploy
+export ARCH=armhf
+export RELEASE=${RELEASE:-bookworm} # Don't forget to update stage0/prerun.sh
+export IMG_NAME="${IMG_NAME:-raspios-$RELEASE-$ARCH}"
+
+# Only emit the lite image
+export STAGE_LIST=${STAGE_LIST:-$IMAGE_DIR/pi-gen/stage[0-2]}
+
+# Emit the images in this directory
+export DEPLOY_DIR=${DEPLOY_DIR:-$IMAGE_DIR/deploy}
 
 # Release info
 export PI_GEN=autolab
