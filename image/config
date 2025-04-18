@@ -1,0 +1,16 @@
+#!/bin/bash
+
+IMAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+export DEPLOY_DIR=$IMAGE_DIR/deploy
+
+# Release info
+export PI_GEN=autolab
+export PI_GEN_REPO=https://github.com/ColdenCullen/autolab
+export PI_GEN_RELEASE=Raspberry Pi autolab image
+
+# Locale info
+export LOCALE_DEFAULT=en_US.UTF-8
+export KEYBOARD_KEYMAP=us
+export KEYBOARD_LAYOUT="English (US)"
+export TIMEZONE_DEFAULT="America/Los_Angeles"
