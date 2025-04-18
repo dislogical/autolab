@@ -40,6 +40,27 @@ services:
     labels:
       - traefik.enable=true
 
+  portainer:
+    image: ngxson/portainer-ce-without-annoying:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    labels:
+      - traefik.enable=true
+
+      # Frontend
+      - traefik.http.routers.frontend.rule=Host(`portainer.${DOMAIN}`)
+      - traefik.http.routers.frontend.service=frontend
+      - traefik.http.services.frontend.loadbalancer.server.port=9000
+
+      # Edge
+      - traefik.http.routers.edge.rule=Host(`edge.${DOMAIN}`)
+      - traefik.http.routers.edge.service=edge
+      - traefik.http.services.edge.loadbalancer.server.port=8000
+
 configs:
   coredns_config:
     file: ./Corefile
+
+volumes:
+  portainer_data:
