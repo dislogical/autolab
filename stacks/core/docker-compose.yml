@@ -1,0 +1,28 @@
+services:
+  traefik:
+    image: traefik:v3
+    command:
+      - --api=true
+      - --accesslog=true
+      - --providers.docker
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service" }}.localhost`)
+      - --providers.docker.exposedByDefault=false
+      - --entrypoints.web.address=:80
+      # Uncomment for HTTPS
+      # - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      # - --entryPoints.web.http.redirections.entrypoint.scheme=https
+      # - --entrypoints.websecure.address=:443
+      # - --entrypoints.websecure.asDefault=true
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.service=api@internal
+
+  whoami:
+    image: traefik/whoami
+    labels:
+      - traefik.enable=true
