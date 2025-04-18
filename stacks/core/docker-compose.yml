@@ -5,7 +5,7 @@ services:
       - --api=true
       - --accesslog=true
       - --providers.docker
-      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service" }}.localhost`)
+      - --providers.docker.defaultRule=Host(`{{ index .Labels "com.docker.compose.service" }}.${DOMAIN}`)
       - --providers.docker.exposedByDefault=false
       - --entrypoints.web.address=:80
       # Uncomment for HTTPS
@@ -22,7 +22,24 @@ services:
       - traefik.enable=true
       - traefik.http.routers.dashboard.service=api@internal
 
+  coredns:
+    image: coredns/coredns:1.12.1
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+    configs:
+      - source: coredns_config
+        target: /Corefile
+        mode: 444
+    command: -conf /Corefile
+    env_file:
+      - .env
+
   whoami:
     image: traefik/whoami
     labels:
       - traefik.enable=true
+
+configs:
+  coredns_config:
+    file: ./Corefile
