@@ -9,7 +9,7 @@ export IMG_NAME="${IMG_NAME:-raspios-$RELEASE-$ARCH}"
 export DEPLOY_COMPRESSION=none
 
 # Only emit the lite image
-export STAGE_LIST=${STAGE_LIST:-${BASE_DIR:-}/stage[0-2]}
+export STAGE_LIST=${STAGE_LIST:-${BASE_DIR:-}/stage[0-2] /autolab/stage*}
 
 # Emit the images in this directory
 export DEPLOY_DIR=${DEPLOY_DIR:-/autolab/deploy}
