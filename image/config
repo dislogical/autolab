@@ -1,5 +1,7 @@
 IMAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+export PIGEN_DOCKER_OPTS="--volume $IMAGE_DIR:/autolab:rw"
+
 # Image info
 export ARCH=armhf
 export RELEASE=${RELEASE:-bookworm} # Don't forget to update stage0/prerun.sh
@@ -7,10 +9,10 @@ export IMG_NAME="${IMG_NAME:-raspios-$RELEASE-$ARCH}"
 export DEPLOY_COMPRESSION=none
 
 # Only emit the lite image
-export STAGE_LIST=${STAGE_LIST:-$IMAGE_DIR/pi-gen/stage[0-2]}
+export STAGE_LIST=${STAGE_LIST:-${BASE_DIR:-}/stage[0-2]}
 
 # Emit the images in this directory
-export DEPLOY_DIR=${DEPLOY_DIR:-$IMAGE_DIR/deploy}
+export DEPLOY_DIR=${DEPLOY_DIR:-/autolab/deploy}
 
 # Release info
 export PI_GEN=autolab
