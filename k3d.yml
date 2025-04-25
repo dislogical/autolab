@@ -1,0 +1,18 @@
+---
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: autolab
+ports:
+  - port: 8080:80
+    nodeFilters:
+      - loadbalancer
+files:
+  - source: ./stacks/kubernetes-dashboard.yml
+    destination: /var/lib/rancher/k3s/server/manifests/autolab/kubernetes-dashboard.yml
+    nodeFilters:
+      - server:0
+  - source: ./stacks/traefik-dashboard.yml
+    destination: /var/lib/rancher/k3s/server/manifests/autolab/traefik-dashboard.yml
+    nodeFilters:
+      - server:0
