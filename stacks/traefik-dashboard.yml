@@ -11,3 +11,4 @@ spec:
         matchRule: Host(`traefik.localhost`)
         entryPoints:
           - web
+          - websecure
