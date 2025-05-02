@@ -2,6 +2,18 @@
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
+  name: traefik-crds
+  namespace: kube-system
+spec:
+  repo: https://traefik.github.io/charts
+  chart: traefik-crds
+  valuesContent: |-
+    traefik: false
+    gatewayAPI: true
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
   name: traefik
   namespace: kube-system
 spec:
@@ -19,6 +31,8 @@ spec:
 
     providers:
       kubernetesIngress:
+        enabled: false
+      kubernetesCRD:
         enabled: false
       kubernetesGateway:
         enabled: true
