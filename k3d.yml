@@ -12,11 +12,3 @@ files:
     destination: /etc/rancher/k3s/config.yaml.d/autolab.yaml
     nodeFilters:
       - all
-  - source: ./stacks/kubernetes-dashboard.yml
-    destination: /var/lib/rancher/k3s/server/manifests/autolab/kubernetes-dashboard.yml
-    nodeFilters:
-      - server:0
-  - source: ./stacks/traefik.yml
-    destination: /var/lib/rancher/k3s/server/manifests/autolab/traefik.yml
-    nodeFilters:
-      - server:0
