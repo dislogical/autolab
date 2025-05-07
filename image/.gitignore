@@ -1,1 +1,3 @@
 deploy/
+.vagrant/
+tests/raspios-*
