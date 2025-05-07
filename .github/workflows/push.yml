@@ -1,0 +1,14 @@
+name: On Commit CI
+on:
+  - push
+jobs:
+  kubectl-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint yamls
+        uses: stackrox/kube-linter-action@v1
+        with:
+          directory: stacks
