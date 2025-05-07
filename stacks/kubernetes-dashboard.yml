@@ -3,36 +3,30 @@ kind: Namespace
 metadata:
   name: kubernetes-dashboard
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: admin-user
-  namespace: kubernetes-dashboard
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: admin-user
-  namespace: kubernetes-dashboard
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: admin-user
-    namespace: kubernetes-dashboard
----
-apiVersion: helm.cattle.io/v1
-kind: HelmChart
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
 metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 spec:
-  repo: https://kubernetes.github.io/dashboard/
-  chart: kubernetes-dashboard
-  targetNamespace: kubernetes-dashboard
-  valuesContent: |-
+  interval: 1m0s
+  url: https://kubernetes.github.io/dashboard/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  interval: 24h
+  chart:
+    spec:
+      chart: kubernetes-dashboard
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: kubernetes-dashboard
+  values:
     kong:
       enabled: false
 ---
@@ -45,7 +39,7 @@ spec:
   parentRefs:
     - kind: Gateway
       name: traefik-gateway
-      namespace: kube-system
+      namespace: traefik
   hostnames:
     - kubernetes.localhost
   rules:
