@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prometheus
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: prometheus
+  namespace: prometheus
+spec:
+  interval: 1m0s
+  url: https://prometheus-community.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus
+  namespace: prometheus
+spec:
+  interval: 24h
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus
+  install:
+    crds: CreateReplace
+  values:
+    crds:
+      enabled: true
+    prometheus:
+      route:
+        main:
+          enabled: true
+          hostnames:
+            - prometheus.localhost
+          parentRefs:
+            - kind: Gateway
+              name: traefik-gateway
+              namespace: traefik
+    grafana:
+      route:
+        main:
+          enabled: true
+          hostnames:
+            - grafana.localhost
+          parentRefs:
+            - kind: Gateway
+              name: traefik-gateway
+              namespace: traefik
