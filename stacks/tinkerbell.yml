@@ -1,0 +1,88 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tinkerbell
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: tinkerbell-git
+  namespace: tinkerbell
+spec:
+  interval: 24h
+  url: https://github.com/tinkerbell/tinkerbell
+  ref:
+    branch: main
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tinkerbell-crds
+  namespace: tinkerbell
+spec:
+  interval: 24h
+  targetNamespace: tinkerbell
+  sourceRef:
+    kind: GitRepository
+    name: tinkerbell-git
+  path: crd
+  prune: true
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: tinkerbell-charts
+  namespace: tinkerbell
+spec:
+  interval: 24h
+  url: https://github.com/tinkerbell/charts
+  ref:
+    branch: main
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: smee
+  namespace: tinkerbell
+spec:
+  interval: 24h
+  chart:
+    spec:
+      chart: tinkerbell/smee
+      sourceRef:
+        kind: GitRepository
+        name: tinkerbell-charts
+      interval: 24h
+      reconcileStrategy: Revision
+  values:
+    dhcp:
+      enabled: true
+      mode: auto-proxy
+    tftp:
+      enabled: false
+    hostNetwork: false
+    trustedProxies:
+      - 0.0.0.0/0
+    additionalArgs:
+      - -dhcp-http-ipxe-script-prepend-mac=false
+      - -dhcp-http-ipxe-script-url=https://boot.netboot.xyz
+---
+# Override Smee to be a headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: smee
+  namespace: tinkerbell
+  labels:
+    app: smee
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+    kustomize.toolkit.fluxcd.io/ssa: merge
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
