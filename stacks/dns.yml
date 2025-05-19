@@ -1,0 +1,53 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dns
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: coredns
+  namespace: dns
+spec:
+  interval: 1m0s
+  url: https://coredns.github.io/helm
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: coredns
+  namespace: dns
+spec:
+  interval: 24h
+  chart:
+    spec:
+      chart: coredns
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: HelmRepository
+        name: coredns
+  values:
+    isClusterService: false
+    image:
+
+    servers:
+      - zones:
+          - zone: .
+        port: 53
+        use_tcp: true
+        plugins:
+          - name: errors
+          - name: health
+          - name: ready
+          - name: k8s_gateway
+            parameters:
+            configBlock: |-
+
+          - name: prometheus
+            parameters: 0.0.0.0:9153
+          - name: cache
+            parameters: 30
+          - name: loop
+          - name: reload
+          - name: loadbalance
