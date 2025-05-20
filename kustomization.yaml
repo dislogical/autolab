@@ -9,3 +9,4 @@ resources:
   - stacks/kubernetes-dashboard
   - stacks/capacitor
   - stacks/metrics
+  - stacks/tinkerbell.yml
