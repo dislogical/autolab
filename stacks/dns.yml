@@ -55,6 +55,7 @@ spec:
             parameters: localhost
             configBlock: |-
               resources HTTPRoute
+              fallthrough
           - name: prometheus
             parameters: 0.0.0.0:9153
           - name: cache
@@ -71,6 +72,14 @@ spec:
               - op: replace
                 path: /rules
                 value:
+                  - apiGroups:
+                      - apiextensions.k8s.io
+                    resources:
+                      - customresourcedefinitions
+                    verbs:
+                      - get
+                      - list
+                      - watch
                   - apiGroups:
                       - discovery.k8s.io
                     resources:
