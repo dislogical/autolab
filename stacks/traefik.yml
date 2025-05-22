@@ -59,6 +59,9 @@ spec:
         enabled: false
       kubernetesGateway:
         enabled: true
+        statusAddress:
+          service:
+            enabled: true
 
     gateway:
       listeners:
