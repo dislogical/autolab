@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 resources:
   - https://github.com/kubernetes-sigs/gateway-api//config/crd?ref=v1.3.0
   - stacks/flux-system/gotk-components.yaml
+  - stacks/load-balancer.yml
   - stacks/traefik.yml
   - stacks/dns.yml
   - stacks/kubernetes-dashboard.yml
