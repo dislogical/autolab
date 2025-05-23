@@ -1,5 +1,3 @@
-load('ext://helm_resource', 'helm_repo', 'helm_resource')
-
 load('./stacks/flux-system/Tiltfile', 'flux')
 load('./stacks/capacitor/Tiltfile', 'capacitor')
 load('./stacks/gateway/Tiltfile', 'gateway')

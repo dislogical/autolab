@@ -24,6 +24,7 @@ def kubernetes_dashboard():
         new_name='kubernetes-dashboard-route',
         objects=['kubernetes-dashboard-route:HTTPRoute:kubernetes-dashboard'],
         labels=['kubernetes-dashboard'],
+        resource_deps=['traefik-crds'],
         links=[link('kubernetes.localhost:8080', 'kubernetes dashboard')],
         )
 
