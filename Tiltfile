@@ -1,5 +1,19 @@
-# Install flux but without the repo syncing
-k8s_yaml('stacks/flux-system/gotk-components.yaml')
+load('ext://helm_resource', 'helm_repo', 'helm_resource')
 
-# Install this repo's stacks
-k8s_yaml(kustomize('.'))
+load('./stacks/flux-system/Tiltfile', 'flux')
+load('./stacks/capacitor/Tiltfile', 'capacitor')
+load('./stacks/gateway/Tiltfile', 'gateway')
+load('./stacks/load-balancer/Tiltfile', 'load_balancer')
+load('./stacks/dns/Tiltfile', 'dns')
+load('./stacks/kubernetes-dashboard/Tiltfile', 'kubernetes_dashboard')
+load('./stacks/metrics/Tiltfile', 'metrics')
+
+update_settings(k8s_upsert_timeout_secs=180)
+
+# flux()
+# capacitor()
+gateway()
+load_balancer()
+dns()
+kubernetes_dashboard()
+metrics()

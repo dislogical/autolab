@@ -1,0 +1,28 @@
+isClusterService: false
+image:
+  repository: ghcr.io/k8s-gateway/k8s_gateway
+  tag: 1.2.0
+  pullPolicy: IfNotPresent
+service:
+  clusterIP: None
+serviceAccount:
+  create: true
+servers:
+  - zones:
+      - zone: .
+    port: 53
+    plugins:
+      - name: debug
+      - name: errors
+      - name: health
+      - name: ready
+      - name: k8s_gateway
+        parameters: localhost
+        configBlock: |-
+          resources HTTPRoute
+          fallthrough
+      - name: prometheus
+        parameters: 0.0.0.0:9153
+      - name: cache
+        parameters: 30
+      - name: loadbalance

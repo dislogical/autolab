@@ -1,0 +1,30 @@
+load('ext://helm_resource', 'helm_repo', 'helm_resource')
+
+def kubernetes_dashboard():
+    k8s_yaml('./stacks/kubernetes-dashboard/namespace.yml')
+
+    helm_repo(
+        'kubernetes-dashboard',
+        'https://kubernetes.github.io/dashboard/',
+        resource_name='kubernetes-dashboard-repo',
+        labels=['kubernetes-dashboard']
+    )
+
+    helm_resource(
+        'kubernetes-dashboard',
+        'kubernetes-dashboard/kubernetes-dashboard',
+        namespace='kubernetes-dashboard',
+        flags=['--values=./stacks/kubernetes-dashboard/values-kubernetes-dashboard.yml'],
+        labels=['kubernetes-dashboard'],
+        resource_deps=['kubernetes-dashboard-repo'],
+    )
+
+    k8s_yaml('./stacks/kubernetes-dashboard/route.yml')
+    k8s_resource(
+        new_name='kubernetes-dashboard-route',
+        objects=['kubernetes-dashboard-route:HTTPRoute:kubernetes-dashboard'],
+        labels=['kubernetes-dashboard'],
+        links=[link('kubernetes.localhost:8080', 'kubernetes dashboard')],
+        )
+
+

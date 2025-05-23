@@ -1,0 +1,26 @@
+load('ext://helm_resource', 'helm_repo', 'helm_resource')
+
+def capacitor():
+    helm_repo(
+        'capacitor',
+        'oci://ghcr.io/gimlet-io/capacitor-manifests',
+        resource_name='capacitor-repo',
+        labels=['capacitor']
+    )
+
+    helm_resource(
+        'capacitor',
+        'capacitor/capacitor',
+        namespace='flux-system',
+        flags=['--create-namespace'],
+        labels=['capacitor'],
+        resource_deps=['capacitor-repo'],
+    )
+
+    k8s_yaml('./stacks/capacitor/route.yml')
+    k8s_resource(
+        new_name='traefik-route',
+        objects=['traefik-dashboard:httproute'],
+        labels=['capacitor'],
+        links=[link('flux.localhost:8080', 'flux dashboard')],
+        )

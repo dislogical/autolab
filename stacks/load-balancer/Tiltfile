@@ -1,0 +1,20 @@
+load('ext://helm_resource', 'helm_repo', 'helm_resource')
+
+def load_balancer():
+    k8s_yaml('./stacks/load-balancer/namespace.yml')
+
+    helm_repo(
+        'metallb',
+        'https://metallb.github.io/metallb',
+        resource_name='metallb-repo',
+        labels=['load-balancer']
+    )
+
+    helm_resource(
+        'metallb',
+        'metallb/metallb',
+        namespace='load-balancer',
+        flags=['--values=./stacks/load-balancer/values-metallb.yml'],
+        resource_deps=['metallb-repo'],
+        labels=['load-balancer'],
+    )

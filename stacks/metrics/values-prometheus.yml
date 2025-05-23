@@ -1,0 +1,24 @@
+crds:
+  enabled: true
+prometheus:
+  prometheusSpec:
+    maximumStartupDurationSeconds: null
+  route:
+    main:
+      enabled: true
+      hostnames:
+        - prometheus.localhost
+      parentRefs:
+        - kind: Gateway
+          name: traefik-gateway
+          namespace: gateway
+grafana:
+  route:
+    main:
+      enabled: true
+      hostnames:
+        - grafana.localhost
+      parentRefs:
+        - kind: Gateway
+          name: traefik-gateway
+          namespace: gateway

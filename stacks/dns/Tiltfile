@@ -1,0 +1,20 @@
+load('ext://helm_resource', 'helm_repo', 'helm_resource')
+
+def dns():
+    k8s_yaml('./stacks/dns/namespace.yml')
+
+    helm_repo(
+        'coredns',
+        'https://coredns.github.io/helm',
+        resource_name='coredns-repo',
+        labels=['dns']
+    )
+
+    helm_resource(
+        'coredns',
+        'coredns/coredns',
+        namespace='dns',
+        flags=['--values=./stacks/dns/values-coredns.yml'],
+        labels=['dns'],
+        resource_deps=['coredns-repo'],
+    )

@@ -1,0 +1,15 @@
+providers:
+  kubernetesIngress:
+    enabled: false
+  kubernetesCRD:
+    enabled: false
+  kubernetesGateway:
+    enabled: true
+    statusAddress:
+      service:
+        enabled: true
+
+gateway:
+  listeners:
+    web:
+      namespacePolicy: All

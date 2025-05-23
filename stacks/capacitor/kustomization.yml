@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: capacitor
+
+components:
+  - ../../components/config-common
+
+resources:
+  - namespace.yml
+  - helm.yml
+  - network-policy.yml
+  - route.yml

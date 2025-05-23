@@ -1,9 +1,4 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dns
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
@@ -31,37 +26,10 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: coredns
-  values:
-    isClusterService: false
-    image:
-      repository: ghcr.io/k8s-gateway/k8s_gateway
-      tag: 1.2.0
-      pullPolicy: IfNotPresent
-    customLabels:
-      app.kubernetes.io/component: coredns
-    service:
-      clusterIP: None
-    serviceAccount:
-      create: true
-    servers:
-      - zones:
-          - zone: .
-        port: 53
-        plugins:
-          - name: debug
-          - name: errors
-          - name: health
-          - name: ready
-          - name: k8s_gateway
-            parameters: localhost
-            configBlock: |-
-              resources HTTPRoute
-              fallthrough
-          - name: prometheus
-            parameters: 0.0.0.0:9153
-          - name: cache
-            parameters: 30
-          - name: loadbalance
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-values
+      valuesKey: values-coredns.yml
   postRenderers:
     - kustomize:
         patches:
