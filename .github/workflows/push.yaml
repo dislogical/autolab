@@ -24,6 +24,8 @@ jobs:
         runtime:
           - name: Kind
             create: ctlptl apply -f cluster-kind.yaml
+          - name: Talos
+            create: talosctl cluster create
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
