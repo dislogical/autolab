@@ -6,6 +6,8 @@ tap "tilt-dev/tap"
 brew "helm"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
+# Run local Kubernetes cluster in Docker
+brew "kind"
 # FAST Kubernetes manifests validator, with support for Custom Resources!
 brew "kubeconform"
 # Kubernetes command-line interface
