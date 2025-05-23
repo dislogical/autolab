@@ -19,6 +19,8 @@ jobs:
         runtime:
           - name: Kind
             create: ctlptl apply -f cluster-kind.yaml
+          - name: Talos
+            create: talosctl cluster create
         mode:
           - name: Tilt Mode
             args: ""
