@@ -2,6 +2,8 @@ tap "fluxcd/tap"
 tap "siderolabs/tap"
 tap "tilt-dev/tap"
 
+# Kubernetes package manager
+brew "helm"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # FAST Kubernetes manifests validator, with support for Custom Resources!
