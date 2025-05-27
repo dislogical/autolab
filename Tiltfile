@@ -40,6 +40,7 @@ def process_stack(path):
 
     for release in decode_yaml_stream(helm_releases):
         metadata = release.get('metadata', {})
+        namespace = metadata.get('namespace')
         spec = release['spec']
         chart = spec['chart']['spec']
         values_files = [os.path.join(path, entry['valuesKey']) for entry in spec.get('valuesFrom') if entry['kind'] == 'ConfigMap']
@@ -53,14 +54,16 @@ def process_stack(path):
         if metadata['name'].endswith('-crds'):
             pod_readiness='ignore'
 
-        dependencies = [_get_object_name(source_ref, metadata=source_ref, namespace=source_ref.get('namespace', metadata.get('namespace')))]
+        dependencies = [_get_object_name(source_ref, metadata=source_ref, namespace=source_ref.get('namespace', namespace))]
         for dep in spec.get('dependsOn', []):
             dependencies.append(_get_object_name(
                 dep,
                 metadata=dep,
                 kind='helmrelease',
-                namespace=dep.get('namespace', metadata.get('namespace'))
+                namespace=dep.get('namespace', namespace)
             ))
+        if namespace:
+            dependencies.append('{}:namespace'.format(namespace))
 
         helm_resource(
             _get_object_name(release),
