@@ -25,6 +25,6 @@ spec:
   install:
     crds: CreateReplace
   valuesFrom:
-    - kind: ConfigmMap
+    - kind: ConfigMap
       name: helm-values
       valuesKey: values-metallb.yaml
