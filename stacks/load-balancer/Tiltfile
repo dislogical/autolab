@@ -18,3 +18,10 @@ def load_balancer():
         resource_deps=['metallb-repo'],
         labels=['load-balancer'],
     )
+
+    k8s_yaml('./stacks/load-balancer/address-pool.yml')
+    k8s_resource(
+        new_name='metallb-advertisement',
+        objects=['default-advertisement:l2advertisement'],
+        labels=['load-balancer'],
+    )
