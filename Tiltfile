@@ -61,28 +61,21 @@ def process_stack(path):
             labels=[label],
         )
 
-    for object in decode_yaml_stream(rest):
-        apiVersion = object['apiVersion']
-        kind = object['kind']
-        metadata = object.get('metadata', {})
-        spec = object.get('spec', {})
+    k8s_yaml(rest)
 
-        if not flux_mode:
-            if kind == 'ConfigMap' and len(object['data']) == 1:
-                values_path = os.path.join(path, object['data'].keys()[0])
-                if os.path.exists(values_path):
-                    continue
+    #for object in decode_yaml_stream(kustomized):
 
-        k8s_yaml(encode_yaml(object))
-
-        if apiVersion.startswith('gateway.networking.k8s.io') and kind.endswith('Route'):
-            k8s_resource(
-                new_name='route-' + metadata['name'],
-                objects=['{}:{}:{}'.format(metadata['name'], kind, metadata['namespace'])],
-                labels=[label],
-                links=[link(hostname + ':8080', metadata['name']) for hostname in spec['hostnames']],
-                resource_deps=['traefik-crds:HelmRelease:gateway'], # HACK
-                )
+    gateway_resources, _ = filter_yaml(kustomized, api_version='gateway.networking.k8s.io')
+    for resource in decode_yaml_stream(gateway_resources):
+        metadata = resource['metadata']
+        spec = resource['spec']
+        k8s_resource(
+            new_name='{}:{}:{}'.format(metadata['name'], resource['kind'], metadata['namespace']),
+            objects=['{}:{}:{}'.format(metadata['name'], resource['kind'], metadata['namespace'])],
+            labels=[label],
+            links=[link(hostname + ':8080', metadata['name']) for hostname in spec['hostnames']],
+            resource_deps=['traefik-crds:HelmRelease:gateway'], # HACK
+            )
 
 k8s_yaml('stacks/flux-system/gotk-components.yaml')
 process_stack('stacks/gateway')
