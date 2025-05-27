@@ -59,3 +59,9 @@ jobs:
 
       - name: Run Tilt CI
         run: tilt ci
+
+      - name: Reset Cluster
+        run: ctlptl delete -f cluster-kind.yaml && ctlptl apply -f cluster-kind.yaml
+
+      - name: Run Tilt CI (Flux Mode)
+        run: tilt ci -- --flux-mode
