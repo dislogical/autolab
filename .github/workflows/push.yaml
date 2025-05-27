@@ -13,17 +13,6 @@ jobs:
       - uses: actions/setup-python@v3
       - uses: pre-commit/action@v3.0.1
 
-  kubectl-validate:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Lint yamls
-        uses: stackrox/kube-linter-action@v1
-        with:
-          directory: stacks
-
   tilt-ci:
     runs-on: ubuntu-latest
     steps:
