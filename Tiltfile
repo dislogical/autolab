@@ -1,11 +1,3 @@
-load('./stacks/flux-system/Tiltfile', 'flux')
-load('./stacks/capacitor/Tiltfile', 'capacitor')
-load('./stacks/gateway/Tiltfile', 'gateway')
-load('./stacks/load-balancer/Tiltfile', 'load_balancer')
-load('./stacks/dns/Tiltfile', 'dns')
-load('./stacks/kubernetes-dashboard/Tiltfile', 'kubernetes_dashboard')
-load('./stacks/metrics/Tiltfile', 'metrics')
-
 load('ext://helm_resource', 'helm_repo', 'helm_resource')
 
 ctx = k8s_context()
