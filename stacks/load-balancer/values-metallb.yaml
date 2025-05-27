@@ -1,3 +1,11 @@
+controller:
+  repository: quay.io/metallb/controller
+  tag: v0.14.9
+  pullPolicy: IfNotPresent
 speaker:
+  image:
+    repository: quay.io/metallb/speaker
+    tag: v0.14.9
+    pullPolicy: IfNotPresent
   frr:
     enabled: false

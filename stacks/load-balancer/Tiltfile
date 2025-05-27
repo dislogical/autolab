@@ -15,6 +15,7 @@ def load_balancer():
         'metallb/metallb',
         namespace='load-balancer',
         flags=['--values=./stacks/load-balancer/values-metallb.yaml'],
+        deps=['./stacks/load-balancer/values-metallb.yaml'],
         resource_deps=['metallb-repo'],
         labels=['load-balancer'],
     )

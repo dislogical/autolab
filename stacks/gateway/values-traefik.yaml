@@ -1,3 +1,8 @@
+image:
+  registry: docker.io
+  repository: traefik
+  tag: v3.4.0
+
 providers:
   kubernetesIngress:
     enabled: false
