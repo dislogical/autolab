@@ -14,6 +14,17 @@ if ctx.startswith('admin@talos-'):
 
 update_settings(k8s_upsert_timeout_secs=180)
 
+def _get_object_name(object, metadata=None, name = None, kind = None, namespace = None):
+    metadata = metadata or object.get('metadata', {})
+    name = name or metadata['name'].lower()
+    kind = kind or object['kind'].lower()
+    namespace = namespace or metadata.get('namespace', None)
+
+    if namespace:
+        return '{}:{}:{}'.format(name, kind, namespace.lower())
+    else:
+        return '{}:{}'.format(name, kind)
+
 config.define_bool('flux-mode', usage='Use flux for helm instead of tilt')
 options = config.parse()
 flux_mode = options.get('flux-mode', False)
@@ -31,7 +42,7 @@ def process_stack(path):
         helm_repo(
             metadata['name'],
             spec['url'],
-            resource_name='{}:{}:{}'.format(metadata['name'], repo['kind'], metadata['namespace']),
+            resource_name=_get_object_name(repo),
             labels=[label],
         )
 
@@ -40,6 +51,7 @@ def process_stack(path):
         spec = release['spec']
         chart = spec['chart']['spec']
         values_files = [os.path.join(path, entry['valuesKey']) for entry in spec.get('valuesFrom') if entry['kind'] == 'ConfigMap']
+        source_ref = chart['sourceRef']
 
         flags = []
         if spec.get('install', {}).get('crds', None) == 'Skip':
@@ -49,45 +61,59 @@ def process_stack(path):
         if metadata['name'].endswith('-crds'):
             pod_readiness='ignore'
 
+        dependencies = [_get_object_name(source_ref, metadata=source_ref, namespace=source_ref.get('namespace', metadata.get('namespace')))]
+        for dep in spec.get('dependsOn', []):
+            dependencies.append(_get_object_name(
+                dep,
+                metadata=dep,
+                kind='helmrelease',
+                namespace=dep.get('namespace', metadata.get('namespace'))
+            ))
+
         helm_resource(
-            '{}:{}:{}'.format(metadata['name'], release['kind'], metadata['namespace']),
-            chart['sourceRef']['name'] + '/' + chart['chart'],
+            _get_object_name(release),
+            source_ref['name'] + '/' + chart['chart'],
             release_name=metadata['name'],
             namespace=metadata['namespace'],
             flags=flags + ['--values=' + file for file in values_files],
             deps=values_files,
-            resource_deps=['{}:{}:{}'.format(chart['sourceRef']['name'], chart['sourceRef']['kind'], chart['sourceRef'].get('namespace', metadata['namespace']))],
+            resource_deps=dependencies,
             pod_readiness=pod_readiness,
             labels=[label],
         )
 
     k8s_yaml(rest)
+    for object in decode_yaml_stream(rest):
+        metadata = object['metadata']
+        name = _get_object_name(object)
+        k8s_resource(
+            new_name=name,
+            objects=[name],
+            labels=[label],
+            )
 
-    #for object in decode_yaml_stream(kustomized):
+        # Depend on namespace creation
+        namespace = metadata.get('namespace')
+        if namespace:
+            k8s_resource(
+                workload=name,
+                resource_deps=['{}:namespace'.format(namespace)]
+            )
 
     gateway_resources, _ = filter_yaml(kustomized, api_version='gateway.networking.k8s.io')
     for resource in decode_yaml_stream(gateway_resources):
         metadata = resource['metadata']
         spec = resource['spec']
         k8s_resource(
-            new_name='{}:{}:{}'.format(metadata['name'], resource['kind'], metadata['namespace']),
-            objects=['{}:{}:{}'.format(metadata['name'], resource['kind'], metadata['namespace'])],
-            labels=[label],
+            workload=_get_object_name(resource),
             links=[link(hostname + ':8080', metadata['name']) for hostname in spec['hostnames']],
-            resource_deps=['traefik-crds:HelmRelease:gateway'], # HACK
+            resource_deps=['traefik-crds:helmrelease:gateway'], # HACK
             )
 
 k8s_yaml('stacks/flux-system/gotk-components.yaml')
+process_stack('stacks/capacitor')
 process_stack('stacks/gateway')
 process_stack('stacks/load-balancer')
 process_stack('stacks/dns')
 process_stack('stacks/kubernetes-dashboard')
 process_stack('stacks/metrics')
-
-# flux()
-# capacitor()
-# gateway()
-# load_balancer()
-# dns()
-# kubernetes_dashboard()
-# metrics()
