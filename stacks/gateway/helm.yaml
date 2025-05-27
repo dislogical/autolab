@@ -27,7 +27,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: helm-values
-      valuesKey: values-traefik-crds
+      valuesKey: values-traefik-crds.yaml
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -50,4 +50,4 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: helm-values
-      valuesKey: values-traefik
+      valuesKey: values-traefik.yaml
