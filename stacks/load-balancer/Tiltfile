@@ -23,5 +23,13 @@ def load_balancer():
     k8s_resource(
         new_name='metallb-advertisement',
         objects=['default-advertisement:l2advertisement'],
+        resource_deps=['metallb'],
+        labels=['load-balancer'],
+    )
+
+    k8s_resource(
+        new_name='metallb-pool',
+        objects=['default-pool:IPAddressPool'],
+        resource_deps=['metallb'],
         labels=['load-balancer'],
     )
