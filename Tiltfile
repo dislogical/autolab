@@ -119,3 +119,8 @@ process_stack('stacks/dns')
 process_stack('stacks/kubernetes-dashboard')
 process_stack('stacks/metrics')
 process_stack('stacks/postgres')
+
+k8s_resource(
+    'traefik:helmrelease:gateway',
+    port_forwards=[port_forward(8080, 8000)],
+    )
