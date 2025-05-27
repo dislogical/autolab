@@ -45,6 +45,10 @@ def process_stack(path):
         if spec.get('install', {}).get('crds', None) == 'Skip':
             flags.append('--skip-crds')
 
+        pod_readiness='wait'
+        if metadata['name'].endswith('-crds'):
+            pod_readiness='ignore'
+
         helm_resource(
             '{}:{}:{}'.format(metadata['name'], release['kind'], metadata['namespace']),
             chart['sourceRef']['name'] + '/' + chart['chart'],
@@ -52,8 +56,9 @@ def process_stack(path):
             namespace=metadata['namespace'],
             flags=flags + ['--values=' + file for file in values_files],
             deps=values_files,
-            labels=[label],
             resource_deps=['{}:{}:{}'.format(chart['sourceRef']['name'], chart['sourceRef']['kind'], chart['sourceRef'].get('namespace', metadata['namespace']))],
+            pod_readiness=pod_readiness,
+            labels=[label],
         )
 
     for object in decode_yaml_stream(rest):
