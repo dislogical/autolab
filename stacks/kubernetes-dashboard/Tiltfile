@@ -15,6 +15,7 @@ def kubernetes_dashboard():
         'kubernetes-dashboard/kubernetes-dashboard',
         namespace='kubernetes-dashboard',
         flags=['--values=./stacks/kubernetes-dashboard/values-kubernetes-dashboard.yaml'],
+        deps=['./stacks/kubernetes-dashboard/values-kubernetes-dashboard.yaml'],
         labels=['kubernetes-dashboard'],
         resource_deps=['kubernetes-dashboard-repo'],
     )
