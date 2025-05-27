@@ -8,7 +8,7 @@ components:
   - ../../components/config-common
 
 resources:
-  - namespace.yml
-  - helm.yml
-  - network-policy.yml
-  - route.yml
+  - namespace.yaml
+  - helm.yaml
+  - network-policy.yaml
+  - route.yaml

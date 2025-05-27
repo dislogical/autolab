@@ -9,12 +9,12 @@ components:
   - ../../components/config-common
 
 resources:
-  - namespace.yml
-  - helm.yml
-  - route.yml
+  - namespace.yaml
+  - helm.yaml
+  - route.yaml
 
 configMapGenerator:
   - name: helm-values
     files:
-      - values-traefik.yml
-      - values-traefik-crds.yml
+      - values-traefik.yaml
+      - values-traefik-crds.yaml

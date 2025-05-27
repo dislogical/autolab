@@ -1,7 +1,7 @@
 load('ext://helm_resource', 'helm_repo', 'helm_resource')
 
 def gateway():
-    k8s_yaml('./stacks/gateway/namespace.yml')
+    k8s_yaml('./stacks/gateway/namespace.yaml')
 
     helm_repo(
         'traefik',
@@ -14,8 +14,8 @@ def gateway():
         'traefik-crds',
         'traefik/traefik-crds',
         namespace='gateway',
-        flags=['--values=./stacks/gateway/values-traefik-crds.yml'],
-        deps=['./stacks/gateway/values-traefik-crds.yml'],
+        flags=['--values=./stacks/gateway/values-traefik-crds.yaml'],
+        deps=['./stacks/gateway/values-traefik-crds.yaml'],
         resource_deps=['traefik-repo'],
         pod_readiness='ignore',
         labels=['gateway'],
@@ -25,14 +25,14 @@ def gateway():
         'traefik',
         'traefik/traefik',
         namespace='gateway',
-        flags=['--values=./stacks/gateway/values-traefik.yml', '--skip-crds'],
-        deps=['./stacks/gateway/values-traefik.yml'],
+        flags=['--values=./stacks/gateway/values-traefik.yaml', '--skip-crds'],
+        deps=['./stacks/gateway/values-traefik.yaml'],
         resource_deps=['traefik-crds'],
         port_forwards=[port_forward(8080, 8000)],
         labels=['gateway'],
     )
 
-    k8s_yaml('./stacks/gateway/route.yml')
+    k8s_yaml('./stacks/gateway/route.yaml')
     k8s_resource(
         new_name='traefik-route',
         objects=['traefik-dashboard:httproute'],

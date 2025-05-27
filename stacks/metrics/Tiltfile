@@ -1,7 +1,7 @@
 load('ext://helm_resource', 'helm_repo', 'helm_resource')
 
 def metrics():
-    k8s_yaml('./stacks/metrics/namespace.yml')
+    k8s_yaml('./stacks/metrics/namespace.yaml')
 
     helm_repo(
         'prometheus',
@@ -14,7 +14,7 @@ def metrics():
         'kube-prometheus-stack',
         'prometheus/kube-prometheus-stack',
         namespace='metrics',
-        flags=['--values=./stacks/metrics/values-prometheus.yml'],
+        flags=['--values=./stacks/metrics/values-prometheus.yaml'],
         resource_deps=['prometheus-repo'],
         labels=['metrics'],
     )

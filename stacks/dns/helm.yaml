@@ -29,7 +29,7 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: helm-values
-      valuesKey: values-coredns.yml
+      valuesKey: values-coredns.yaml
   postRenderers:
     - kustomize:
         patches:

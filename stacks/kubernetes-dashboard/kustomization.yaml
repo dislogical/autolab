@@ -2,18 +2,18 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
-  name: load-balancer
-namespace: load-balancer
+  name: kubernetes-dashboard
+namespace: kubernetes-dashboard
 
 components:
   - ../../components/config-common
 
 resources:
-  - namespace.yml
-  - helm.yml
-  - address-pool.yml
+  - namespace.yaml
+  - helm.yaml
+  - route.yaml
 
 configMapGenerator:
   - name: helm-values
     files:
-      - values-metallb.yml
+      - values-kubernetes-dashboard.yaml

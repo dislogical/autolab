@@ -17,7 +17,7 @@ def capacitor():
         resource_deps=['capacitor-repo'],
     )
 
-    k8s_yaml('./stacks/capacitor/route.yml')
+    k8s_yaml('./stacks/capacitor/route.yaml')
     k8s_resource(
         new_name='traefik-route',
         objects=['traefik-dashboard:httproute'],

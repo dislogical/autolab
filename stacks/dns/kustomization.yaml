@@ -9,10 +9,10 @@ components:
   - ../../components/config-common
 
 resources:
-  - namespace.yml
-  - helm.yml
+  - namespace.yaml
+  - helm.yaml
 
 configMapGenerator:
   - name: helm-values
     files:
-      - values-coredns.yml
+      - values-coredns.yaml

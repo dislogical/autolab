@@ -27,4 +27,4 @@ spec:
   valuesFrom:
     - kind: ConfigmMap
       name: helm-values
-      valuesKey: values-metallb.yml
+      valuesKey: values-metallb.yaml

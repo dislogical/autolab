@@ -1,7 +1,7 @@
 load('ext://helm_resource', 'helm_repo', 'helm_resource')
 
 def load_balancer():
-    k8s_yaml('./stacks/load-balancer/namespace.yml')
+    k8s_yaml('./stacks/load-balancer/namespace.yaml')
 
     helm_repo(
         'metallb',
@@ -14,12 +14,12 @@ def load_balancer():
         'metallb',
         'metallb/metallb',
         namespace='load-balancer',
-        flags=['--values=./stacks/load-balancer/values-metallb.yml'],
+        flags=['--values=./stacks/load-balancer/values-metallb.yaml'],
         resource_deps=['metallb-repo'],
         labels=['load-balancer'],
     )
 
-    k8s_yaml('./stacks/load-balancer/address-pool.yml')
+    k8s_yaml('./stacks/load-balancer/address-pool.yaml')
     k8s_resource(
         new_name='metallb-advertisement',
         objects=['default-advertisement:l2advertisement'],
