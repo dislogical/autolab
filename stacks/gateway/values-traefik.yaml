@@ -22,3 +22,8 @@ gateway:
   listeners:
     web:
       namespacePolicy: All
+
+metrics:
+  prometheus:
+    serviceMonitor:
+      enabled: true
