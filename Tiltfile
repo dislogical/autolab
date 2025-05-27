@@ -102,13 +102,18 @@ def process_stack(path):
 
     gateway_resources, _ = filter_yaml(kustomized, api_version='gateway.networking.k8s.io')
     for resource in decode_yaml_stream(gateway_resources):
-        metadata = resource['metadata']
-        spec = resource['spec']
         k8s_resource(
             workload=_get_object_name(resource),
-            links=[link(hostname + ':8080', metadata['name']) for hostname in spec['hostnames']],
+            links=[link(hostname + ':8080', resource['metadata']['name']) for hostname in resource['spec']['hostnames']],
             resource_deps=['traefik-crds:helmrelease:gateway'], # HACK
             )
+
+    lb_resources, _ = filter_yaml(kustomized, api_version='metallb.io')
+    for resource in decode_yaml_stream(lb_resources):
+        k8s_resource(
+            workload=_get_object_name(resource),
+            resource_deps=['metallb:helmrelease:load-balancer'],
+        )
 
 k8s_yaml('stacks/flux-system/gotk-components.yaml')
 process_stack('stacks/capacitor')
