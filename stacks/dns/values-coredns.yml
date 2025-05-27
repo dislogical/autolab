@@ -3,10 +3,9 @@ image:
   repository: ghcr.io/k8s-gateway/k8s_gateway
   tag: 1.2.0
   pullPolicy: IfNotPresent
-service:
-  clusterIP: None
 serviceAccount:
   create: true
+serviceType: LoadBalancer
 servers:
   - zones:
       - zone: .
