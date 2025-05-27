@@ -9,22 +9,22 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v3
-      - uses: pre-commit/action@v3.0.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-python@3542bca2639a428e1796aaa6a2ffef0c0f575566 # v3
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   tilt-ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Check Latest Homebrew
         id: brew-version
         run: echo version=$(gh api repos/Homebrew/brew/releases -q '.[0].tag_name') >> "$GITHUB_OUTPUT"
 
       - name: Cache Homebrew
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         id: cache-brew
         with:
           path: /home/linuxbrew/.linuxbrew
@@ -41,7 +41,7 @@ jobs:
         run: echo ${{ env.HOMEBREW_PREFIX }}/bin:${{ env.HOMEBREW_PREFIX }}/sbin >> "$GITHUB_PATH"
 
       - name: Cache Homebew Bundle
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
         id: cache-bundle
         with:
           path: |
