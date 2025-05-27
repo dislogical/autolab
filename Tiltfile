@@ -84,8 +84,9 @@ def process_stack(path):
             labels=[label],
             )
 
+    for object in decode_yaml_stream(kustomized):
         # Depend on namespace creation
-        namespace = metadata.get('namespace')
+        namespace = object['metadata'].get('namespace')
         if namespace:
             k8s_resource(
                 workload=name,
