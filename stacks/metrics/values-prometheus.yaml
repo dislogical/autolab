@@ -3,6 +3,12 @@ crds:
 prometheus:
   prometheusSpec:
     maximumStartupDurationSeconds: null
+
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
   route:
     main:
       enabled: true
