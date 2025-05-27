@@ -27,5 +27,3 @@ def kubernetes_dashboard():
         resource_deps=['traefik-crds'],
         links=[link('kubernetes.localhost:8080', 'kubernetes dashboard')],
         )
-
-
