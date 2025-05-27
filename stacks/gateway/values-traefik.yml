@@ -9,6 +9,10 @@ providers:
       service:
         enabled: true
 
+service:
+  annotations:
+    metallb.io/loadBalancerIPs: 10.42.42.1
+
 gateway:
   listeners:
     web:
