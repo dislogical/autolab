@@ -15,6 +15,7 @@ def dns():
         'coredns/coredns',
         namespace='dns',
         flags=['--values=./stacks/dns/values-coredns.yml'],
-        labels=['dns'],
+        deps=['./stacks/dns/values-coredns.yml'],
         resource_deps=['coredns-repo'],
+        labels=['dns'],
     )
