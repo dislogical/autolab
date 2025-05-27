@@ -1,0 +1,4 @@
+checks:
+  addAllBuiltIn: true
+  ignorePaths:
+    - stacks/flux-system/gotk-components.yaml
