@@ -36,6 +36,8 @@ metadata:
   namespace: postgres
 spec:
   interval: 24h
+  dependsOn:
+    - name: operator
   chart:
     spec:
       chart: cluster
