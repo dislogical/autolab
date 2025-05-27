@@ -10,5 +10,4 @@ components:
 resources:
   - namespace.yaml
   - helm.yaml
-  - network-policy.yaml
   - route.yaml
