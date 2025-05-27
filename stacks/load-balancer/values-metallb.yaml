@@ -5,7 +5,7 @@ controller:
 speaker:
   image:
     repository: quay.io/metallb/speaker
-    tag: v0.14.9
+    tag: v0.14.9@sha256:b09a1dfcf330938950b65115cd58f6989108c0c21d3c096040e7fe9a25a92993
     pullPolicy: IfNotPresent
   frr:
     enabled: false
