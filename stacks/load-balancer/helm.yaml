@@ -15,6 +15,9 @@ metadata:
   namespace: load-balancer
 spec:
   interval: 24h
+  dependsOn:
+    - name: prometheus
+      namespace: metrics
   chart:
     spec:
       chart: metallb
