@@ -16,7 +16,7 @@ metadata:
 spec:
   interval: 24h
   dependsOn:
-    - name: prometheus
+    - name: prometheus-crds
       namespace: metrics
   chart:
     spec:

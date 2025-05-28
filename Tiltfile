@@ -43,7 +43,9 @@ def process_stack(path):
         namespace = metadata.get('namespace')
         spec = release['spec']
         chart = spec['chart']['spec']
-        values_files = [os.path.join(path, entry['valuesKey']) for entry in spec.get('valuesFrom') if entry['kind'] == 'ConfigMap']
+        values_files = []
+        if spec.get('valuesFrom'):
+            values_files = [os.path.join(path, entry['valuesKey']) for entry in spec.get('valuesFrom') if entry['kind'] == 'ConfigMap']
         source_ref = chart['sourceRef']
 
         flags = []

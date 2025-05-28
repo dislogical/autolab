@@ -38,7 +38,7 @@ spec:
   interval: 24h
   dependsOn:
     - name: traefik-crds
-    - name: prometheus
+    - name: prometheus-crds
       namespace: metrics
   chart:
     spec:
