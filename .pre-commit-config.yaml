@@ -27,7 +27,7 @@ repos:
         stages: [commit-msg]
         args: [--strict]
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 40.33.6
+    rev: 40.33.8
     hooks:
       - id: renovate-config-validator
         args: [--strict]
