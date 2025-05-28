@@ -15,6 +15,9 @@ metadata:
   namespace: metrics
 spec:
   interval: 24h
+  dependsOn:
+    - name: traefik-crds
+      namespace: gateway
   chart:
     spec:
       chart: kube-prometheus-stack
