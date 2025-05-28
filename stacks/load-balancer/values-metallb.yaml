@@ -9,3 +9,9 @@ speaker:
     pullPolicy: IfNotPresent
   frr:
     enabled: false
+
+prometheus:
+  serviceAccount: prometheus-kube-prometheus-prometheus
+  namespace: metrics
+  serviceMonitor:
+    enabled: true
