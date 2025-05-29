@@ -25,11 +25,29 @@ def process_stack(path):
     label = os.path.basename(path)
     kustomized = kustomize(path)
 
+    config_maps, rest = filter_yaml(kustomized, kind='ConfigMap')
     helm_repos, rest = filter_yaml(kustomized, api_version='source.toolkit.fluxcd.io', kind='HelmRepository')
     helm_releases, rest = filter_yaml(rest, api_version='helm.toolkit.fluxcd.io', kind='HelmRelease')
 
+    values_objects = {}
+    for config_map in decode_yaml_stream(config_maps):
+        metadata = config_map['metadata']
+        name = metadata['name']
+        namespace = metadata.get('namespace', None)
+        data = config_map['data']
+
+        contents = values_objects.setdefault(namespace, {}).setdefault(name, {})
+        # TODO: When helm 3.19 comes out, we can replace this hack with just the object
+        for key, value in data.items():
+            contents_object = contents.setdefault(key, {})
+            object = decode_yaml(value)
+            for key, value in object.items():
+                contents_object[key] = value
+
+        print('config_map:', name, '\n', contents)
+
     for repo in decode_yaml_stream(helm_repos):
-        metadata = repo.get('metadata', {})
+        metadata = repo['metadata']
         spec = repo['spec']
         helm_repo(
             metadata['name'],
@@ -43,10 +61,21 @@ def process_stack(path):
         namespace = metadata.get('namespace')
         spec = release['spec']
         chart = spec['chart']['spec']
-        values_files = []
-        if spec.get('valuesFrom'):
-            values_files = [os.path.join(path, entry['valuesKey']) for entry in spec.get('valuesFrom') if entry['kind'] == 'ConfigMap']
         source_ref = chart['sourceRef']
+
+        # Parse values
+        values = {}
+        for value_source in spec.get('valuesFrom', []):
+            namespace = value_source.get('namespace',  namespace)
+            name = value_source['name']
+            key = value_source['valuesKey']
+
+            # TODO: When helm 3.19 comes out, we can replace this hack with just the object
+            object = values_objects.get(namespace, {}).get(name, {}).get(key, {})
+            for key, value in object.items():
+                values[key] = encode_json(value).replace('\n', '')
+
+        print(values)
 
         flags = []
         if spec.get('install', {}).get('crds', None) == 'Skip':
@@ -72,8 +101,7 @@ def process_stack(path):
             source_ref['name'] + '/' + chart['chart'],
             release_name=metadata['name'],
             namespace=metadata['namespace'],
-            flags=flags + ['--values=' + file for file in values_files],
-            deps=values_files,
+            flags=flags + ['--set-json=' + '{}={}'.format(key, value) for key, value in values.items()],
             resource_deps=dependencies,
             pod_readiness=pod_readiness,
             labels=[label],
