@@ -4,6 +4,7 @@ on:
 
 jobs:
   pre-commit:
+    name: Pre-Commit Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -11,9 +12,13 @@ jobs:
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   tilt-ci:
+    name: Tilt CI - ${{ matrix.runtime.name }} - ${{ matrix.mode.name }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        runtime:
+          - name: Kind
+            create: ctlptl apply -f cluster-kind.yaml
         mode:
           - name: Tilt Mode
             args: ""
@@ -28,7 +33,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Setup Cluster
-        run: ctlptl apply -f cluster-kind.yaml
+        run: ${{ matrix.runtime.create }}
 
       - name: Run Tilt CI (${{ matrix.mode.name }})
         run: tilt ci -- ${{ matrix.mode.args }}
