@@ -149,7 +149,7 @@ def process_stack(path):
             resource_deps=['metallb:helmrelease:load-balancer'],
         )
 
-k8s_yaml('stacks/flux-system/gotk-components.yaml')
+k8s_yaml('flux-system/gotk-components.yaml')
 
 process_stack('.')
 
