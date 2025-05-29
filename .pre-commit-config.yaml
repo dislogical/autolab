@@ -19,7 +19,16 @@ repos:
           - --allow-multiple-documents
       - id: check-xml
       - id: check-added-large-files
+      - id: mixed-line-ending
       - id: detect-private-key
+      - id: check-ast
+        types: [tiltfile]
+      - id: check-docstring-first
+        types: [tiltfile]
+      - id: double-quote-string-fixer
+        types: [tiltfile]
+      - id: no-commit-to-branch
+        args: [--branch, main]
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.2.0
     hooks:
