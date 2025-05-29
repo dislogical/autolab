@@ -150,10 +150,6 @@ def process_stack(path):
         )
 
 k8s_yaml('stacks/flux-system/gotk-components.yaml')
-k8s_resource(
-    new_name='flux-system:namespace',
-    objects=['flux-system:namespace'],
-)
 
 process_stack('.')
 
