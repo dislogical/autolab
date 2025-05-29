@@ -6,8 +6,8 @@ if ctx.startswith('admin@talos-'):
 
 update_settings(k8s_upsert_timeout_secs=180)
 
-def _get_object_name(object, metadata=None, name = None, kind = None, namespace = None):
-    metadata = metadata or object.get('metadata', {})
+def _get_object_name(object, name = None, kind = None, namespace = None, metadata=None):
+    metadata = metadata or object.get('metadata', {}) or object
     name = name or metadata['name'].lower()
     kind = kind or object['kind'].lower()
     namespace = namespace or metadata.get('namespace', None)
@@ -17,25 +17,46 @@ def _get_object_name(object, metadata=None, name = None, kind = None, namespace 
     else:
         return '{}:{}'.format(name, kind)
 
+def _get_object_labels(object):
+    label = object.get('metadata', {}).get('annotations', {}).get('tilt.dev/label')
+    if not label:
+        label = object.get('metadata', {}).get('namespace')
+    return [label] if label else []
+
 config.define_bool('flux-mode', usage='Use flux for helm instead of tilt')
 options = config.parse()
 flux_mode = options.get('flux-mode', False)
 
 def process_stack(path):
-    label = os.path.basename(path)
     kustomized = kustomize(path)
 
+    config_maps, rest = filter_yaml(kustomized, kind='ConfigMap')
     helm_repos, rest = filter_yaml(kustomized, api_version='source.toolkit.fluxcd.io', kind='HelmRepository')
     helm_releases, rest = filter_yaml(rest, api_version='helm.toolkit.fluxcd.io', kind='HelmRelease')
 
+    values_objects = {}
+    for config_map in decode_yaml_stream(config_maps):
+        metadata = config_map['metadata']
+        name = metadata['name']
+        namespace = metadata.get('namespace', None)
+        data = config_map['data']
+
+        contents = values_objects.setdefault(namespace, {}).setdefault(name, {})
+        # TODO: When helm 3.19 comes out, we can replace this hack with just the object
+        for key, value in data.items():
+            contents_object = contents.setdefault(key, {})
+            object = decode_yaml(value)
+            for key, value in object.items():
+                contents_object[key] = value
+
     for repo in decode_yaml_stream(helm_repos):
-        metadata = repo.get('metadata', {})
+        metadata = repo['metadata']
         spec = repo['spec']
         helm_repo(
             metadata['name'],
             spec['url'],
             resource_name=_get_object_name(repo),
-            labels=[label],
+            labels=_get_object_labels(repo),
         )
 
     for release in decode_yaml_stream(helm_releases):
@@ -43,10 +64,19 @@ def process_stack(path):
         namespace = metadata.get('namespace')
         spec = release['spec']
         chart = spec['chart']['spec']
-        values_files = []
-        if spec.get('valuesFrom'):
-            values_files = [os.path.join(path, entry['valuesKey']) for entry in spec.get('valuesFrom') if entry['kind'] == 'ConfigMap']
         source_ref = chart['sourceRef']
+
+        # Parse values
+        values = {}
+        for value_source in spec.get('valuesFrom', []):
+            namespace = value_source.get('namespace',  namespace)
+            name = value_source['name']
+            key = value_source['valuesKey']
+
+            # TODO: When helm 3.19 comes out, we can replace this hack with just the object
+            object = values_objects.get(namespace, {}).get(name, {}).get(key, {})
+            for key, value in object.items():
+                values[key] = encode_json(value).replace('\n', '')
 
         flags = []
         if spec.get('install', {}).get('crds', None) == 'Skip':
@@ -56,7 +86,7 @@ def process_stack(path):
         if metadata['name'].endswith('-crds'):
             pod_readiness='ignore'
 
-        dependencies = [_get_object_name(source_ref, metadata=source_ref, namespace=source_ref.get('namespace', namespace))]
+        dependencies = [_get_object_name(source_ref, namespace=source_ref.get('namespace', namespace))]
         for dep in spec.get('dependsOn', []):
             dependencies.append(_get_object_name(
                 dep,
@@ -72,33 +102,39 @@ def process_stack(path):
             source_ref['name'] + '/' + chart['chart'],
             release_name=metadata['name'],
             namespace=metadata['namespace'],
-            flags=flags + ['--values=' + file for file in values_files],
-            deps=values_files,
+            flags=flags + ['--set-json=' + '{}={}'.format(key, value) for key, value in values.items()],
             resource_deps=dependencies,
             pod_readiness=pod_readiness,
-            labels=[label],
+            labels=_get_object_labels(release),
         )
 
     k8s_yaml(rest)
+
     for object in decode_yaml_stream(rest):
-        metadata = object['metadata']
         name = _get_object_name(object)
         k8s_resource(
             new_name=name,
             objects=[name],
-            labels=[label],
+            labels=_get_object_labels(object),
             )
 
-    for object in decode_yaml_stream(kustomized):
+    namespaces, rest = filter_yaml(rest, kind='namespace')
+    for object in decode_yaml_stream(namespaces):
+        k8s_resource(
+            workload=_get_object_name(object),
+            labels=[object['metadata']['name'],]
+        )
+
+    for object in decode_yaml_stream(rest):
         # Depend on namespace creation
         namespace = object['metadata'].get('namespace')
         if namespace:
             k8s_resource(
-                workload=name,
+                workload=_get_object_name(object),
                 resource_deps=['{}:namespace'.format(namespace)]
             )
 
-    gateway_resources, _ = filter_yaml(kustomized, api_version='gateway.networking.k8s.io')
+    gateway_resources, rest = filter_yaml(rest, api_version='gateway.networking.k8s.io')
     for resource in decode_yaml_stream(gateway_resources):
         k8s_resource(
             workload=_get_object_name(resource),
@@ -106,7 +142,7 @@ def process_stack(path):
             resource_deps=['traefik-crds:helmrelease:gateway'], # HACK
             )
 
-    lb_resources, _ = filter_yaml(kustomized, api_version='metallb.io')
+    lb_resources, rest = filter_yaml(rest, api_version='metallb.io')
     for resource in decode_yaml_stream(lb_resources):
         k8s_resource(
             workload=_get_object_name(resource),
@@ -114,13 +150,8 @@ def process_stack(path):
         )
 
 k8s_yaml('stacks/flux-system/gotk-components.yaml')
-process_stack('stacks/capacitor')
-process_stack('stacks/gateway')
-process_stack('stacks/load-balancer')
-process_stack('stacks/dns')
-process_stack('stacks/kubernetes-dashboard')
-process_stack('stacks/metrics')
-process_stack('stacks/postgres')
+
+process_stack('.')
 
 k8s_resource(
     'traefik:helmrelease:gateway',
