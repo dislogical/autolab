@@ -12,7 +12,7 @@ runs:
       run: echo version=$(gh api repos/Homebrew/brew/releases -q '.[0].tag_name') >> "$GITHUB_OUTPUT"
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN: ${{ inputs.github-token }}
 
     - name: Cache Homebrew
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
