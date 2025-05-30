@@ -48,6 +48,9 @@ jobs:
         run: tofu init
         if: ${{ steps.cache-tofu-providers.outputs.cache-hit != 'true' }}
 
+      - name: Tofu Plan
+        run: tofu plan
+
       - name: Setup Cluster
         run: ${{ matrix.runtime.create }}
 
