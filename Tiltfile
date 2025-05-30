@@ -219,7 +219,7 @@ matchers = {
 }
 
 def process_tf(path):
-    plan = decode_json(local('tofu show -json', quiet=True))
+    plan = decode_json(local('tofu show -json'))
     format_version = plan['format_version']
     terraform_version = plan['terraform_version']
 
