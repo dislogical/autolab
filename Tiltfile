@@ -1,3 +1,4 @@
+load('ext://namespace', 'namespace_create')
 load('ext://helm_resource', 'helm_repo', 'helm_resource')
 
 ctx = k8s_context()
@@ -149,9 +150,109 @@ def process_stack(path):
             resource_deps=['metallb:helmrelease:load-balancer'],
         )
 
+def _kubernetes_get_first_metadata(resource, entry):
+    result = None
+    for root in ['values', 'sensitive_values']:
+        metadata = resource[root]['metadata']
+        if type(metadata) == 'list':
+            for metadata_inst in metadata:
+                result = metadata_inst.get(entry)
+                if result:
+                    return result
+        else:
+            result = metadata.get(entry)
+            if result:
+                return result
+
+def _kubernetes_get_all_metadata(resource, entry):
+    result = []
+    for root in ['values', 'sensitive_values']:
+        for metadata in resource[root]['metadata']:
+            value = metadata[entry]
+            if value:
+                result.append(value)
+
+    return result
+
+def _parse_kubernetes_namespace(resource):
+    name = _kubernetes_get_first_metadata(resource, 'name')
+    namespace_create(
+        name=name,
+        annotations=['- {}: {}'.format(key, value) for key, value in _kubernetes_get_all_metadata(resource, 'annotations')],
+        labels=['- {}: {}'.format(key, value) for key, value in _kubernetes_get_all_metadata(resource, 'labels')]
+    )
+    k8s_resource(
+        new_name=resource['address'],
+        objects=['{}:namespace'.format(name)],
+        labels=[name],
+    )
+
+def _parse_helm_release(resource):
+    namespace = _kubernetes_get_first_metadata(resource, 'namespace')
+
+    helm_repo(
+        name=resource['address'],
+        url=resource['values']['repository'],
+        resource_name=resource['address'] + '.repo',
+        labels=[namespace] if namespace else [],
+    )
+
+    values = {}
+    for value_source in resource['values']['values']:
+        values.update(**decode_yaml(value_source))
+
+    helm_resource(
+        name=resource['address'],
+        chart=resource['address'] + '/' + resource['values']['chart'],
+        release_name=resource['values']['name'],
+        namespace=namespace,
+        flags=['--set-json=' + '{}={}'.format(key, encode_json(value).replace('\n', '')) for key, value in values.items()],
+    )
+
+matchers = {
+    'registry.opentofu.org/hashicorp/kubernetes': {
+        'kubernetes_namespace': _parse_kubernetes_namespace,
+    },
+    'registry.opentofu.org/hashicorp/helm': {
+        'helm_release': _parse_helm_release,
+    },
+}
+
+def process_tf(path):
+    plan = decode_json(local('tofu show -json', quiet=True))
+    format_version = plan['format_version']
+    terraform_version = plan['terraform_version']
+
+    print('Using terraform', terraform_version, 'format version', format_version)
+
+    def _process_module(module):
+        for resource in module.get('resources', []):
+            address = resource['address']
+            provider = resource['provider_name']
+            type = resource['type']
+
+            matcher = matchers.get(provider, {}).get(type)
+            if matcher:
+                matcher(resource)
+                namespace = _kubernetes_get_first_metadata(resource, 'namespace')
+                k8s_resource(
+                    workload=address,
+                    resource_deps=resource.get('depends_on', []),
+                    labels=[namespace] if namespace else [],
+                )
+            else:
+                print('no matcher for type', type, 'from', provider)
+
+        for child in module.get('child_modules', []):
+            _process_module(child)
+
+    _process_module(plan['values']['root_module'])
+
 k8s_yaml('flux-system/gotk-components.yaml')
 
 process_stack('.')
+
+process_tf('.')
 
 k8s_resource(
     'traefik:helmrelease:gateway',
