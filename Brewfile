@@ -14,6 +14,13 @@ brew "kubeconform"
 brew "kubernetes-cli"
 # Template-free customization of Kubernetes YAML manifests
 brew "kustomize"
+# Drop-in replacement for Terraform. Infrastructure as Code Tool
+brew "opentofu"
+# Framework for managing multi-language pre-commit hooks
+brew "pre-commit"
+# Linter for Terraform files
+brew "tflint"
+
 # Define your dev environment as code. For microservice apps on Kubernetes
 brew "tilt"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
