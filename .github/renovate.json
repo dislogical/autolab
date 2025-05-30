@@ -5,6 +5,11 @@
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true
+    },
+    {
+      "matchPackageNames": ["renovatebot/pre-commit-hooks"],
+      "matchUpdateTypes": ["minor"],
+      "enabled": false
     }
   ],
   "renovate-config-presets": {
