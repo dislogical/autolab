@@ -219,7 +219,7 @@ matchers = {
 }
 
 def process_tf(path):
-    plan = decode_json(local('tofu show -json'))
+    plan = decode_json(local('tofu plan -refresh=false -out=.terraform/plan > /dev/null && tofu show  -json .terraform/plan'))
     format_version = plan['format_version']
     terraform_version = plan['terraform_version']
 
@@ -246,7 +246,7 @@ def process_tf(path):
         for child in module.get('child_modules', []):
             _process_module(child)
 
-    _process_module(plan['values']['root_module'])
+    _process_module(plan['planned_values']['root_module'])
 
 k8s_yaml('flux-system/gotk-components.yaml')
 
