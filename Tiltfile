@@ -194,11 +194,12 @@ def _parse_kubernetes_namespace(resource):
 
 def _parse_helm_release(resource):
     namespace = _kubernetes_get_first_metadata(resource, 'namespace')
+    repo_resource_name = resource['address'] + '.repo'
 
     helm_repo(
         name=resource['address'],
         url=resource['values']['repository'],
-        resource_name=resource['address'] + '.repo',
+        resource_name=repo_resource_name,
         labels=[namespace] if namespace else [],
     )
 
@@ -215,6 +216,7 @@ def _parse_helm_release(resource):
         release_name=resource['values']['name'],
         namespace=namespace,
         flags=['--set-json=' + '{}={}'.format(key, encode_json(value).replace('\n', '')) for key, value in values.items()],
+        resource_deps=[repo_resource_name],
     )
 
 matchers = {
