@@ -202,6 +202,9 @@ def _parse_helm_release(resource):
     for value_source in resource['values']['values']:
         values.update(**decode_yaml(value_source))
 
+    if not namespace:
+        print('!!!', 'Helm Release without namespace!', '!!!\n', resource)
+
     helm_resource(
         name=resource['address'],
         chart=resource['address'] + '/' + resource['values']['chart'],
