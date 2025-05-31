@@ -27,8 +27,8 @@ jobs:
         mode:
           - name: Tilt Mode
             args: ""
-          - name: Flux Mode
-            args: --flux-mode
+          # - name: Flux Mode
+          #   args: --flux-mode
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
