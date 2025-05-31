@@ -210,7 +210,10 @@ def _parse_helm_release(resource):
     if not namespace:
         print('!!!', 'Helm Release without namespace!', '!!!\n', resource)
 
-    print('!!!', 'helm chart depends on:', resource.get('depends_on'))
+    depends = resource.get('depends_on')
+    print('!!!', 'helm chart depends on:', depends)
+    if not depends:
+        print(resource)
 
     helm_resource(
         name=resource['address'],
