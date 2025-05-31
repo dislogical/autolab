@@ -169,7 +169,7 @@ def _kubernetes_get_all_metadata(resource, entry):
     result = []
     for root in ['values', 'sensitive_values']:
         for metadata in resource[root].get('metadata', []):
-            value = metadata[entry]
+            value = metadata.get(entry)
             if value:
                 result.append(value)
 
