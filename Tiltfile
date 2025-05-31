@@ -152,6 +152,10 @@ def process_stack(path):
 
 def _kubernetes_get_first_metadata(resource, entry):
     for root in ['values', 'sensitive_values']:
+        result = resource[root].get(entry)
+        if result:
+            return result
+
         metadata = resource[root].get('metadata')
         if type(metadata) == 'list':
             for metadata_inst in metadata:
