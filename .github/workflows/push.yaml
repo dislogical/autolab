@@ -46,7 +46,6 @@ jobs:
 
       - name: Tofu Init
         run: tofu init
-        if: ${{ steps.cache-tofu-providers.outputs.cache-hit != 'true' }}
 
       - name: Tofu Plan
         run: tofu plan
