@@ -11,6 +11,7 @@ components:
 resources:
   - namespace.yaml
   - helm.yaml
+  - rbac.yaml
 
 configMapGenerator:
   - name: helm-values
