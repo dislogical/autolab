@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - stacks/load-balancer
   - stacks/gateway
-  - stacks/dns
   - stacks/kubernetes-dashboard
   - stacks/capacitor
   - stacks/metrics
