@@ -84,5 +84,6 @@ helmrelease: helmreleasev2.#HelmRelease & {
 						"""
 				}]
 			}]
-		}}
+		}
+	}
 }
