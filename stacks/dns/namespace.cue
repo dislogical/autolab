@@ -5,7 +5,5 @@ import (
 )
 
 namespace: corev1.#Namespace & {
-	apiVersion: "v1"
-	kind:       "Namespace"
 	metadata: name: "dns"
 }

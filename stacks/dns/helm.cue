@@ -24,8 +24,7 @@ helmrelease: helmreleasev2.#HelmRelease & {
 	spec: {
 		interval: _interval
 		chart: spec: {
-			chart:             "coredns"
-			reconcileStrategy: "ChartVersion"
+			chart: "coredns"
 			sourceRef: {
 				kind: helmrepository.kind
 				name: helmrepository.metadata.name
