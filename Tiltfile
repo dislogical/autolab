@@ -66,16 +66,13 @@ def process_stack(path):
             source_ref = chart['sourceRef']
 
             # Parse values
-            values = {}
+            values = spec.get('values', {})
             for value_source in spec.get('valuesFrom', []):
                 namespace = value_source.get('namespace',  namespace)
                 name = value_source['name']
                 key = value_source['valuesKey']
 
-                # TODO: When helm 3.19 comes out, we can replace this hack with just the object
-                object = values_objects.get(namespace, {}).get(name, {}).get(key, {})
-                for key, value in object.items():
-                    values[key] = encode_json(value).replace('\n', '')
+                values.update(**values_objects.get(namespace, {}).get(name, {}).get(key, {}))
 
             flags = []
             if spec.get('install', {}).get('crds', None) == 'Skip':
@@ -101,7 +98,8 @@ def process_stack(path):
                 source_ref['name'] + '/' + chart['chart'],
                 release_name=metadata['name'],
                 namespace=metadata['namespace'],
-                flags=flags + ['--set-json=' + '{}={}'.format(key, value) for key, value in values.items()],
+                # TODO: When helm 3.19 comes out, we can replace this hack with just the object
+                flags=flags + ['--set-json=' + '{}={}'.format(key, encode_json(value).replace('\n', '')) for key, value in values.items()],
                 resource_deps=dependencies,
                 pod_readiness=pod_readiness,
                 labels=_get_object_labels(release),
