@@ -62,7 +62,7 @@ repos:
       - id: cue-lint
         name: Lint CUE files
         entry: cue
-        args: [cmd, "lint"]
+        args: [cmd, lint, "./..."]
         types: [cue]
         pass_filenames: false
         language: golang

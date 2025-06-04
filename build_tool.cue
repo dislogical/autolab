@@ -2,25 +2,15 @@ package autolab
 
 import (
 	"encoding/yaml"
-	"list"
 	"tool/cli"
 	"tool/exec"
-	"tool/file"
-
-	"github.com/dislogical/autolab/stacks/dns"
-	"github.com/dislogical/autolab/stacks/gateway"
 )
 
-let _yaml = yaml.MarshalStream([
-	for module in [dns, gateway]
-	for _, value in module {value},
-])
+export: {}
+let _yaml = yaml.MarshalStream([for _, module in export for _, value in module {value}])
 let _pass_yaml = {
 	stdin: _yaml
 }
-let _files = (file.Glob & {
-	glob: "stacks/**/*.cue"
-}).files
 
 command: {
 	export: task: print: cli.Print & {
@@ -28,11 +18,12 @@ command: {
 	}
 	lint: task: {
 		fmt: exec.Run & {
-			cmd: list.Concat([[
+			cmd: [
 				"cue",
 				"fmt",
 				"--check",
-			], _files])
+				"./...",
+			]
 		}
 		vet: exec.Run & {
 			cmd: [
@@ -40,8 +31,7 @@ command: {
 				"vet",
 				"-c",
 				"-v",
-				"github.com/dislogical/autolab/stacks/dns",
-				"github.com/dislogical/autolab/stacks/gateway",
+				"./...",
 			]
 			after: fmt
 		}
