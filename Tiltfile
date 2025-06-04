@@ -28,8 +28,7 @@ options = config.parse()
 flux_mode = options.get('flux-mode', False)
 
 def process_stack(path):
-    kustomized = kustomize(path)
-
+    kustomized = local('cue cmd export ./...', quiet=True)
     config_maps, rest = filter_yaml(kustomized, kind='ConfigMap')
     helm_repos, rest = filter_yaml(kustomized, api_version='source.toolkit.fluxcd.io', kind='HelmRepository')
     helm_releases, rest = filter_yaml(rest, api_version='helm.toolkit.fluxcd.io', kind='HelmRelease')
@@ -67,16 +66,13 @@ def process_stack(path):
         source_ref = chart['sourceRef']
 
         # Parse values
-        values = {}
+        values = spec.get('values', {})
         for value_source in spec.get('valuesFrom', []):
             namespace = value_source.get('namespace',  namespace)
             name = value_source['name']
             key = value_source['valuesKey']
 
-            # TODO: When helm 3.19 comes out, we can replace this hack with just the object
-            object = values_objects.get(namespace, {}).get(name, {}).get(key, {})
-            for key, value in object.items():
-                values[key] = encode_json(value).replace('\n', '')
+            values.update(**values_objects.get(namespace, {}).get(name, {}).get(key, {}))
 
         flags = []
         if spec.get('install', {}).get('crds', None) == 'Skip':
@@ -102,7 +98,8 @@ def process_stack(path):
             source_ref['name'] + '/' + chart['chart'],
             release_name=metadata['name'],
             namespace=metadata['namespace'],
-            flags=flags + ['--set-json=' + '{}={}'.format(key, value) for key, value in values.items()],
+            # TODO: When helm 3.19 comes out, we can replace this hack with just the object
+            flags=flags + ['--set-json=' + '{}={}'.format(key, encode_json(value).replace('\n', '')) for key, value in values.items()],
             resource_deps=dependencies,
             pod_readiness=pod_readiness,
             labels=_get_object_labels(release),
