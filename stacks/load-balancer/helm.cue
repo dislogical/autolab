@@ -24,6 +24,9 @@ export: load_balancer: {
 		metadata: {
 			name:      "metallb"
 			namespace: this.namespace.metadata.name
+			annotations: {
+				"tilt.dev/crd": "metallb.io"
+			}
 		}
 		spec: {
 			interval: _interval

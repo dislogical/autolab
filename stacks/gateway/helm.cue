@@ -27,6 +27,9 @@ export: gateway: {
 		metadata: {
 			name:      "traefik-crds"
 			namespace: this.namespace.metadata.name
+			annotations: {
+				"tilt.dev/crd": "gateway.networking.k8s.io"
+			}
 		}
 		spec: {
 			interval: _interval
@@ -52,6 +55,9 @@ export: gateway: {
 		metadata: {
 			name:      "traefik"
 			namespace: this.namespace.metadata.name
+			annotations: {
+				"tilt.dev/port-forward": "8000:8080"
+			}
 		}
 		spec: {
 			interval: _interval

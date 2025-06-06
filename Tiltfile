@@ -131,26 +131,24 @@ def process_stack(path):
                 resource_deps=['{}:namespace'.format(namespace)]
             )
 
-    gateway_resources, rest = filter_yaml(rest, api_version='gateway.networking.k8s.io')
-    for resource in decode_yaml_stream(gateway_resources):
-        k8s_resource(
-            workload=_get_object_name(resource),
-            links=[link(hostname + ':8080', resource['metadata']['name']) for hostname in resource['spec']['hostnames']],
-            resource_deps=['traefik-crds:helmrelease:gateway'], # HACK
-            )
+    # filter_yaml on labels doesn't seem to work, soooo
+    for resource in decode_yaml_stream(kustomized):
+        api_group = resource.get('metadata', {}).get('annotations', {}).get('tilt.dev/crd')
+        if api_group:
+            crd_deps, _ = filter_yaml(rest, api_version=api_group)
+            for dep in decode_yaml_stream(crd_deps):
+                k8s_resource(
+                    workload=_get_object_name(dep),
+                    resource_deps=[_get_object_name(resource)]
+                )
 
-    lb_resources, rest = filter_yaml(rest, api_version='metallb.io')
-    for resource in decode_yaml_stream(lb_resources):
-        k8s_resource(
-            workload=_get_object_name(resource),
-            resource_deps=['metallb:helmrelease:load-balancer'],
-        )
+        port_forward = resource.get('metadata').get('annotations', {}).get('tilt.dev/port-forward')
+        if port_forward:
+            k8s_resource(
+                workload=_get_object_name(resource),
+                port_forwards=[port_forward]
+            )
 
 k8s_yaml('flux-system/gotk-components.yaml')
 
 process_stack('.')
-
-k8s_resource(
-    'traefik:helmrelease:gateway',
-    port_forwards=[port_forward(8080, 8000)],
-    )
