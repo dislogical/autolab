@@ -21,6 +21,7 @@ Platform: author.#Platform & {
 		gateway:              _
 		kubernetes_dashboard: _
 		load_balancer:        _
+		metrics:              _
 	}
 }
 
