@@ -18,7 +18,12 @@ import (
 #Resources: {
 	[Kind=string]: [InternalLabel=string]: {
 		kind: Kind
-		metadata: name: string | *InternalLabel
+		metadata: {
+			name:       string | *InternalLabel
+			namespace?: string
+		}
+
+		[_]: _
 	}
 
 	AppProject?: [_]:         ap.#AppProject

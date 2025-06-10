@@ -20,6 +20,7 @@ Platform: author.#Platform & {
 		dns:                  _
 		gateway:              _
 		kubernetes_dashboard: _
+		load_balancer:        _
 	}
 }
 
