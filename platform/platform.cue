@@ -1,23 +1,25 @@
 package holos
 
-import "github.com/holos-run/holos/api/author/v1alpha5:author"
+import (
+	"strings"
+
+	"github.com/holos-run/holos/api/author/v1alpha5:author"
+)
 
 Platform: author.#Platform & {
 	Name: "default"
 
 	Components: {
 		[NAME=string]: {
-			name: string | *NAME
+			name: string | *strings.Replace(NAME, "_", "-", -1)
 			path: string | *"components/\(name)"
 		}
 	}
 
 	Components: {
-		dns:     _
-		gateway: _
-		kubernetes_dashboard: {
-			name: "kubernetes-dashboard"
-		}
+		dns:                  _
+		gateway:              _
+		kubernetes_dashboard: _
 	}
 }
 
