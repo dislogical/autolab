@@ -6,10 +6,15 @@ Platform: author.#Platform & {
 	Name: "default"
 
 	Components: {
-		dns: {
-			name: "dns"
-			path: "components/dns"
+		[NAME=string]: {
+			name: string | *NAME
+			path: string | *"components/\(NAME)"
 		}
+	}
+
+	Components: {
+		dns:     _
+		gateway: _
 	}
 }
 
