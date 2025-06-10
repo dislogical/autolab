@@ -22,6 +22,12 @@ Platform: author.#Platform & {
 		kubernetes_dashboard: _
 		load_balancer:        _
 		metrics:              _
+		postgres_operator: {
+			path: "components/postgres/operator"
+		}
+		postgres_cluster: {
+			path: "components/postgres/cluster"
+		}
 	}
 }
 
