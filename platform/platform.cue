@@ -8,13 +8,16 @@ Platform: author.#Platform & {
 	Components: {
 		[NAME=string]: {
 			name: string | *NAME
-			path: string | *"components/\(NAME)"
+			path: string | *"components/\(name)"
 		}
 	}
 
 	Components: {
 		dns:     _
 		gateway: _
+		kubernetes_dashboard: {
+			name: "kubernetes-dashboard"
+		}
 	}
 }
 
