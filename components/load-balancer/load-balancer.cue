@@ -4,6 +4,7 @@ holos: LoadBalancer.BuildPlan
 
 LoadBalancer: #Helm & {
 	Namespace: "load-balancer"
+	KustomizeConfig: Kustomization: namespace: LoadBalancer.Resources.Namespace.load_balancer.metadata.name
 
 	Chart: {
 		name:    "metallb"
