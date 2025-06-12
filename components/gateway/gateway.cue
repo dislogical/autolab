@@ -58,7 +58,7 @@ Gateway: #Helm & {
 
 		service: annotations: {
 			"metallb.io/loadBalancerIPs": "10.42.42.1"
-			"tilt.dev/port-forward":      "8000:8080"
+			"tilt.dev/port-forward":      "8080:80"
 		}
 		gateway: listeners: web: namespacePolicy: "All"
 		// metrics: prometheus: serviceMonitor: enabled: true
