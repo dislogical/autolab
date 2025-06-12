@@ -3,7 +3,8 @@ package holos
 holos: KubernetesDashboard.BuildPlan
 
 KubernetesDashboard: #Helm & {
-	Namespace: "kubernetes-dashboard"
+	Namespace: KubernetesDashboard.Resources.Namespace.kubernetes_dashboard.metadata.name
+	KustomizeConfig: Kustomization: namespace: KubernetesDashboard.Resources.Namespace.kubernetes_dashboard.metadata.name
 
 	Chart: {
 		name:    "kubernetes-dashboard"
@@ -23,8 +24,8 @@ KubernetesDashboard: Resources: {
 		metadata: name: "kubernetes-dashboard"
 	}
 
-	HTTPRoute: kubernetes_dashboard: {
-		metadata: namespace: "kubernetes-dashboard"
+	HTTPRoute: kubernetes: {
+		metadata: namespace: Namespace.kubernetes_dashboard.metadata.name
 		spec: {
 			parentRefs: [{
 				name:      "traefik-gateway"
