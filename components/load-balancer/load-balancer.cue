@@ -7,6 +7,7 @@ LoadBalancer: #Helm & {
 
 	Chart: {
 		name:    "metallb"
+		release: "metallb"
 		version: "0.15.2"
 		repository: {
 			name: "metallb"
