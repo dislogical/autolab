@@ -10,7 +10,6 @@ import (
 	rgv1 "github.com/orvis98/cue-schemas/gateway.networking.k8s.io/gateway.networking.k8s.io/referencegrant/v1beta1"
 	certv1 "cert-manager.io/certificate/v1"
 	hrv1 "github.com/orvis98/cue-schemas/gateway.networking.k8s.io/gateway.networking.k8s.io/httproute/v1"
-	ap "argoproj.io/appproject/v1alpha1"
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
 )
@@ -26,7 +25,6 @@ import (
 		[_]: _
 	}
 
-	AppProject?: [_]:         ap.#AppProject
 	Certificate?: [_]:        certv1.#Certificate
 	ClusterIssuer?: [_]:      ci.#ClusterIssuer
 	ClusterRole?: [_]:        rbacv1.#ClusterRole
