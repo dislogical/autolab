@@ -3,14 +3,14 @@ package holos
 holos: LoadBalancer.BuildPlan
 
 LoadBalancer: #Helm & {
-	Namespace: "kubernetes-dashboard"
+	Namespace: "load-balancer"
 
 	Chart: {
-		name:    "kubernetes-dashboard"
-		version: "7.13.0"
+		name:    "metallb"
+		version: "0.15.2"
 		repository: {
-			name: "kubernetes-dashboard"
-			url:  "https://kubernetes.github.io/dashboard"
+			name: "metallb"
+			url:  "https://metallb.github.io/metallb"
 		}
 	}
 	Values: {
