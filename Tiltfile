@@ -1,4 +1,5 @@
 load('ext://helm_resource', 'helm_repo', 'helm_resource')
+load('ext://namespace', 'namespace_create')
 
 ctx = k8s_context()
 if ctx.startswith('admin@talos-'):
@@ -6,149 +7,111 @@ if ctx.startswith('admin@talos-'):
 
 update_settings(k8s_upsert_timeout_secs=180)
 
-def _get_object_name(object, name = None, kind = None, namespace = None, metadata=None):
-    metadata = metadata or object.get('metadata', {}) or object
-    name = name or metadata['name'].lower()
-    kind = kind or object['kind'].lower()
-    namespace = namespace or metadata.get('namespace', None)
+def resource_name(id):
+    return _get_object_name(name=id.name, kind=id.kind, namespace=id.namespace)
+workload_to_resource_function(resource_name)
 
-    if namespace:
-        return '{}:{}:{}'.format(name, kind, namespace.lower())
-    else:
-        return '{}:{}'.format(name, kind)
+# k8s_yaml('flux-system/gotk-components.yaml')
+
+def _get_object_name(object = {}, name = None, kind = None, namespace = None, metadata=None):
+    metadata = metadata or object.get('metadata', {}) or object
+    name = name or metadata['name']
+    kind = kind or object['kind']
+
+    name = name.replace(':', '\\:')
+
+    return '{}:{}:{}'.format(name, kind, namespace or metadata.get('namespace', 'default'))
 
 def _get_object_labels(object):
+    if object['kind'].lower() == 'namespace':
+        return [object['metadata']['name']]
+
+    if object['kind'].lower() == 'customresourcedefinition':
+        return ['CRDs']
+
     label = object.get('metadata', {}).get('annotations', {}).get('tilt.dev/label')
     if not label:
         label = object.get('metadata', {}).get('namespace')
     return [label] if label else []
 
-config.define_bool('flux-mode', usage='Use flux for helm instead of tilt')
-options = config.parse()
-flux_mode = options.get('flux-mode', False)
+def _get_object_field(object, fields, default = None):
+    current = object
+    for field in fields.split('.'):
+        current = current.get(field) if current else None
+    return current or default
 
-def process_stack(path):
-    kustomized = local('cue cmd export ./...', quiet=True)
-    config_maps, rest = filter_yaml(kustomized, kind='ConfigMap')
-    helm_repos, rest = filter_yaml(kustomized, api_version='source.toolkit.fluxcd.io', kind='HelmRepository')
-    helm_releases, rest = filter_yaml(rest, api_version='helm.toolkit.fluxcd.io', kind='HelmRelease')
 
-    values_objects = {}
-    for config_map in decode_yaml_stream(config_maps):
-        metadata = config_map['metadata']
-        name = metadata['name']
-        namespace = metadata.get('namespace', None)
-        data = config_map['data']
+watch_file('components')
+watch_file('platform')
+kustomized = local('holos render platform && holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml && kustomize build deploy', quiet=True)
 
-        contents = values_objects.setdefault(namespace, {}).setdefault(name, {})
-        # TODO: When helm 3.19 comes out, we can replace this hack with just the object
-        for key, value in data.items():
-            contents_object = contents.setdefault(key, {})
-            object = decode_yaml(value)
-            for key, value in object.items():
-                contents_object[key] = value
+# Make services get workloads
+k8s_kind('^Service$')
+k8s_yaml(kustomized)
 
-    for repo in decode_yaml_stream(helm_repos):
-        metadata = repo['metadata']
-        spec = repo['spec']
-        helm_repo(
-            metadata['name'],
-            spec['url'],
-            resource_name=_get_object_name(repo),
-            labels=_get_object_labels(repo),
-        )
+crd_yamls, _ = filter_yaml(kustomized, kind='CustomResourceDefinition', api_version='apiextensions.k8s.io')
+crds = {}
 
-    for release in decode_yaml_stream(helm_releases):
-        metadata = release.get('metadata', {})
-        namespace = metadata.get('namespace')
-        spec = release['spec']
-        chart = spec['chart']['spec']
-        source_ref = chart['sourceRef']
+for crd in decode_yaml_stream(crd_yamls):
+    group = _get_object_field(crd, 'spec.group')
+    kind = _get_object_field(crd, 'spec.names.kind').lower()
+    crds.setdefault(group, {})[kind] = _get_object_name(crd)
 
-        # Parse values
-        values = spec.get('values', {})
-        for value_source in spec.get('valuesFrom', []):
-            namespace = value_source.get('namespace',  namespace)
-            name = value_source['name']
-            key = value_source['valuesKey']
+for resource in decode_yaml_stream(kustomized):
+    name = _get_object_name(resource)
+    kind = resource['kind'].lower()
 
-            values.update(**values_objects.get(namespace, {}).get(name, {}).get(key, {}))
-
-        flags = []
-        if spec.get('install', {}).get('crds', None) == 'Skip':
-            flags.append('--skip-crds')
-
-        pod_readiness='wait'
-        if metadata['name'].endswith('-crds'):
-            pod_readiness='ignore'
-
-        dependencies = [_get_object_name(source_ref, namespace=source_ref.get('namespace', namespace))]
-        for dep in spec.get('dependsOn', []):
-            dependencies.append(_get_object_name(
-                dep,
-                metadata=dep,
-                kind='helmrelease',
-                namespace=dep.get('namespace', namespace)
-            ))
-        if namespace:
-            dependencies.append('{}:namespace'.format(namespace))
-
-        helm_resource(
-            _get_object_name(release),
-            source_ref['name'] + '/' + chart['chart'],
-            release_name=metadata['name'],
-            namespace=metadata['namespace'],
-            # TODO: When helm 3.19 comes out, we can replace this hack with just the object
-            flags=flags + ['--set-json=' + '{}={}'.format(key, encode_json(value).replace('\n', '')) for key, value in values.items()],
-            resource_deps=dependencies,
-            pod_readiness=pod_readiness,
-            labels=_get_object_labels(release),
-        )
-
-    k8s_yaml(rest)
-
-    for object in decode_yaml_stream(rest):
-        name = _get_object_name(object)
+    if kind not in ['service', 'deployment', 'job', 'daemonset']:
         k8s_resource(
             new_name=name,
             objects=[name],
-            labels=_get_object_labels(object),
-            )
-
-    namespaces, rest = filter_yaml(rest, kind='namespace')
-    for object in decode_yaml_stream(namespaces):
-        k8s_resource(
-            workload=_get_object_name(object),
-            labels=[object['metadata']['name'],]
         )
 
-    for object in decode_yaml_stream(rest):
-        # Depend on namespace creation
-        namespace = object['metadata'].get('namespace')
-        if namespace:
+    # Services don't get pod readiness notifications
+    if kind == 'service':
+        k8s_resource(
+            workload=name,
+            pod_readiness='ignore',
+        )
+
+    k8s_resource(
+        workload=name,
+        labels=_get_object_labels(resource)
+    )
+
+    # Make sure custom resources get dependencies on their CRDs
+    api_version = resource.get('apiVersion', '').split('/')
+    if len(api_version) == 2 and api_version[0] != 'apps' and not api_version[0].endswith('k8s.io'):
+        crd = crds.get(api_version[0], {}).get(kind)
+        if crd:
             k8s_resource(
-                workload=_get_object_name(object),
-                resource_deps=['{}:namespace'.format(namespace)]
+                workload=name,
+                resource_deps=[crd]
+            )
+        else:
+            print('couldnt find crd', api_version, kind)
+
+    # Make sure objects depend on their namespace
+    namespace = _get_object_field(resource, 'metadata.namespace', 'default')
+    if namespace not in ['default', 'kube-system']:
+        k8s_resource(
+            workload=name,
+            resource_deps=[_get_object_name(name=namespace, kind='Namespace')]
+        )
+
+    # Make sure deployments depend on their service accounts
+    if kind == 'deployment':
+        service_account = _get_object_field(resource, 'spec.template.spec.serviceAccountName')
+        if service_account:
+            k8s_resource(
+                workload=name,
+                resource_deps=[_get_object_name(name=service_account, kind='ServiceAccount', namespace=namespace)]
             )
 
-    # filter_yaml on labels doesn't seem to work, soooo
-    for resource in decode_yaml_stream(kustomized):
-        api_group = resource.get('metadata', {}).get('annotations', {}).get('tilt.dev/crd')
-        if api_group:
-            crd_deps, _ = filter_yaml(rest, api_version=api_group)
-            for dep in decode_yaml_stream(crd_deps):
-                k8s_resource(
-                    workload=_get_object_name(dep),
-                    resource_deps=[_get_object_name(resource)]
-                )
-
-        port_forward = resource.get('metadata').get('annotations', {}).get('tilt.dev/port-forward')
-        if port_forward:
-            k8s_resource(
-                workload=_get_object_name(resource),
-                port_forwards=[port_forward]
-            )
-
-k8s_yaml('flux-system/gotk-components.yaml')
-
-process_stack('.')
+    # Enable port-forwards via annotation
+    port_forward = _get_object_field(resource, 'metadata.annotations', {}).get('tilt.dev/port-forward')
+    if port_forward:
+        k8s_resource(
+            workload=name,
+            port_forwards=[port_forward],
+        )

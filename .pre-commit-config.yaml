@@ -4,6 +4,8 @@ default_install_hook_types:
   - pre-commit
   - commit-msg
 
+exclude: ^cue\.mod\/(?!module\.cue)
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -56,15 +58,3 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-
-  - repo: local
-    hooks:
-      - id: cue-lint
-        name: Lint CUE files
-        entry: cue
-        args: [cmd, lint, "./..."]
-        types: [cue]
-        pass_filenames: false
-        language: golang
-        additional_dependencies:
-          - cuelang.org/go/cmd/cue@v0.13.0

@@ -1,6 +1,6 @@
 module: "github.com/dislogical/autolab@v0"
 language: {
-	version: "v0.13.0"
+	version: "v0.12.0"
 }
 source: {
 	kind: "git"

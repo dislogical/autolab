@@ -17,18 +17,13 @@ jobs:
           SKIP: no-commit-to-branch
 
   tilt-ci:
-    name: Tilt CI - ${{ matrix.runtime.name }} - ${{ matrix.mode.name }}
+    name: Tilt CI - ${{ matrix.runtime.name }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
         runtime:
           - name: Kind
             create: ctlptl apply -f cluster-kind.yaml
-        mode:
-          - name: Tilt Mode
-            args: ""
-          - name: Flux Mode
-            args: --flux-mode
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -40,5 +35,5 @@ jobs:
       - name: Setup Cluster
         run: ${{ matrix.runtime.create }}
 
-      - name: Run Tilt CI (${{ matrix.mode.name }})
-        run: tilt ci -- ${{ matrix.mode.args }}
+      - name: Run Tilt CI
+        run: tilt ci
