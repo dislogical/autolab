@@ -11,8 +11,6 @@ def resource_name(id):
     return _get_object_name(name=id.name, kind=id.kind, namespace=id.namespace)
 workload_to_resource_function(resource_name)
 
-# k8s_yaml('flux-system/gotk-components.yaml')
-
 def _get_object_name(object = {}, name = None, kind = None, namespace = None, metadata=None):
     metadata = metadata or object.get('metadata', {}) or object
     name = name or metadata['name']
@@ -40,78 +38,84 @@ def _get_object_field(object, fields, default = None):
         current = current.get(field) if current else None
     return current or default
 
+watch_file('flux-system/gotk-components.yaml')
+flux = read_file('flux-system/gotk-components.yaml')
 
 watch_file('components')
 watch_file('platform')
-kustomized = local('holos render platform && holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml && kustomize build deploy', quiet=True)
+built = local('holos render platform && holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml && kustomize build deploy', quiet=True)
 
 # Make services get workloads
 k8s_kind('^Service$')
-k8s_yaml(kustomized)
 
-crd_yamls, _ = filter_yaml(kustomized, kind='CustomResourceDefinition', api_version='apiextensions.k8s.io')
 crds = {}
 
-for crd in decode_yaml_stream(crd_yamls):
-    group = _get_object_field(crd, 'spec.group')
-    kind = _get_object_field(crd, 'spec.names.kind').lower()
-    crds.setdefault(group, {})[kind] = _get_object_name(crd)
+for kustomized in [flux, built]:
 
-for resource in decode_yaml_stream(kustomized):
-    name = _get_object_name(resource)
-    kind = resource['kind'].lower()
+    k8s_yaml(kustomized)
 
-    if kind not in ['service', 'deployment', 'job', 'daemonset']:
-        k8s_resource(
-            new_name=name,
-            objects=[name],
-        )
+    crd_yamls, _ = filter_yaml(kustomized, kind='CustomResourceDefinition', api_version='apiextensions.k8s.io')
 
-    # Services don't get pod readiness notifications
-    if kind == 'service':
-        k8s_resource(
-            workload=name,
-            pod_readiness='ignore',
-        )
+    for crd in decode_yaml_stream(crd_yamls):
+        group = _get_object_field(crd, 'spec.group')
+        kind = _get_object_field(crd, 'spec.names.kind').lower()
+        crds.setdefault(group, {})[kind] = _get_object_name(crd)
 
-    k8s_resource(
-        workload=name,
-        labels=_get_object_labels(resource)
-    )
+    for resource in decode_yaml_stream(kustomized):
+        name = _get_object_name(resource)
+        kind = resource['kind'].lower()
 
-    # Make sure custom resources get dependencies on their CRDs
-    api_version = resource.get('apiVersion', '').split('/')
-    if len(api_version) == 2 and api_version[0] != 'apps' and not api_version[0].endswith('k8s.io'):
-        crd = crds.get(api_version[0], {}).get(kind)
-        if crd:
+        if kind not in ['service', 'deployment', 'job', 'daemonset']:
             k8s_resource(
-                workload=name,
-                resource_deps=[crd]
-            )
-        else:
-            print('couldnt find crd', api_version, kind)
-
-    # Make sure objects depend on their namespace
-    namespace = _get_object_field(resource, 'metadata.namespace', 'default')
-    if namespace not in ['default', 'kube-system']:
-        k8s_resource(
-            workload=name,
-            resource_deps=[_get_object_name(name=namespace, kind='Namespace')]
-        )
-
-    # Make sure deployments depend on their service accounts
-    if kind == 'deployment':
-        service_account = _get_object_field(resource, 'spec.template.spec.serviceAccountName')
-        if service_account:
-            k8s_resource(
-                workload=name,
-                resource_deps=[_get_object_name(name=service_account, kind='ServiceAccount', namespace=namespace)]
+                new_name=name,
+                objects=[name],
             )
 
-    # Enable port-forwards via annotation
-    port_forward = _get_object_field(resource, 'metadata.annotations', {}).get('tilt.dev/port-forward')
-    if port_forward:
+        # Services don't get pod readiness notifications
+        if kind == 'service':
+            k8s_resource(
+                workload=name,
+                pod_readiness='ignore',
+            )
+
         k8s_resource(
             workload=name,
-            port_forwards=[port_forward],
+            labels=_get_object_labels(resource)
         )
+
+        # Make sure custom resources get dependencies on their CRDs
+        api_version = resource.get('apiVersion', '').split('/')
+        if len(api_version) == 2 and api_version[0] != 'apps' and not api_version[0].endswith('k8s.io'):
+            crd = crds.get(api_version[0], {}).get(kind)
+            if crd:
+                k8s_resource(
+                    workload=name,
+                    resource_deps=[crd]
+                )
+            else:
+                print('couldnt find crd', api_version, kind)
+
+        # Make sure objects depend on their namespace
+        namespace = _get_object_field(resource, 'metadata.namespace', 'default')
+        if namespace not in ['default', 'kube-system']:
+            k8s_resource(
+                workload=name,
+                resource_deps=[_get_object_name(name=namespace, kind='Namespace')]
+            )
+
+        # Make sure deployments depend on their service accounts
+        if kind == 'deployment':
+            service_account = _get_object_field(resource, 'spec.template.spec.serviceAccountName')
+            if service_account:
+                k8s_resource(
+                    workload=name,
+                    resource_deps=[_get_object_name(name=service_account, kind='ServiceAccount', namespace=namespace)]
+                )
+
+        # Enable port-forwards via annotation
+        port_forward = _get_object_field(resource, 'metadata.annotations', {}).get('tilt.dev/port-forward')
+        if port_forward:
+            k8s_resource(
+                workload=name,
+                port_forwards=[port_forward],
+            )
