@@ -1,9 +1,7 @@
 tap "fluxcd/tap"
+tap "holos-run/tap"
 tap "siderolabs/tap"
 tap "tilt-dev/tap"
-
-# Validate and define text-based and dynamic configuration
-brew "cue"
 # Kubernetes package manager
 brew "helm"
 # Lightweight and flexible command-line JSON processor
@@ -26,6 +24,8 @@ brew "tilt"
 brew "yq"
 # Flux CLI
 brew "fluxcd/tap/flux"
+# Holos CLI
+brew "holos-run/tap/holos"
 # CLI for out-of-band management of Kubernetes nodes created by Talos
 brew "siderolabs/tap/talosctl"
 # Making local Kubernetes clusters easy to set up and tear down
