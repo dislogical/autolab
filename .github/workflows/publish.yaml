@@ -1,0 +1,49 @@
+name: Publish OCI Image
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  packages: write # needed for ghcr.io access
+
+env:
+  OCI_REGISTRY: ghcr.io
+  OCI_REPO: "oci://ghcr.io/dislogical/autolab/manifest"
+
+jobs:
+  publish:
+    name: Publish Contents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: ./.github/actions/setup-homebrew
+        with:
+          github-token: ${{ github.token }}
+
+      - name: Build Holos Platform
+        run: holos render platform
+
+      - name: Export Kustomization
+        run: holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.OCI_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+          logout: false
+
+      - name: Publish Artifacts
+        run: |
+          kustomize build deploy | flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) -f - \
+            --reproducible \
+            --source="$(git config --get remote.origin.url)" \
+            --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
+            --annotations='org.opencontainers.image.licenses=MIT' \
+            --annotations='org.opencontainers.image.source=https://github.com/dislogical/autolab'
+
+      - name: Tag Latest
+        run: |
+          flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag latest
