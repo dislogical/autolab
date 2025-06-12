@@ -57,8 +57,9 @@ Dns: {
 				name:     "gateway"
 			}
 			subjects: [{
-				kind: "ServiceAccount"
-				name: "coredns"
+				kind:      "ServiceAccount"
+				name:      "coredns"
+				namespace: Namespace.dns.metadata.name
 			}]
 		}
 	}
