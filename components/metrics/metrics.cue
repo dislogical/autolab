@@ -33,6 +33,7 @@ LoadBalancer: #Helm & {
 				}]
 			}
 		}
+		prometheusOperator: tls: enabled: false
 		grafana: route: main: {
 			enabled: true
 			hostnames: ["grafana.localhost"]
