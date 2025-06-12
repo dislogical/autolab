@@ -6,9 +6,9 @@ Gateway: {
 	Resources: {
 		Namespace: gateway: _
 
-		HTTPRoute: traefik_dashboard: {
+		HTTPRoute: traefik: {
 			metadata: {
-				namespace: "gateway"
+				namespace: Namespace.gateway.metadata.name
 			}
 			spec: {
 				parentRefs: [{
@@ -30,7 +30,7 @@ Gateway: {
 }
 
 Gateway: #Helm & {
-	Namespace: "gateway"
+	Namespace: Gateway.Resources.Namespace.gateway.metadata.name
 
 	Chart: {
 		name:    "traefik"
