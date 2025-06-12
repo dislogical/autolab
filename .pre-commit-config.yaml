@@ -4,6 +4,8 @@ default_install_hook_types:
   - pre-commit
   - commit-msg
 
+exclude: ^cue\.mod\/(?!module\.cue)
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
