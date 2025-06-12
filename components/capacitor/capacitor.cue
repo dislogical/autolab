@@ -1,15 +1,15 @@
-package autolab
+package holos
 
-import (
-	httproutev1 "github.com/orvis98/cue-schemas/gateway.networking.k8s.io/gateway.networking.k8s.io/httproute/v1"
-)
+holos: Capacitor.BuildPlan
 
-export: capacitor: {
-	httproute: httproutev1.#HTTPRoute & {
-		metadata: {
-			name:      "capacitor"
-			namespace: "flux-system"
+Capacitor: #Kustomize & {
+	KustomizeConfig: {
+		Resources: {
+			"https://raw.githubusercontent.com/gimlet-io/capacitor/main/deploy/k8s/rbac.yaml": _
 		}
+	}
+	Resources: HTTPRoute: capacitor: {
+		metadata: namespace: "flux-system"
 		spec: {
 			parentRefs: [{
 				kind:      "Gateway"
