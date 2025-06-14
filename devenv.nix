@@ -10,6 +10,7 @@
     kustomize
     kubernetes-helm
     kubeconform
+    kube-linter
     yq
 
     # Deployment

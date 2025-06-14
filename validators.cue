@@ -3,7 +3,6 @@ package holos
 #ComponentConfig: Validators: {
 	k8svalidate: {
 		kind: "Command"
-		// Note --path maps each resource to a top level field named by the kind.
 		command: args: [
 			"kubeconform",
 			"-schema-location", "default",
@@ -13,15 +12,14 @@ package holos
 			"-summary",
 		]
 	}
-	// kube_linter: {
-	// 	kind: "Command"
-	// 	// Note --path maps each resource to a top level field named by the kind.
-	// 	command: args: [
-	// 		"kube-linter",
-	// 		"lint",
-	// 		"--config", ".kube-linter.yaml",
-	// 	]
-	// }
+	kube_linter: {
+		kind: "Command"
+		command: args: [
+			"kube-linter",
+			"lint",
+			"--config", ".kube-linter.yaml",
+		]
+	}
 
 	config: {
 		kind: "Command"
