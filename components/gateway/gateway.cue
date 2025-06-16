@@ -60,7 +60,10 @@ Gateway: #Helm & {
 			"metallb.io/loadBalancerIPs": "10.42.42.1"
 			"tilt.dev/port-forward":      "8080:80"
 		}
-		gateway: listeners: web: namespacePolicy: "All"
-		// metrics: prometheus: serviceMonitor: enabled: true
+		gateway: listeners: web: namespacePolicy:     "All"
+		metrics: prometheus: serviceMonitor: enabled: true
 	}
+	APIVersions: [
+		"monitoring.coreos.com/v1",
+	]
 }
