@@ -16,7 +16,7 @@ Gateway: {
 					name: "traefik-gateway"
 				}]
 				hostnames: [
-					"traefik.localhost",
+					"traefik.\(env.external_url)",
 				]
 				rules: [{
 					backendRefs: [{

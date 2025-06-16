@@ -22,4 +22,11 @@ package holos
 	// 		"--config", ".kube-linter.yaml",
 	// 	]
 	// }
+
+	config: {
+		kind: "Command"
+		command: args: [
+			"holos", "cue", "vet", "-c", "./config",
+		]
+	}
 }

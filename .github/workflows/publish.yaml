@@ -22,7 +22,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Build Holos Platform
-        run: holos render platform
+        run: holos render platform -t env=prod
 
       - name: Export Kustomization
         run: holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml

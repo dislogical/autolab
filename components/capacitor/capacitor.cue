@@ -17,7 +17,7 @@ Capacitor: #Kustomize & {
 				name:      "traefik-gateway"
 				namespace: "gateway"
 			}]
-			hostnames: ["flux.localhost"]
+			hostnames: ["flux.\(env.external_url)"]
 			rules: [{
 				backendRefs: [{
 					kind: "Service"
