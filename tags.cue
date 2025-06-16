@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 
 	"github.com/holos-run/holos/api/core/v1alpha5:core"
+
+	"github.com/dislogical/autolab/config"
 )
 
 // Note: tags should have a reasonable default value for cue export.
@@ -32,3 +34,7 @@ _Tags: {
 		}
 	}
 }
+
+// Custom parameters
+_environment_name: string | *"dev" @tag(env, type=string)
+env:               config.config[_environment_name]

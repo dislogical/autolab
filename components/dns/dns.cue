@@ -110,11 +110,11 @@ Dns: #Helm & {
 				name: "loadbalance"
 			}, {
 				name:        "k8s_gateway"
-				parameters:  "localhost"
+				parameters:  "\(env.external_url)"
 				configBlock: "resources HTTPRoute"
 			}, {
 				name:       "cache"
-				parameters: "30 localhost"
+				parameters: "30 \(env.external_url)"
 			}, {
 				name:       "forward"
 				parameters: "ballard.coldencullen.com 10.0.1.1"

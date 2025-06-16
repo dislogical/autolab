@@ -31,7 +31,7 @@ KubernetesDashboard: Resources: {
 				name:      "traefik-gateway"
 				namespace: "gateway"
 			}]
-			hostnames: ["kubernetes.localhost"]
+			hostnames: ["kubernetes.\(env.external_url)"]
 			rules: [{
 				backendRefs: [{
 					kind: "Service"
