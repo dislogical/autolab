@@ -85,7 +85,7 @@ Dns: #Helm & {
 		}
 		serviceAccount: create: true
 		serviceType: "LoadBalancer"
-		service: loadBalancerIP: "10.42.42.2"
+		service: loadBalancerIP: "10.0.1.2"
 		servers: [{
 			zones: [{
 				zone:    "."

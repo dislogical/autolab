@@ -45,7 +45,7 @@ LoadBalancer: Resources: {
 		metadata: namespace: "load-balancer"
 		spec: {
 			avoidBuggyIPs: true
-			addresses: ["10.42.42.0/24"]
+			addresses: ["10.0.1.0/29"]
 		}
 	}
 	L2Advertisement: default: {
