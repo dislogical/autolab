@@ -2,6 +2,8 @@ tap "fluxcd/tap"
 tap "holos-run/tap"
 tap "siderolabs/tap"
 tap "tilt-dev/tap"
+# Task is a task runner/build tool that aims to be simpler and easier to use
+brew "go-task"
 # Kubernetes package manager
 brew "helm"
 # Lightweight and flexible command-line JSON processor
