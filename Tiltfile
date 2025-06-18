@@ -43,7 +43,9 @@ flux = read_file('flux-system/gotk-components.yaml')
 
 watch_file('components')
 watch_file('platform')
-built = local('holos render platform && holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml && kustomize build deploy', quiet=True)
+local('task build:dev', quiet=True)
+
+built = read_file('deploy/dev/kustomized.yaml')
 
 # Make services get workloads
 k8s_kind('^Service$')
