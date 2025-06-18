@@ -21,12 +21,6 @@ jobs:
         with:
           github-token: ${{ github.token }}
 
-      - name: Build Holos Platform
-        run: holos render platform -t env=prod
-
-      - name: Export Kustomization
-        run: holos cue export --out yaml ./platform -e kustomization > deploy/kustomization.yaml
-
       - name: Log in to the Container registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
@@ -35,14 +29,17 @@ jobs:
           password: ${{ github.token }}
           logout: false
 
+      - name: Build
+        run: task build:prod
+
       - name: Publish Artifacts
         run: |
-          kustomize build deploy | flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) -f - \
-            --reproducible \
-            --source="$(git config --get remote.origin.url)" \
-            --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
-            --annotations='org.opencontainers.image.licenses=MIT' \
-            --annotations='org.opencontainers.image.source=https://github.com/dislogical/autolab'
+          flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) -f deploy/prod/kustomized.yaml \
+          --reproducible \
+          --source="$(git config --get remote.origin.url)" \
+          --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
+          --annotations='org.opencontainers.image.licenses=MIT' \
+          --annotations='org.opencontainers.image.source=https://github.com/dislogical/autolab'
 
       - name: Tag Latest
         run: |
