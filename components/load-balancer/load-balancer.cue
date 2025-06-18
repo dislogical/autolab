@@ -43,7 +43,10 @@ LoadBalancer: Resources: {
 	IPAddressPool: default: {
 		apiVersion: "metallb.io/v1beta1"
 		metadata: namespace: "load-balancer"
-		spec: addresses: ["10.42.42.0/24"]
+		spec: {
+			avoidBuggyIPs: true
+			addresses: ["10.42.42.0/24"]
+		}
 	}
 	L2Advertisement: default: {
 		apiVersion: "metallb.io/v1beta1"
