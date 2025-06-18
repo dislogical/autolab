@@ -28,5 +28,8 @@ tasks:
       - export-kustomize
     cmds:
       - kustomize build ./deploy > deploy/kustomized.yaml
+    sources:
+      - deploy/components/**/*.yaml
+      - deploy/kustomization.yaml
     generates:
       - deploy/kustomized.yaml
