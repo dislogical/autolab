@@ -3,33 +3,52 @@ version: "3"
 output: prefixed
 
 tasks:
-  holos-render:
+  _common: &common
+    label: '{{ trimSuffix ":*" .TASK }}:{{ .TARGET_ENV }}'
+    prefix: '{{ trimSuffix ":*" .TASK }}:{{ .TARGET_ENV }}'
+    vars:
+      TARGET_ENV: "{{ index .MATCH 0 }}"
+
+  holos-render:*:
+    <<: *common
+    internal: true
     cmds:
-      - holos render platform
+      - holos render platform -t env={{ .TARGET_ENV }}
+    env:
+      HOLOS_WRITE_TO: deploy/{{ .TARGET_ENV }}
     sources:
       - platform/*.cue
       - components/**/*.cue
     generates:
-      - deploy/components/**/*.yaml
+      - deploy/{{ .TARGET_ENV }}/components/**/*.yaml
 
-  export-kustomize:
+  export-kustomize:*:
+    <<: *common
+    internal: true
+    deps:
+      - holos-render:{{ .TARGET_ENV }}
     cmds:
-      - holos cue export ./platform -e kustomization --out yaml > deploy/kustomization.yaml
+      - holos cue export ./platform -e kustomization --out yaml -t env={{ .TARGET_ENV }} > deploy/{{ .TARGET_ENV }}/kustomization.yaml
     sources:
       - platform/*.cue
     generates:
-      - deploy/kustomization.yaml
+      - deploy/{{ .TARGET_ENV }}/kustomization.yaml
+
+  build:*:
+    <<: *common
+    deps:
+      - export-kustomize:{{ .TARGET_ENV }}
+    cmds:
+      - kustomize build ./deploy/{{ .TARGET_ENV }} > deploy/{{ .TARGET_ENV }}/kustomized.yaml
+    sources:
+      - deploy/{{ .TARGET_ENV }}/components/**/*.yaml
+      - deploy/{{ .TARGET_ENV }}/kustomization.yaml
+    generates:
+      - deploy/{{ .TARGET_ENV }}/kustomized.yaml
 
   build:
     aliases:
       - default
     deps:
-      - holos-render
-      - export-kustomize
-    cmds:
-      - kustomize build ./deploy > deploy/kustomized.yaml
-    sources:
-      - deploy/components/**/*.yaml
-      - deploy/kustomization.yaml
-    generates:
-      - deploy/kustomized.yaml
+      - build:dev
+      - build:prod
