@@ -1,0 +1,32 @@
+version: "3"
+
+output: prefixed
+
+tasks:
+  holos-render:
+    cmds:
+      - holos render platform
+    sources:
+      - platform/*.cue
+      - components/**/*.cue
+    generates:
+      - deploy/components/**/*.yaml
+
+  export-kustomize:
+    cmds:
+      - holos cue export ./platform -e kustomization --out yaml > deploy/kustomization.yaml
+    sources:
+      - platform/*.cue
+    generates:
+      - deploy/kustomization.yaml
+
+  build:
+    aliases:
+      - default
+    deps:
+      - holos-render
+      - export-kustomize
+    cmds:
+      - kustomize build ./deploy > deploy/kustomized.yaml
+    generates:
+      - deploy/kustomized.yaml
