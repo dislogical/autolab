@@ -1,11 +1,9 @@
-tap "fluxcd/tap"
-tap "holos-run/tap"
-tap "siderolabs/tap"
-tap "tilt-dev/tap"
+# Making local Kubernetes clusters fun and easy to set up
+brew "ctlptl"
+# Lightweight scripting language for querying databases
+brew "flux"
 # Task is a task runner/build tool that aims to be simpler and easier to use
 brew "go-task"
-# Kubernetes package manager
-brew "helm"
 # Lightweight and flexible command-line JSON processor
 brew "jq"
 # Run local Kubernetes cluster in Docker
@@ -20,15 +18,13 @@ brew "kubernetes-cli"
 brew "kustomize"
 # Framework for managing multi-language pre-commit hooks
 brew "pre-commit"
+# CLI for out-of-band management of Kubernetes nodes created by Talos
+brew "talosctl"
 # Define your dev environment as code. For microservice apps on Kubernetes
 brew "tilt"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
-# Flux CLI
-brew "fluxcd/tap/flux"
+
+tap "holos-run/tap"
 # Holos CLI
 brew "holos-run/tap/holos"
-# CLI for out-of-band management of Kubernetes nodes created by Talos
-brew "siderolabs/tap/talosctl"
-# Making local Kubernetes clusters easy to set up and tear down
-brew "tilt-dev/tap/ctlptl"
