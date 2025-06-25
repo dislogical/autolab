@@ -6,6 +6,10 @@ default_install_hook_types:
 
 exclude: ^cue\.mod\/(?!module\.cue)
 
+ci:
+  skip:
+    - renovate-config-validator
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
