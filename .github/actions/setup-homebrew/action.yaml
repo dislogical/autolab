@@ -15,11 +15,11 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
 
     - name: Cache Homebrew
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      uses: actions/cache@v4
       id: cache-brew
       with:
         path: /home/linuxbrew/.linuxbrew
-        key: ${{ runner.os }}-${{ steps.brew-version.outputs.version }}
+        key: Homebrew-${{ runner.os }}-${{ steps.brew-version.outputs.version }}
 
     - name: Install Homebrew
       if: steps.cache-brew.outputs.cache-hit != 'true'
@@ -34,17 +34,21 @@ runs:
       run: echo ${{ env.HOMEBREW_PREFIX }}/bin:${{ env.HOMEBREW_PREFIX }}/sbin >> "$GITHUB_PATH"
       shell: bash
 
-    - name: Cache Homebew Bundle
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
-      id: cache-bundle
-      with:
-        path: |
-          ${{ env.HOMEBREW_CELLAR }}
-          ${{ env.HOMEBREW_PREFIX }}/bin
-          ${{ env.HOMEBREW_PREFIX }}/sbin
-        key: ${{ runner.os }}-${{ steps.brew-version.outputs.version }}-${{ hashFiles('Brewfile') }}
+    # Disabled for now: cache doesn't work with relative paths
+    # - name: Cache Homebew Bundle
+    #   uses: actions/cache@v4
+    #   id: cache-bundle
+    #   with:
+    #     path: ${{ env.HOMEBREW_CELLAR }}
+    #     key: Homebrew-${{ runner.os }}-${{ steps.brew-version.outputs.version }}-Bundle-${{ hashFiles('Brewfile') }}
 
     - name: Install Homebrew Bundle
-      if: steps.cache-bundle.outputs.cache-hit != 'true'
+      # if: steps.cache-bundle.outputs.cache-hit != 'true' #CACHE
       run: brew bundle install
       shell: bash
+
+    # CACHE
+    # - name: Link Homebrew Bundle
+    #   if: steps.cache-bundle.outputs.cache-hit == 'true'
+    #   run: brew bundle list | xargs brew link
+    #   shell: bash
