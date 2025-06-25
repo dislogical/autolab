@@ -18,7 +18,7 @@ LoadBalancer: #Helm & {
 	Values: {
 		controller: {
 			repository: "quay.io/metallb/controller"
-			tag:        "v0.14.9"
+			tag:        "v0.15.2"
 		}
 		speaker: {
 			image: {
