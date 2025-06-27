@@ -37,7 +37,14 @@ LoadBalancer: #Helm & {
 
 LoadBalancer: Resources: {
 	Namespace: load_balancer: {
-		metadata: name: "load-balancer"
+		metadata: {
+			name: "load-balancer"
+			labels: {
+				"pod-security.kubernetes.io/enforce": "privileged"
+				"pod-security.kubernetes.io/audit":   "privileged"
+				"pod-security.kubernetes.io/warn":    "privileged"
+			}
+		}
 	}
 
 	IPAddressPool: default: {
