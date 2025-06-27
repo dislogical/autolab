@@ -1,7 +1,5 @@
 # Making local Kubernetes clusters fun and easy to set up
 brew "ctlptl"
-# Lightweight scripting language for querying databases
-brew "flux"
 # Task is a task runner/build tool that aims to be simpler and easier to use
 brew "go-task"
 # Lightweight and flexible command-line JSON processor
@@ -24,6 +22,10 @@ brew "talosctl"
 brew "tilt"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
+
+tap "fluxcd/tap"
+# Flux CLI
+brew "fluxcd/tap/flux"
 
 tap "holos-run/tap"
 # Holos CLI
