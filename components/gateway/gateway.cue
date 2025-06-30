@@ -76,7 +76,7 @@ Gateway: #Helm & {
 		}
 
 		ports: {
-			web: http: redirections: entrypoint: {
+			web: redirections: entryPoint: {
 				to:     "websecure"
 				scheme: "https"
 			}
