@@ -74,6 +74,15 @@ Gateway: #Helm & {
 			"metallb.io/loadBalancerIPs": "10.0.1.3"
 			"tilt.dev/port-forward":      "8080:80"
 		}
+
+		ports: {
+			web: http: redirections: entrypoint: {
+				to:     "websecure"
+				scheme: "https"
+			}
+			websecure: asDefault: true
+		}
+
 		gateway: listeners: {
 			web: {
 				namespacePolicy: "All"
