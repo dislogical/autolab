@@ -26,6 +26,20 @@ Gateway: {
 				}]
 			}
 		}
+
+		Certificate: default: {
+			metadata: namespace: Namespace.gateway.metadata.name
+			spec: {
+				secretName: "default-tls" //pragma: allowlist secret
+				dnsNames: [
+					env.external_url,
+				]
+				issuerRef: {
+					name: env.cert_issuer
+					kind: "Issuer"
+				}
+			}
+		}
 	}
 }
 
@@ -60,7 +74,19 @@ Gateway: #Helm & {
 			"metallb.io/loadBalancerIPs": "10.0.1.3"
 			"tilt.dev/port-forward":      "8080:80"
 		}
-		gateway: listeners: web: namespacePolicy:     "All"
+		gateway: listeners: {
+			web: {
+				namespacePolicy: "All"
+			}
+			websecure: {
+				port:            8443
+				protocol:        "HTTPS"
+				namespacePolicy: "All"
+				certificateRefs: [{
+					name: Gateway.Resources.Certificate.default.metadata.name
+				}]
+			}
+		}
 		metrics: prometheus: serviceMonitor: enabled: true
 	}
 	APIVersions: [
