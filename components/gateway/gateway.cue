@@ -92,7 +92,7 @@ Gateway: #Helm & {
 				protocol:        "HTTPS"
 				namespacePolicy: "All"
 				certificateRefs: [{
-					name: Gateway.Resources.Certificate.default.metadata.name
+					name: Gateway.Resources.Certificate.default.spec.secretName
 				}]
 			}
 		}
