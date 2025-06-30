@@ -19,6 +19,7 @@ Platform: author.#Platform & {
 	Components: {
 		dns:                  _
 		gateway:              _
+		cert_manager:         _
 		kubernetes_dashboard: _
 		load_balancer:        _
 		metrics:              _

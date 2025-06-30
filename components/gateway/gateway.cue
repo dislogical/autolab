@@ -26,6 +26,20 @@ Gateway: {
 				}]
 			}
 		}
+
+		Certificate: default: {
+			metadata: namespace: Namespace.gateway.metadata.name
+			spec: {
+				secretName: "default-tls" //pragma: allowlist secret
+				dnsNames: [
+					env.external_url,
+				]
+				issuerRef: {
+					name: env.cert_issuer
+					kind: "Issuer"
+				}
+			}
+		}
 	}
 }
 
