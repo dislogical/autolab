@@ -58,6 +58,6 @@ LoadBalancer: Resources: {
 	L2Advertisement: default: {
 		apiVersion: "metallb.io/v1beta1"
 		metadata: namespace: "load-balancer"
-		spec: ipAddressPools: ["default-pool"]
+		spec: ipAddressPools: [IPAddressPool.default.metadata.name]
 	}
 }
