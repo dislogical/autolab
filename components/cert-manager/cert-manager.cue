@@ -31,6 +31,9 @@ CertManager: #Helm & {
 			repository: "jetstack/cert-manager-acmesolver"
 			tag:        "v1.17.2"
 		}
+
+		config: featureGates: ServerSideApply: true
+
 		prometheus: {
 			servicemonitor: enabled: true
 			podmonitor: enabled:     false
