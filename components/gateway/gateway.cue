@@ -32,7 +32,7 @@ Gateway: {
 			spec: {
 				secretName: "gw-tls-\(env.cert_issuer)" //pragma: allowlist secret
 				dnsNames: [
-					env.external_url,
+					"*.\(env.external_url)",
 				]
 				issuerRef: {
 					name: env.cert_issuer
