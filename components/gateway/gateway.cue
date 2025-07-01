@@ -30,7 +30,7 @@ Gateway: {
 		Certificate: default: {
 			metadata: namespace: Namespace.gateway.metadata.name
 			spec: {
-				secretName: "default-tls" //pragma: allowlist secret
+				secretName: "gw-tls-\(env.cert_issuer)" //pragma: allowlist secret
 				dnsNames: [
 					env.external_url,
 				]
