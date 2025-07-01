@@ -96,8 +96,6 @@ Dns: #Helm & {
 			plugins: [{
 				name: "any"
 			}, {
-				name: "debug"
-			}, {
 				name: "errors"
 			}, {
 				name: "health"
