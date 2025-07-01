@@ -1,0 +1,24 @@
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: github-dislogical-autolab
+  namespace: flux-system
+spec:
+  type: github
+  address: https://github.com/dislogical/autolab
+  secretRef:
+    name: github-login-secret
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  providerRef:
+    name: github-dislogical-autolab
+  eventSeverity: info
+  eventSources:
+    - kind: Kustomization
+      name: flux-system
+      namespace: flux-system
