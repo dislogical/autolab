@@ -14,6 +14,8 @@ Headlamp: #Helm & {
 		}
 	}
 	Values: {
+		config: watchPlugins: true
+
 		pluginsManager: {
 			enabled: true
 			configContent: yaml.Marshal({
