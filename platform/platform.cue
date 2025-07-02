@@ -17,6 +17,7 @@ Platform: author.#Platform & {
 	}
 
 	Components: {
+		metrics_server:       _
 		dns:                  _
 		gateway:              _
 		cert_manager:         _
