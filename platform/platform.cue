@@ -25,6 +25,7 @@ Platform: author.#Platform & {
 		metrics:              _
 		postgres:             _
 		capacitor:            _
+		headlamp:             _
 	}
 }
 
