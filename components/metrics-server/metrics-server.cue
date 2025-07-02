@@ -11,6 +11,10 @@ MetricsServer: #Helm & {
 			url:  "https://kubernetes-sigs.github.io/metrics-server/"
 		}
 	}
-	Values: {}
+	Values: {
+		args: [
+			"--kubelet-insecure-tls",
+		]
+	}
 	KustomizeConfig: Kustomization: namespace: "kube-system"
 }
