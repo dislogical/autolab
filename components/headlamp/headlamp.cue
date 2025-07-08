@@ -7,7 +7,7 @@ holos: Headlamp.BuildPlan
 Headlamp: #Helm & {
 	Chart: {
 		name:    "headlamp"
-		version: "0.31.1"
+		version: "0.32.1"
 		repository: {
 			name: "headlamp"
 			url:  "https://kubernetes-sigs.github.io/headlamp"
