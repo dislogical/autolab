@@ -17,15 +17,14 @@ Platform: author.#Platform & {
 	}
 
 	Components: {
-		metrics_server:       _
-		dns:                  _
-		gateway:              _
-		cert_manager:         _
-		kubernetes_dashboard: _
-		load_balancer:        _
-		metrics:              _
-		postgres:             _
-		headlamp:             _
+		metrics_server: _
+		dns:            _
+		gateway:        _
+		cert_manager:   _
+		load_balancer:  _
+		metrics:        _
+		postgres:       _
+		headlamp:       _
 	}
 }
 
