@@ -14,7 +14,12 @@ Headlamp: #Helm & {
 		}
 	}
 	Values: {
-		config: watchPlugins: true
+		config: {
+			watchPlugins: true
+			extraArgs: [
+				"-otlp-endpoint=''",
+			]
+		}
 
 		pluginsManager: {
 			enabled: true
