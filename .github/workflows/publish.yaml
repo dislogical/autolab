@@ -30,7 +30,7 @@ jobs:
           logout: false
 
       - name: Build
-        run: task build:prod
+        run: task render:prod
 
       - name: Publish Artifacts
         run: |
