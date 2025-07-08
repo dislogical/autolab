@@ -43,7 +43,7 @@ flux = read_file('flux-system/gotk-components.yaml')
 
 watch_file('components')
 watch_file('platform')
-local('task build:dev', quiet=True)
+local('task render:dev', quiet=True)
 
 built = read_file('deploy/dev/kustomized.yaml')
 
