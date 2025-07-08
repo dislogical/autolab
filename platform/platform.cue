@@ -25,7 +25,6 @@ Platform: author.#Platform & {
 		load_balancer:        _
 		metrics:              _
 		postgres:             _
-		capacitor:            _
 		headlamp:             _
 	}
 }
