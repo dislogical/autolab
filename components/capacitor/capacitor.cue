@@ -5,8 +5,7 @@ holos: Capacitor.BuildPlan
 Capacitor: #Kustomize & {
 	KustomizeConfig: {
 		Resources: {
-			"https://raw.githubusercontent.com/gimlet-io/capacitor/main/deploy/k8s/rbac.yaml":     _
-			"https://raw.githubusercontent.com/gimlet-io/capacitor/main/deploy/k8s/manifest.yaml": _
+			"https://github.com/gimlet-io/capacitor/deploy/k8s?ref=capacitor-v0.4.8": _
 		}
 	}
 	Resources: HTTPRoute: capacitor: {
