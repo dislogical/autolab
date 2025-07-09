@@ -15,12 +15,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - uses: ./.github/actions/setup-homebrew
+      - uses: cachix/install-nix-action@v25
         with:
-          github-token: ${{ github.token }}
+          nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Setup Cluster
-        run: ${{ matrix.runtime.create }}
+        run: nix-shell --run "${{ matrix.runtime.create }}"
 
       - name: Run Tilt CI
-        run: tilt ci
+        run: nix-shell --run "tilt ci"
