@@ -17,9 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: ./.github/actions/setup-homebrew
+
+      - uses: cachix/install-nix-action@v25
         with:
-          github-token: ${{ github.token }}
+          nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Log in to the Container registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
@@ -30,17 +31,17 @@ jobs:
           logout: false
 
       - name: Build
-        run: task render:prod
+        run: nix-shell --run "task render:prod"
 
       - name: Publish Artifacts
         run: |
-          flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) -f deploy/prod/kustomized.yaml \
+          nix-shell --run "flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) -f deploy/prod/kustomized.yaml \
           --reproducible \
-          --source="$(git config --get remote.origin.url)" \
-          --revision="$(git branch --show-current)@sha1:$(git rev-parse HEAD)" \
+          --source=$(git config --get remote.origin.url) \
+          --revision=$(git branch --show-current)@sha1:$(git rev-parse HEAD) \
           --annotations='org.opencontainers.image.licenses=MIT' \
-          --annotations='org.opencontainers.image.source=https://github.com/dislogical/autolab'
+          --annotations='org.opencontainers.image.source=https://github.com/dislogical/autolab'"
 
       - name: Tag Latest
         run: |
-          flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag latest
+          nix-shell --run "flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag latest"
