@@ -107,18 +107,18 @@ Dns: #Helm & {
 			}, {
 				name: "loadbalance"
 			}, {
+				name:       "forward"
+				parameters: "ballard.coldencullen.com 10.0.1.1"
+			}, {
+				name:       "forward"
+				parameters: "mission.coldencullen.com 10.1.1.1"
+			}, {
 				name:        "k8s_gateway"
 				parameters:  "\(env.external_url)"
 				configBlock: "resources HTTPRoute"
 			}, {
 				name:       "cache"
 				parameters: "30 \(env.external_url)"
-			}, {
-				name:       "forward"
-				parameters: "ballard.coldencullen.com 10.0.1.1"
-			}, {
-				name:       "forward"
-				parameters: "mission.coldencullen.com 10.1.1.1"
 			}, {
 				name:       "forward"
 				parameters: ". tls://1.1.1.1 tls://1.0.0.1"

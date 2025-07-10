@@ -25,7 +25,7 @@ LoadBalancer: #Helm & {
 			}
 			route: main: {
 				enabled: true
-				hostnames: ["prometheus.\(env.external_url)"]
+				hostnames: ["prometheus.services.\(env.external_url)"]
 				parentRefs: [{
 					kind:      "Gateway"
 					name:      "traefik-gateway"
@@ -36,7 +36,7 @@ LoadBalancer: #Helm & {
 		prometheusOperator: tls: enabled: false
 		grafana: route: main: {
 			enabled: true
-			hostnames: ["grafana.\(env.external_url)"]
+			hostnames: ["grafana.services.\(env.external_url)"]
 			parentRefs: [{
 				kind:      "Gateway"
 				name:      "traefik-gateway"
