@@ -1,20 +1,27 @@
 { pkgs ? import <nixpkgs> {} }:
-pkgs.mkShell {
-  packages = with pkgs; [
-    # Build Tools
-    go-task
-    holos
-    kustomize
-    kubernetes-helm
-    kubeconform
-    yq
+let
+  pythonEnv = pkgs.python3.withPackages(p: with p; [
+    pyyaml
+  ]);
+in
+  pkgs.mkShell {
+    packages = with pkgs; [
+      pythonEnv
 
-    # Deployment
-    fluxcd
+      # Build Tools
+      go-task
+      holos
+      kustomize
+      kubernetes-helm
+      kubeconform
+      yq
 
-    # Test Environment
-    ctlptl
-    kind
-    tilt
-  ];
-}
+      # Deployment
+      fluxcd
+
+      # Test Environment
+      ctlptl
+      kind
+      tilt
+    ];
+  }
