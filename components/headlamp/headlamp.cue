@@ -59,7 +59,7 @@ Headlamp: {
 					name:      "traefik-gateway"
 					namespace: "gateway"
 				}]
-				hostnames: [env.external_url]
+				hostnames: ["services.\(env.external_url)"]
 				rules: [{
 					backendRefs: [{
 						kind: "Service"

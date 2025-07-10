@@ -34,6 +34,7 @@ Gateway: {
 				dnsNames: [
 					env.external_url,
 					"*.\(env.external_url)",
+					"*.services.\(env.external_url)"
 				]
 				issuerRef: {
 					name: env.cert_issuer
