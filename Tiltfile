@@ -121,3 +121,11 @@ for kustomized in [flux, built]:
                 workload=name,
                 port_forwards=[port_forward],
             )
+
+        # Enable explicit dependencies
+        depends_on = _get_object_field(resource, 'metadata.annotations', {}).get('tilt.dev/depends-on')
+        if depends_on:
+            k8s_resource(
+                workload=name,
+                resource_deps=depends_on.split(','),
+            )

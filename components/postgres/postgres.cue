@@ -5,6 +5,8 @@ import (
 	"github.com/holos-run/holos/api/author/v1alpha5:author"
 )
 
+let _namespace = "postgres"
+
 holos: core.#BuildPlan & Postgres.BuildPlan
 
 Postgres: #ComponentConfig & {
@@ -19,7 +21,7 @@ Postgres: #ComponentConfig & {
 				kind:   "Helm"
 				output: "helm.postgres.gen.yaml"
 				helm: core.#Helm & {
-					namespace: Resources.Namespace.postgres.metadata.name
+					namespace: _namespace
 					chart: {
 						name:    "cloudnative-pg"
 						release: "postgres"
@@ -42,7 +44,7 @@ Postgres: #ComponentConfig & {
 				kind:   "Helm"
 				output: "helm.cluseter.gen.yaml"
 				helm: core.#Helm & {
-					namespace: Resources.Namespace.postgres.metadata.name
+					namespace: _namespace
 					chart: {
 						name:    "cluster"
 						release: "cluster"
@@ -57,9 +59,13 @@ Postgres: #ComponentConfig & {
 							instances: 2
 							postgresql: parameters: {
 								max_connections: "200"
-								shared_buffers: "2GB"
+								shared_buffers:  "2GB"
 							}
 							initdb: owner: "system"
+
+							annotations: {
+								"tilt.dev/depends-on": "postgres-cloudnative-pg:Deployment:\(_namespace)"
+							}
 						}
 
 						monitoring: enabled: true
