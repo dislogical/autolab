@@ -86,47 +86,75 @@ Dns: #Helm & {
 		serviceAccount: create: true
 		serviceType: "LoadBalancer"
 		service: loadBalancerIP: "10.0.1.2"
-		servers: [{
-			zones: [{
-				zone:    "."
-				scheme:  "dns://"
-				use_tcp: true
-			}]
-			port: 53
-			plugins: [{
-				name: "any"
-			}, {
-				name: "errors"
-			}, {
-				name: "health"
-			}, {
-				name: "ready"
-			}, {
-				name:       "prometheus"
-				parameters: "0.0.0.0:9153"
-			}, {
-				name: "loadbalance"
-			}, {
-				name:       "forward"
-				parameters: "ballard.coldencullen.com 10.0.1.1"
-			}, {
-				name:       "forward"
-				parameters: "mission.coldencullen.com 10.1.1.1"
-			}, {
-				name:        "k8s_gateway"
-				parameters:  "\(env.external_url)"
-				configBlock: "resources HTTPRoute"
-			}, {
-				name:       "cache"
-				parameters: "30 \(env.external_url)"
-			}, {
-				name:       "forward"
-				parameters: ". tls://1.1.1.1 tls://1.0.0.1"
-				configBlock: """
-					tls
-					tls_servername one.one.one.one
-					"""
-			}]
+
+		// Snippets
+		let _common_plugins = [{
+			name: "cache"
+		}, {
+			name:        "log"
+			parameters:  ". \"{combined}\""
+			configBlock: "class denial error"
 		}]
+		servers: [
+			// Site URLs
+			for site in [{name: "ballard", upstream: "10.0.1.1"}, {name: "mission", upstream: "10.1.1.1"}] {
+				zones: [{
+					zone: "\(site.name).\(env.external_url)"
+				}]
+				port: 53
+				plugins: [
+					for plugin in _common_plugins {plugin},
+					{
+						name:       "forward"
+						parameters: ". \(site.upstream)"
+					},
+				]
+			},
+
+			// Services
+			{
+				zones: [{
+					zone: env.external_url
+				}]
+				port: 53
+				plugins: [
+					for plugin in _common_plugins {plugin},
+					{
+						name:        "k8s_gateway"
+						configBlock: "resources HTTPRoute"
+					},
+				]
+			},
+
+			// Global block
+			{
+				port: 53
+				plugins: [
+					for plugin in _common_plugins {plugin},
+					{
+						name: "any"
+					}, {
+						name: "errors"
+					}, {
+						name: "health"
+					}, {
+						name: "ready"
+					}, {
+						name:       "prometheus"
+						parameters: "0.0.0.0:9153"
+					}, {
+						name:       "reload"
+						parameters: "30s 5s"
+					}, {
+						name:       "forward"
+						parameters: ". tls://1.1.1.1 tls://1.0.0.1"
+						configBlock: """
+						tls
+						tls_servername one.one.one.one
+						"""
+					},
+				]
+			},
+		]
 	}
 }
