@@ -1,16 +1,41 @@
 package holos
 
 import (
+	"strings"
+
 	"github.com/holos-run/holos/api/core/v1alpha5:core"
 	"github.com/holos-run/holos/api/author/v1alpha5:author"
 )
 
 let _namespace = "postgres"
+let _cluster_name = "cluster"
 
 holos: core.#BuildPlan & Postgres.BuildPlan
 
 Postgres: #ComponentConfig & {
-	Resources: Namespace: postgres: _
+	Resources: {
+		Namespace: postgres: _
+
+		NetworkPolicy: allow_webhooks: {
+			apiVersion: "networking.k8s.io/v1"
+			metadata: {
+				name:      "allow-webhooks"
+				namespace: _namespace
+			}
+			spec: {
+				namespaceSelector: matchLabels: "kubernetes.io/metadata.name": _namespace
+				podSelector: matchLabels: "app.kubernetes.io/name":            "cloudnative-pg" // Matches the Operator pod
+				policyTypes: [
+					"Ingress"
+				]
+				ingress: [{
+					ports: [{
+						port: 9443
+					}]
+				}]
+			}
+		}
+	}
 
 	KustomizeConfig: author.#KustomizeConfig
 
@@ -31,9 +56,6 @@ Postgres: #ComponentConfig & {
 							url:  "https://cloudnative-pg.github.io/charts"
 						}
 					}
-					values: {
-						webhook: readinessProbe: initialDelaySeconds: 15
-					}
 					enableHooks: true
 				}
 			},
@@ -43,7 +65,7 @@ Postgres: #ComponentConfig & {
 				helm: core.#Helm & {
 					namespace: _namespace
 					chart: {
-						name:    "cluster"
+						name:    _cluster_name
 						release: "cluster"
 						version: "0.3.1"
 						repository: {
@@ -61,7 +83,11 @@ Postgres: #ComponentConfig & {
 							initdb: owner: "system"
 
 							annotations: {
-								"tilt.dev/depends-on": "postgres-cloudnative-pg:Deployment:\(_namespace)"
+								"tilt.dev/depends-on": strings.Join([
+									"postgres-cloudnative-pg:Deployment:\(_namespace)",
+									"cnpg-mutating-webhook-configuration:MutatingWebhookConfiguration:default",
+									"allow-webhooks:NetworkPolicy:\(_namespace)"
+									], ",")
 							}
 						}
 
