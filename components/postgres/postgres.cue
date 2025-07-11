@@ -32,17 +32,14 @@ Postgres: #ComponentConfig & {
 						}
 					}
 					values: {
-						cluster: {
-							instances: 2
-							monitoring: enabled: true
-						}
+						webhook: readinessProbe: initialDelaySeconds: 15
 					}
 					enableHooks: true
 				}
 			},
 			{
 				kind:   "Helm"
-				output: "helm.cluseter.gen.yaml"
+				output: "helm.cluster.gen.yaml"
 				helm: core.#Helm & {
 					namespace: _namespace
 					chart: {
