@@ -70,7 +70,7 @@ Dns: #Helm & {
 
 	Chart: {
 		name:    "coredns"
-		version: "1.42.2"
+		version: "1.43.0"
 		repository: {
 			name: "coredns"
 			url:  "https://coredns.github.io/helm"
