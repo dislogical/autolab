@@ -26,7 +26,7 @@ Postgres: #ComponentConfig & {
 				namespaceSelector: matchLabels: "kubernetes.io/metadata.name": _namespace
 				podSelector: matchLabels: "app.kubernetes.io/name":            "cloudnative-pg" // Matches the Operator pod
 				policyTypes: [
-					"Ingress"
+					"Ingress",
 				]
 				ingress: [{
 					ports: [{
@@ -67,11 +67,12 @@ Postgres: #ComponentConfig & {
 					chart: {
 						name:    _cluster_name
 						release: "cluster"
-						version: "0.3.1"
 						repository: {
 							name: "cloudnative-pg"
 							url:  "https://cloudnative-pg.github.io/charts"
 						}
+						// Intentionally break ordering to not confuse Renovate
+						version: "0.3.1"
 					}
 					values: {
 						cluster: {
@@ -86,8 +87,8 @@ Postgres: #ComponentConfig & {
 								"tilt.dev/depends-on": strings.Join([
 									"postgres-cloudnative-pg:Deployment:\(_namespace)",
 									"cnpg-mutating-webhook-configuration:MutatingWebhookConfiguration:default",
-									"allow-webhooks:NetworkPolicy:\(_namespace)"
-									], ",")
+									"allow-webhooks:NetworkPolicy:\(_namespace)",
+								], ",")
 							}
 						}
 
