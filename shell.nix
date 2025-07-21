@@ -10,6 +10,7 @@ in
 
       # Build Tools
       go-task
+      cue
       holos
       kustomize
       kubernetes-helm
