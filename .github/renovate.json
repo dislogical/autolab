@@ -12,6 +12,14 @@
       "enabled": false
     }
   ],
+  "customManagers": [{
+    "customType": "regex",
+    "datasourceTemplate": "helm",
+    "managerFilePatterns": ["/components/.*\\.cue$/"],
+    "matchStrings": [
+      "version:\\s*\"(?<currentValue>\\S+)\"\\s*repository:\\s*{\\s*name:\\s*\"(?<depName>\\S+)\"\\s*url:\\s*\"(?<registryUrl>\\S+)\"\\s*}"
+    ]
+  }],
   "renovate-config-presets": {
     "managerFilePatterns": [".github/renovate.json"]
   },
