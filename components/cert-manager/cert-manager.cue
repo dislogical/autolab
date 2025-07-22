@@ -16,21 +16,6 @@ CertManager: #Helm & {
 	Values: {
 		crds: enabled: true
 		global: leaderElection: namespace: Namespace
-		image: {
-			registry:   "quay.io"
-			repository: "jetstack/cert-manager-controller"
-			tag:        "v1.17.2"
-		}
-		webhook: image: {
-			registry:   "quay.io"
-			repository: "jetstack/cert-manager-webhook"
-			tag:        "v1.17.2"
-		}
-		acmesolver: image: {
-			registry:   "quay.io"
-			repository: "jetstack/cert-manager-acmesolver"
-			tag:        "v1.17.2"
-		}
 
 		config: featureGates: ServerSideApply: true
 

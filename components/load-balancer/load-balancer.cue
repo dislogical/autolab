@@ -16,15 +16,7 @@ LoadBalancer: #Helm & {
 		}
 	}
 	Values: {
-		controller: {
-			repository: "quay.io/metallb/controller"
-			tag:        "v0.15.2"
-		}
 		speaker: {
-			image: {
-				repository: "quay.io/metallb/speaker"
-				tag:        "v0.15.2@sha256:260c9406f957c0830d4e6cd2e9ac8c05e51ac959dd2462c4c2269ac43076665a"
-			}
 			frr: enabled: false
 		}
 		prometheus: {
