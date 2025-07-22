@@ -34,7 +34,7 @@ Gateway: {
 				dnsNames: [
 					env.external_url,
 					"*.\(env.external_url)",
-					"*.services.\(env.external_url)"
+					"*.services.\(env.external_url)",
 				]
 				issuerRef: {
 					name: env.cert_issuer
@@ -57,12 +57,6 @@ Gateway: #Helm & {
 		}
 	}
 	Values: {
-		image: {
-			registry:   "docker.io"
-			repository: "traefik"
-			tag:        "v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a"
-		}
-
 		providers: {
 			kubernetesIngress: enabled: false
 			kubernetesCRD: enabled:     false
