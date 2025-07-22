@@ -80,7 +80,7 @@ Dns: #Helm & {
 		isClusterService: false
 		image: {
 			repository: "ghcr.io/k8s-gateway/k8s_gateway"
-			tag:        "1.2.1@sha256:7830e736192ec17039a0c6f5302d025e93cc323b15b8e74c69fcdeb895062a5b"
+			tag:        "1.5.1"
 			pullPolicy: "IfNotPresent"
 		}
 		serviceAccount: create: true
