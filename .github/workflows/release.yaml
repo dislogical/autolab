@@ -34,6 +34,7 @@ jobs:
           increment: ${{ inputs.increment }}
           prerelease: ${{ inputs.prerelease }}
           changelog_increment_filename: release.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish Release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
