@@ -28,14 +28,14 @@ jobs:
 
       - name: Bump Version
         id: cz
-        uses: commitizen-tools/commitizen-action@0.24.0
+        uses: commitizen-tools/commitizen-action@5b0848cd060263e24602d1eba03710e056ef7711 # 0.24.0
         with:
           increment: ${{ inputs.increment }}
           prerelease: ${{ inputs.prerelease }}
           changelog_increment_filename: release.md
 
       - name: Publish Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           body_path: release.md
           tag_name: ${{ steps.cz.outputs.version }}
