@@ -10,7 +10,7 @@ jobs:
       matrix:
         runtime:
           - name: Kind
-            create: ctlptl apply -f cluster-kind.yaml
+            create: kind create cluster --config=kind.yaml
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
