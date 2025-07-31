@@ -11,11 +11,10 @@ tmp/
 deploy/
 .task/
 
-# Created by https://www.toptal.com/developers/gitignore/api/direnv
-# Edit at https://www.toptal.com/developers/gitignore?templates=direnv
 
-### direnv ###
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
 .direnv
-.envrc
-
-# End of https://www.toptal.com/developers/g
