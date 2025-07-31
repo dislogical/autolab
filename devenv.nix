@@ -16,7 +16,6 @@
     fluxcd
 
     # Test Environment
-    ctlptl
     kind
     tilt
   ];
