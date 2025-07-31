@@ -35,7 +35,7 @@ jobs:
           changelog_increment_filename: release.md
 
       - name: Publish Release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
         with:
           body_path: release.md
           tag_name: ${{ steps.cz.outputs.version }}
