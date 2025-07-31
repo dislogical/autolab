@@ -7,10 +7,6 @@ on:
 permissions:
   packages: write # needed for ghcr.io access
 
-env:
-  OCI_REGISTRY: ghcr.io
-  OCI_REPO: "oci://ghcr.io/dislogical/autolab/manifest"
-
 jobs:
   publish:
     name: Publish Contents
@@ -22,26 +18,20 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 
+      - uses: cachix/cachix-action@v16
+        with:
+          name: devenv
+
       - name: Log in to the Container registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
         with:
-          registry: ${{ env.OCI_REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
           logout: false
 
-      - name: Build
-        run: nix-shell --run "task render:prod"
+      - name: Install devenv.sh
+        run: nix profile install nixpkgs#devenv
 
-      - name: Publish Artifacts
-        run: |
-          nix-shell --run "flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) -f deploy/prod/kustomized.yaml \
-          --reproducible \
-          --source=$(git config --get remote.origin.url) \
-          --revision=$(git branch --show-current)@sha1:$(git rev-parse HEAD) \
-          --annotations='org.opencontainers.image.licenses=MIT' \
-          --annotations='org.opencontainers.image.source=https://github.com/dislogical/autolab'"
-
-      - name: Tag Latest
-        run: |
-          nix-shell --run "flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag latest"
+      - name: Build & Publish Artifacts
+        run: devenv shell publish-manifest
