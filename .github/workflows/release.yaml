@@ -1,0 +1,41 @@
+name: Publish Release
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: The type of version bump to perform
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+      prerelease:
+        description: The type of version bump to perform
+        required: false
+        type: choice
+        options:
+          - alpha
+          - beta
+          - rc
+
+jobs:
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout
+
+      - name: Bump Version
+        id: cz
+        uses: commitizen-tools/commitizen-action@0.24.0
+        with:
+          increment: ${{ inputs.increment }}
+          prerelease: ${{ inputs.prerelease }}
+          changelog_increment_filename: release.md
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: release.md
+          tag_name: ${{ steps.cz.outputs.version }}
