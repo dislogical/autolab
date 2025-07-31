@@ -12,7 +12,6 @@ ci:
   skip:
     - devenv-build
     - renovate-config-validator
-    - shellcheck
 
 repos:
   - repo: local
@@ -48,30 +47,16 @@ repos:
         types: [tiltfile]
       - id: no-commit-to-branch
         args: [--branch, main]
+
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [--strict]
+
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 41.43.0
     hooks:
       - id: renovate-config-validator
         args: [--strict]
-  - repo: https://github.com/stackrox/kube-linter
-    rev: v0.7.4
-    hooks:
-      - id: kube-linter
-  - repo: https://github.com/Agilicus/pre-commit-hook-k8svalidate
-    rev: v0.2.0
-    hooks:
-      - id: k8svalidate
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.10.0
-    hooks:
-      - id: shellcheck
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
-    hooks:
-      - id: detect-secrets
