@@ -67,8 +67,9 @@ Gateway: #Helm & {
 		}
 
 		service: annotations: {
-			"metallb.io/loadBalancerIPs": "10.0.1.3"
-			"tilt.dev/port-forward":      "8080:80"
+			"metallb.io/loadBalancerIPs":                   "10.0.1.3"
+			"ignore-check.kube-linter.io/exposed-services": "This service is needs to be exposed as the gateway"
+			"tilt.dev/port-forward":                        "8080:80"
 		}
 
 		ports: {
