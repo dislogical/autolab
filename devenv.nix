@@ -18,6 +18,9 @@
     # Test Environment
     kind
     tilt
+
+    # Dev tools
+    commitizen
   ];
 
   languages.python = {
