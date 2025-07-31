@@ -81,12 +81,12 @@ Gateway: #Helm & {
 
 		gateway: listeners: {
 			web: {
-				namespacePolicy: "All"
+				namespacePolicy: from: "All"
 			}
 			websecure: {
-				port:            8443
-				protocol:        "HTTPS"
-				namespacePolicy: "All"
+				port:     8443
+				protocol: "HTTPS"
+				namespacePolicy: from: "All"
 				certificateRefs: [{
 					name: Gateway.Resources.Certificate.default.spec.secretName
 				}]
