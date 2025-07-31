@@ -50,7 +50,7 @@ Gateway: #Helm & {
 
 	Chart: {
 		name:    "traefik"
-		version: "36.3.0"
+		version: "37.0.0"
 		repository: {
 			name: "traefik"
 			url:  "https://traefik.github.io/charts"
@@ -81,12 +81,12 @@ Gateway: #Helm & {
 
 		gateway: listeners: {
 			web: {
-				namespacePolicy: "All"
+				namespacePolicy: from: "All"
 			}
 			websecure: {
-				port:            8443
-				protocol:        "HTTPS"
-				namespacePolicy: "All"
+				port:     8443
+				protocol: "HTTPS"
+				namespacePolicy: from: "All"
 				certificateRefs: [{
 					name: Gateway.Resources.Certificate.default.spec.secretName
 				}]
