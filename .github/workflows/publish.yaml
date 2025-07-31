@@ -31,7 +31,7 @@ jobs:
           logout: false
 
       - name: Install devenv.sh
-        run: nix profile install nixpkgs#devenv
+        run: nix profile add nixpkgs#devenv
 
       - name: Build & Publish Artifacts
         run: devenv shell publish-manifest
