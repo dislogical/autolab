@@ -53,5 +53,16 @@
       # Tag the manifest as latest
       flux tag artifact $IMAGE --tag latest
     '';
+
+    renovate.exec = ''
+      LOG_LEVEL=''${1:-debug}
+      ${pkgs.docker-client}/bin/docker run --rm \
+        --volume .:/usr/src/app \
+        --user $UID:$GID \
+        -e LOG_LEVEL=$LOG_LEVEL \
+        -e RENOVATE_GITHUB_COM_TOKEN=$(${pkgs.gh}/bin/gh auth token) \
+        renovate/renovate \
+          --platform=local
+    '';
   };
 }
