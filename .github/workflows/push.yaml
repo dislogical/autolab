@@ -30,4 +30,4 @@ jobs:
         run: devenv shell ${{ matrix.runtime.create }}
 
       - name: Run Tilt CI
-        run: devenv test
+        run: devenv ci
