@@ -1,6 +1,7 @@
 package holos
 
 import (
+	"path"
 	"encoding/yaml"
 
 	// "tool/cli"
@@ -9,11 +10,12 @@ import (
 
 let Envs = ["dev", "prod"]
 
-let Generator = {
+#Generator: {
 	// Inputs
 	generator: {
 		kind:   "Resources" | "Helm"
 		output: string
+		...
 	}
 	srcDir: string
 	outDir: string
@@ -23,6 +25,7 @@ let Generator = {
 		sources: [
 			srcDir + "/*.cue",
 		]
+		...
 	}
 } & ({
 	generator: kind: "Resources"
@@ -65,6 +68,46 @@ let Generator = {
 				{{if not \(generator.helm.enableHooks)}}--no-hooks{{end}} \\
 				> \(outDir)/\(generator.output)
 			""",
+		]
+	}
+})
+
+#Transformer: {
+	transformer: {
+		kind:   "Kustomize"
+		output: string
+		inputs: [...string]
+		...
+	}
+	srcDir: string
+	outDir: string
+
+	task: {
+		sources: [
+			"\(srcDir)/*.cue",
+			for _, input in transformer.inputs {
+				"\(outDir)/\(input)"
+			},
+		]
+		...
+	}
+} & ({
+	transformer: kind: "Kustomize"
+	outDir: string
+
+	// Transformer output includes the componentPath
+	let outputFile = path.Base(transformer.output)
+
+	task: {
+		cmds: [
+			"echo Kustomizing...",
+			"echo '\(yaml.Marshal(transformer.kustomize.kustomization))' > \(outDir)/kustomization.yaml",
+			"kustomize build \(outDir) > \(outDir)/\(outputFile)",
+		]
+
+		generates: [
+			"\(outDir)/kustomization.yaml",
+			"\(outDir)/\(outputFile)",
 		]
 	}
 })
@@ -122,20 +165,35 @@ let Taskfile = {
 
 			for _, component in Components {
 				let taskName = "component:\(env):\(component.name)"
+				let _outDir = "\(envDir)/\(component.path)"
 				let artifact = component.spec.artifacts[0]
 
 				for index, _generator in artifact.generators {
-					"\(taskName):generator-\(index)": (Generator & {
+					"\(taskName):generator-\(index)": (#Generator & {
 						generator: _generator
 						srcDir:    component.path
-						outDir:    "\(envDir)/\(component.path)"
+						outDir:    _outDir
 					}).task
 				}
 
-				// Create <env>:<component> task that depends on all generators
+				for index, _transformer in artifact.transformers {
+					"\(taskName):transformer-\(index)": (#Transformer & {
+						transformer: _transformer
+						srcDir:      component.path
+						outDir:      _outDir
+					}).task & {
+						deps: [
+							for index, _ in artifact.generators {
+								"\(taskName):generator-\(index)"
+							},
+						]
+					}
+				}
+
+				// Create <env>:<component> task that depends on all transformers
 				"\(taskName)": deps: [
-					for index, _ in artifact.generators {
-						"\(taskName):generator-\(index)"
+					for index, _ in artifact.transformers {
+						"\(taskName):transformer-\(index)"
 					},
 				]
 			}
