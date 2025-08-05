@@ -15,12 +15,16 @@ let Generator = {
 		kind:   "Resources" | "Helm"
 		output: string
 	}
+	srcDir: string
 	outDir: string
 
 	let outPath = "\(outDir)/\(generator.output)"
 
 	// Outputs
 	task: {
+		sources: [
+			srcDir + "/*.cue"
+		]
 		generates: [
 			outPath,
 		]
@@ -65,13 +69,13 @@ let Taskfile = {
 			let envDir = "deploy/\(env)"
 
 			for _, component in Components {
-				let componentDir = "\(envDir)/\(component.path)"
 				let artifact = component.spec.artifacts[0]
 
 				for index, _generator in artifact.generators {
 					"\(env):\(component.name):generator-\(index)": (Generator & {
 						generator: _generator
-						outDir:    componentDir
+						srcDir: component.path
+						outDir:    "\(envDir)/\(component.path)"
 					}).task
 				}
 
