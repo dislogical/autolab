@@ -7,6 +7,7 @@
     go-task
     cue
     holos
+    kubectl
     kustomize
     kubernetes-helm
     kubeconform
