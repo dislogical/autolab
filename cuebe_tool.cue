@@ -18,15 +18,10 @@ let Generator = {
 	srcDir: string
 	outDir: string
 
-	let outPath = "\(outDir)/\(generator.output)"
-
 	// Outputs
 	task: {
 		sources: [
-			srcDir + "/*.cue"
-		]
-		generates: [
-			outPath,
+			srcDir + "/*.cue",
 		]
 	}
 } & ({
@@ -46,14 +41,32 @@ let Generator = {
 				},
 			]))' > \(outPath)",
 		]
+		generates: [
+			outPath,
+		]
 	}
 } | {
 	generator: kind: "Helm"
 	outDir: string
 
-	task: cmds: [
-		"echo '\(yaml.Marshal(generator))'",
-	]
+	task: {
+		deps: [
+			"helm-pull:\(generator.helm.chart.repository.name):\(generator.helm.chart.name):\(generator.helm.chart.version)",
+		]
+		cmds: [
+			"echo Rendering Chart...",
+			"mkdir -p \(outDir)",
+			"echo '\(yaml.Marshal(generator.helm.values))' > \(outDir)/helm.\(generator.helm.chart.release).values.yaml",
+			"""
+			helm template \(generator.helm.chart.release) \\
+				./deploy/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)/\(generator.helm.chart.name) \\
+				--values \(outDir)/helm.\(generator.helm.chart.release).values.yaml \\
+				--atomic \\
+				{{if not \(generator.helm.enableHooks)}}--no-hooks{{end}} \\
+				> \(outDir)/\(generator.output)
+			""",
+		]
+	}
 })
 
 let Taskfile = {
@@ -65,24 +78,64 @@ let Taskfile = {
 	output:  "prefixed"
 
 	tasks: {
+		// Make shared tasks to pull the helm charts
+		for _, component in Components
+		for _, artifact in component.spec.artifacts
+		for _, generator in artifact.generators
+		if generator.kind == "Helm" {
+			"helm-pull:\(generator.helm.chart.repository.name):\(generator.helm.chart.name):\(generator.helm.chart.version)": {
+
+				let dest = "deploy/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)"
+
+				// This is here because multiple tasks may be merged by cue, but we need the repo urls to be the same if that's the case.
+				_repoUrl: generator.helm.chart.repository.url
+
+				// Don't try to run this task more than once per `task` invocation
+				run: "once"
+				cmds: [
+					"echo Pulling...",
+					"mkdir -p \(dest)",
+					"""
+					echo '#!/usr/bin/env bash
+					helm pull \(generator.helm.chart.name) \\
+						--repo \(generator.helm.chart.repository.url) \\
+						--version \(generator.helm.chart.version) \\
+						--destination \(dest) \\
+						--untar' > \(dest)/pull.sh
+					""",
+					"chmod +x \(dest)/pull.sh",
+					"\(dest)/pull.sh",
+				]
+
+				sources: [
+					"\(dest)/pull.sh",
+				]
+				generates: [
+					"\(dest)/\(generator.helm.chart.name)/Chart.yaml",
+				]
+			}
+		}
+
+		// Make tasks to render the components
 		for _, env in Envs {
 			let envDir = "deploy/\(env)"
 
 			for _, component in Components {
+				let taskName = "component:\(env):\(component.name)"
 				let artifact = component.spec.artifacts[0]
 
 				for index, _generator in artifact.generators {
-					"\(env):\(component.name):generator-\(index)": (Generator & {
+					"\(taskName):generator-\(index)": (Generator & {
 						generator: _generator
-						srcDir: component.path
+						srcDir:    component.path
 						outDir:    "\(envDir)/\(component.path)"
 					}).task
 				}
 
 				// Create <env>:<component> task that depends on all generators
-				"\(env):\(component.name)": deps: [
+				"\(taskName)": deps: [
 					for index, _ in artifact.generators {
-						"\(env):\(component.name):generator-\(index)"
+						"\(taskName):generator-\(index)"
 					},
 				]
 			}
@@ -90,7 +143,7 @@ let Taskfile = {
 			// Create <env> task that depends on all components
 			(env): deps: [
 				for _, component in Components {
-					"\(env):\(component.name)"
+					"component:\(env):\(component.name)"
 				},
 			]
 		}
