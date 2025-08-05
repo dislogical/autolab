@@ -25,8 +25,6 @@ let Envs = ["dev", "prod"]
 			// This is here because multiple tasks may be merged by cue, but we need the repo urls to be the same if that's the case.
 			_repoUrl: generator.helm.chart.repository.url
 
-			// Don't try to run this task more than once per `task` invocation
-			run: "once"
 			cmds: [
 				"echo Pulling...",
 				"mkdir -p \(dest)",
@@ -196,15 +194,16 @@ let Envs = ["dev", "prod"]
 
 let Taskfile = {
 	// Input
-	Components: [...]
+	#Components: [...]
 
 	version: 3
 	silent:  true
 	output:  "prefixed"
+	run:     "once"
 
 	tasks: {
 		// Make shared tasks to pull the helm charts
-		for _, component in Components
+		for _, component in #Components
 		for _, artifact in component.spec.artifacts
 		for _, _generator in artifact.generators
 		if _generator.kind == "Helm"
@@ -216,7 +215,7 @@ let Taskfile = {
 		for _, env in Envs {
 			let envDir = "deploy/\(env)"
 
-			for _, component in Components {
+			for _, component in #Components {
 				let taskName = "component:\(env):\(component.name)"
 				let _outDir = "\(envDir)/\(component.path)"
 				let artifact = component.spec.artifacts[0]
@@ -270,7 +269,7 @@ let Taskfile = {
 
 			// Create <env> task that depends on all components
 			(env): deps: [
-				for _, component in Components {
+				for _, component in #Components {
 					"component:\(env):\(component.name)"
 				},
 			]
@@ -328,7 +327,7 @@ command: task: {
 		]
 
 		stdin: yaml.Marshal(Taskfile & {
-			Components: [
+			#Components: [
 				for _, component in components {
 					component & yaml.Unmarshal(describe[component.name].stdout)
 				},
