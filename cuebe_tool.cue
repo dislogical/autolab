@@ -20,7 +20,7 @@ let Envs = ["dev", "prod"]
 	tasks: {
 		"helm-pull:\(generator.helm.chart.repository.name):\(generator.helm.chart.name):\(generator.helm.chart.version)": {
 
-			let dest = "deploy/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)"
+			let dest = ".cuebe/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)"
 
 			// This is here because multiple tasks may be merged by cue, but we need the repo urls to be the same if that's the case.
 			_repoUrl: generator.helm.chart.repository.url
@@ -102,7 +102,7 @@ let Envs = ["dev", "prod"]
 			"echo '\(yaml.Marshal(generator.helm.values))' > \(outDir)/helm.\(generator.helm.chart.release).values.yaml",
 			"""
 			helm template \(generator.helm.chart.release) \\
-				./deploy/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)/\(generator.helm.chart.name) \\
+				./.cuebe/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)/\(generator.helm.chart.name) \\
 				--values \(outDir)/helm.\(generator.helm.chart.release).values.yaml \\
 				--atomic \\
 				{{if not \(generator.helm.enableHooks)}}--no-hooks{{end}} \\
@@ -213,7 +213,7 @@ let Taskfile = {
 
 		// Make tasks to render the components
 		for _, env in Envs {
-			let envDir = "deploy/\(env)"
+			let envDir = ".cuebe/\(env)"
 
 			for _, component in #Components {
 				let taskName = "component:\(env):\(component.name)"
@@ -323,6 +323,10 @@ command: task: {
 			"task",
 			"-t", "-",
 		]
+
+		env: {
+			TASK_TEMP_DIR: ".cuebe/task"
+		}
 
 		stdin: yaml.Marshal(Taskfile & {
 			#Components: [
