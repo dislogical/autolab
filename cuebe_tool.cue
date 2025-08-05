@@ -10,6 +10,46 @@ import (
 
 let Envs = ["dev", "prod"]
 
+#HelmPull: {
+	generator: {
+		...
+	}
+
+	tasks: {
+		"helm-pull:\(generator.helm.chart.repository.name):\(generator.helm.chart.name):\(generator.helm.chart.version)": {
+
+			let dest = "deploy/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)"
+
+			// This is here because multiple tasks may be merged by cue, but we need the repo urls to be the same if that's the case.
+			_repoUrl: generator.helm.chart.repository.url
+
+			// Don't try to run this task more than once per `task` invocation
+			run: "once"
+			cmds: [
+				"echo Pulling...",
+				"mkdir -p \(dest)",
+				"""
+					echo '#!/usr/bin/env bash
+					helm pull \(generator.helm.chart.name) \\
+						--repo \(generator.helm.chart.repository.url) \\
+						--version \(generator.helm.chart.version) \\
+						--destination \(dest) \\
+						--untar' > \(dest)/pull.sh
+					""",
+				"chmod +x \(dest)/pull.sh",
+				"\(dest)/pull.sh",
+			]
+
+			sources: [
+				"\(dest)/pull.sh",
+			]
+			generates: [
+				"\(dest)/\(generator.helm.chart.name)/Chart.yaml",
+			]
+		}
+	}
+}
+
 #Generator: {
 	// Inputs
 	generator: {
@@ -124,39 +164,10 @@ let Taskfile = {
 		// Make shared tasks to pull the helm charts
 		for _, component in Components
 		for _, artifact in component.spec.artifacts
-		for _, generator in artifact.generators
-		if generator.kind == "Helm" {
-			"helm-pull:\(generator.helm.chart.repository.name):\(generator.helm.chart.name):\(generator.helm.chart.version)": {
-
-				let dest = "deploy/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)"
-
-				// This is here because multiple tasks may be merged by cue, but we need the repo urls to be the same if that's the case.
-				_repoUrl: generator.helm.chart.repository.url
-
-				// Don't try to run this task more than once per `task` invocation
-				run: "once"
-				cmds: [
-					"echo Pulling...",
-					"mkdir -p \(dest)",
-					"""
-					echo '#!/usr/bin/env bash
-					helm pull \(generator.helm.chart.name) \\
-						--repo \(generator.helm.chart.repository.url) \\
-						--version \(generator.helm.chart.version) \\
-						--destination \(dest) \\
-						--untar' > \(dest)/pull.sh
-					""",
-					"chmod +x \(dest)/pull.sh",
-					"\(dest)/pull.sh",
-				]
-
-				sources: [
-					"\(dest)/pull.sh",
-				]
-				generates: [
-					"\(dest)/\(generator.helm.chart.name)/Chart.yaml",
-				]
-			}
+		for _, _generator in artifact.generators
+		if _generator.kind == "Helm"
+		let helmPull = (#HelmPull & {generator: _generator}) {
+			helmPull.tasks
 		}
 
 		// Make tasks to render the components
