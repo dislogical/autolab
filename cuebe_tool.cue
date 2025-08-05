@@ -6,7 +6,7 @@ import (
 	"strings"
 	"encoding/yaml"
 
-	// "tool/cli"
+	"tool/file"
 	"tool/exec"
 )
 
@@ -322,8 +322,6 @@ command: task: {
 		cmd: [
 			"task",
 			"-t", "-",
-
-			"-C1",
 		]
 
 		stdin: yaml.Marshal(Taskfile & {
@@ -335,19 +333,20 @@ command: task: {
 		})
 	}
 
-	// print: cli.Print & {
-	// 	$after: [
-	// 		for _, component in components {
-	// 			describe[component.name]
-	// 		},
-	// 	]
+	write: file.Create & {
+		$after: [
+			for _, component in components {
+				describe[component.name]
+			},
+		]
 
-	// 	text: yaml.Marshal(Taskfile & {
-	// 		Components: [
-	// 			for _, component in components {
-	// 				yaml.Unmarshal(describe[component.name].stdout)
-	// 			},
-	// 		]
-	// 	})
-	// }
+		filename: "Taskfile.yaml"
+		contents: yaml.Marshal(Taskfile & {
+			#Components: [
+				for _, component in components {
+					component & yaml.Unmarshal(describe[component.name].stdout)
+				},
+			]
+		})
+	}
 }
