@@ -7,7 +7,7 @@ LoadBalancer: #Helm & {
 
 	Chart: {
 		name:    "kube-prometheus-stack"
-		version: "75.15.2"
+		version: "75.16.0"
 		repository: {
 			name: "kube-prometheus-stack"
 			url:  "https://prometheus-community.github.io/helm-charts"
