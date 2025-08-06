@@ -60,6 +60,9 @@ command: task: {
 		cmd: [
 			"task",
 			"-t", "-",
+
+			// There's an issue where task run through cue doesn't work in parallel
+			"-C1",
 		]
 
 		env: {
