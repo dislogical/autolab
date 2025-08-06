@@ -8,6 +8,8 @@ import (
 
 	"tool/file"
 	"tool/exec"
+
+	kustomize "sigs.k8s.io/kustomize/api/types"
 )
 
 let Envs = ["dev", "prod"]
@@ -142,7 +144,10 @@ let Envs = ["dev", "prod"]
 		...
 	}
 } & ({
-	transformer: kind: "Kustomize"
+	transformer: {
+		kind: "Kustomize"
+		kustomization: kustomize.#Kustomization
+	}
 	outDir: string
 
 	// Transformer output includes the componentPath
