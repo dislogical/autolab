@@ -43,9 +43,9 @@ flux = read_file('flux-system/gotk-components.yaml')
 
 watch_file('components')
 watch_file('platform')
-local('task render:dev', quiet=True)
+local('cue cmd build', quiet=True)
 
-built = read_file('deploy/dev/kustomized.yaml')
+built = read_file('.cuebe/dev/kustomized.yaml')
 
 # Make services get workloads
 k8s_kind('^Service$')
