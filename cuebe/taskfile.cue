@@ -20,10 +20,9 @@ import (
 		// Make shared tasks to pull the helm charts
 		for _, component in #Components
 		for _, artifact in component.spec.artifacts
-		for _, _generator in artifact.generators
-		if _generator.kind == "Helm"
-		let helmPull = (#HelmPull & {generator: _generator}) {
-			helmPull.tasks
+		for _, generator in artifact.generators
+		if generator.kind == "Helm" {
+			(#HelmPull & {#Generator: generator}).tasks
 		}
 
 		// Make tasks to render the components
@@ -35,20 +34,20 @@ import (
 				let _outDir = "\(envDir)/\(component.path)"
 				let artifact = component.spec.artifacts[0]
 
-				for index, _generator in artifact.generators {
-					"\(taskName):generator-\(index)": (#Generator & {
-						generator: _generator
-						srcDir:    component.path
-						outDir:    _outDir
-					}).task
+				for index, generator in artifact.generators {
+					"\(taskName):generator-\(index)": #Generator & {
+						#generator: generator
+						#srcDir:    component.path
+						#outDir:    _outDir
+					}
 				}
 
-				for index, _transformer in artifact.transformers {
-					"\(taskName):transformer-\(index)": (#Transformer & {
-						transformer: _transformer
-						srcDir:      component.path
-						outDir:      _outDir
-					}).task & {
+				for index, transformer in artifact.transformers {
+					"\(taskName):transformer-\(index)": #Transformer & {
+						#transformer: transformer
+						#srcDir:      component.path
+						#outDir:      _outDir
+					} & {
 						deps: [
 							for genIndex, _ in artifact.generators {
 								"\(taskName):generator-\(genIndex)"
@@ -57,12 +56,12 @@ import (
 					}
 				}
 
-				for index, _validator in artifact.validators {
-					"\(taskName):validator-\(index)": (#Validator & {
-						validator: _validator
-						srcDir:    component.path
-						outDir:    _outDir
-					}).task & {
+				for index, validator in artifact.validators {
+					"\(taskName):validator-\(index)": #Validator & {
+						#validator: validator
+						#srcDir:    component.path
+						#outDir:    _outDir
+					} & {
 						deps: [
 							for transIndex, _ in artifact.transformers {
 								"\(taskName):transformer-\(transIndex)"
