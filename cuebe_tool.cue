@@ -66,7 +66,7 @@ command: build: {
 		]
 
 		env: {
-			TASK_TEMP_DIR: ".cuebe/task"
+			// TASK_TEMP_DIR: ".cuebe/task"
 		}
 
 		stdin: yaml.Marshal(Taskfile)
