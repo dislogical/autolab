@@ -100,7 +100,11 @@ import (
 				}
 				cmds: [
 					"echo Kustomizing...",
-					"echo '\(yaml.Marshal(kustomization))' > \(envDir)/kustomization.yaml",
+					"""
+					cat << EOF > \(envDir)/kustomization.yaml
+					\(yaml.Marshal(kustomization))
+					EOF
+					""",
 					"kustomize build \(envDir) > \(envDir)/kustomized.yaml",
 				]
 			}

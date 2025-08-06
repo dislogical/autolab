@@ -19,12 +19,14 @@ import (
 				"echo Pulling...",
 				"mkdir -p \(dest)",
 				"""
-				echo '#!/usr/bin/env bash
+				cat << EOF > \(dest)/pull.sh
+				#!/usr/bin/env bash
 				helm pull \(#Generator.helm.chart.name) \\
 					--repo \(#Generator.helm.chart.repository.url) \\
 					--version \(#Generator.helm.chart.version) \\
 					--destination \(dest) \\
-					--untar' > \(dest)/pull.sh
+					--untar
+				EOF
 				""",
 				"chmod +x \(dest)/pull.sh",
 				"\(dest)/pull.sh",
