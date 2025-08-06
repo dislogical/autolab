@@ -8,7 +8,7 @@ Thumbs.db
 vendor/
 node_modules/
 tmp/
-deploy/
+.task/
 .cuebe/
 
 
