@@ -11,7 +11,7 @@ import (
 
 let Envs = ["dev", "prod"]
 
-command: task: {
+command: build: {
 	project: exec.Run & {
 		cmd: [
 			"cue", "export", "./platform",
