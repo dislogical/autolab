@@ -9,32 +9,29 @@ import (
 )
 
 #Validator: {
-	validator: core.#Validator
-	srcDir:    string
-	outDir:    string
+	#validator: core.#Validator
+	#srcDir:    string
+	#outDir:    string
 
-	task: {
-		sources: [
-			"\(srcDir)/*.cue",
-			for _, input in validator.inputs {
-				"\(outDir)/\(path.Base(input))"
-			},
-		]
-		...
-	}
+	sources: [
+		"\(#srcDir)/*.cue",
+		for _, input in #validator.inputs {
+			"\(#outDir)/\(path.Base(input))"
+		},
+	]
+
+	...
 } & ({
-	validator: kind: "Command"
-	outDir: string
+	#validator: kind: "Command"
+	#outDir: string
 
-	task: {
-		cmds: [
-			"echo Validating with \(validator.command.args[0])...",
-			for input in validator.inputs {
-				// Need to wrap this in {{ `` }} so the Task templating doesn't pick anything up
-				"""
-				{{ `\(strings.Join(list.Concat([validator.command.args, ["\(outDir)/\(path.Base(input))"]]), " "))` }}
-				"""
-			},
-		]
-	}
+	cmds: [
+		"echo Validating with \(#validator.command.args[0])...",
+		for input in #validator.inputs {
+			// Need to wrap this in {{ `` }} so the Task templating doesn't pick anything up
+			"""
+			{{ `\(strings.Join(list.Concat([#validator.command.args, ["\(#outDir)/\(path.Base(input))"]]), " "))` }}
+			"""
+		},
+	]
 })

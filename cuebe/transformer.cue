@@ -8,36 +8,33 @@ import (
 )
 
 #Transformer: {
-	transformer: core.#Transformer
-	srcDir:      string
-	outDir:      string
+	#transformer: core.#Transformer
+	#srcDir:      string
+	#outDir:      string
 
-	task: {
-		sources: [
-			"\(srcDir)/*.cue",
-			for _, input in transformer.inputs {
-				"\(outDir)/\(input)"
-			},
-		]
-		...
-	}
+	sources: [
+		"\(#srcDir)/*.cue",
+		for _, input in #transformer.inputs {
+			"\(#outDir)/\(input)"
+		},
+	]
+
+	...
 } & ({
-	transformer: kind: "Kustomize"
-	outDir: string
+	#transformer: kind: "Kustomize"
+	#outDir: string
 
 	// Transformer output includes the componentPath
-	let outputFile = path.Base(transformer.output)
+	let outputFile = path.Base(#transformer.output)
 
-	task: {
-		cmds: [
-			"echo Kustomizing...",
-			"echo '\(yaml.Marshal(transformer.kustomize.kustomization))' > \(outDir)/kustomization.yaml",
-			"kustomize build \(outDir) > \(outDir)/\(outputFile)",
-		]
+	cmds: [
+		"echo Kustomizing...",
+		"echo '\(yaml.Marshal(#transformer.kustomize.kustomization))' > \(#outDir)/kustomization.yaml",
+		"kustomize build \(#outDir) > \(#outDir)/\(outputFile)",
+	]
 
-		generates: [
-			"\(outDir)/kustomization.yaml",
-			"\(outDir)/\(outputFile)",
-		]
-	}
+	generates: [
+		"\(#outDir)/kustomization.yaml",
+		"\(#outDir)/\(outputFile)",
+	]
 })
