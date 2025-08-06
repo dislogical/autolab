@@ -27,12 +27,16 @@ import (
 	cmds: [
 		"echo Exporting Resources",
 		"mkdir -p \(#outDir)",
-		"echo '\(yaml.MarshalStream([
+		"""
+		cat << EOF > \(outPath)
+		\(yaml.MarshalStream([
 			for _, type in #generator.resources
 			for _, resource in type {
 				resource
 			},
-		]))' > \(outPath)",
+		]))
+		EOF
+		""",
 	]
 	generates: [
 		outPath,
@@ -60,7 +64,11 @@ import (
 	cmds: [
 		"echo Rendering Chart...",
 		"mkdir -p \(#outDir)",
-		"echo '\(yaml.Marshal(#generator.helm.values))' > \(#outDir)/helm.\(#generator.helm.chart.release).values.yaml",
+		"""
+		cat << EOF > \(#outDir)/helm.\(#generator.helm.chart.release).values.yaml
+		\(yaml.Marshal(#generator.helm.values))
+		EOF
+		""",
 		"""
 		helm template \(#generator.helm.chart.release) \\
 			./.cuebe/helm-cache/\(#generator.helm.chart.repository.name)/\(#generator.helm.chart.name)/\(#generator.helm.chart.version)/\(#generator.helm.chart.name) \\

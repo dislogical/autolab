@@ -29,7 +29,11 @@ import (
 
 	cmds: [
 		"echo Kustomizing...",
-		"echo '\(yaml.Marshal(#transformer.kustomize.kustomization))' > \(#outDir)/kustomization.yaml",
+		"""
+		cat << EOF > \(#outDir)/kustomization.yaml
+		\(yaml.Marshal(#transformer.kustomize.kustomization))
+		EOF
+		""",
 		"kustomize build \(#outDir) > \(#outDir)/\(outputFile)",
 	]
 
