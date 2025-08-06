@@ -3,17 +3,15 @@ package cuebe
 import (
 	"strings"
 	"encoding/yaml"
+
+	"github.com/holos-run/holos/api/core/v1alpha5:core"
 )
 
 #Generator: {
 	// Inputs
-	generator: {
-		kind:   "Resources" | "Helm"
-		output: string
-		...
-	}
-	srcDir: string
-	outDir: string
+	generator: core.#Generator
+	srcDir:    string
+	outDir:    string
 
 	// Outputs
 	task: {
@@ -44,16 +42,21 @@ import (
 		]
 	}
 } | {
-	generator: {
-		kind: "Helm"
-		helm: {
-			namespace: string | *""
-			apiVersions: [...string]
-			enableHooks: bool
-			...
-		}
-	}
+	generator: kind: "Helm"
 	outDir: string
+
+  let namespaceArg = [
+    if generator.helm.namespace != _|_ {
+      "--namespace \(generator.helm.namespace)"
+    }
+    ""
+  ][0]
+	let apiVersionArg = [
+		if generator.helm.apiVersions != _|_ {
+			"--api-versions '\(strings.Join(generator.helm.apiVersions, ","))'"
+		},
+		"",
+	][0]
 
 	task: {
 		deps: [
@@ -67,8 +70,8 @@ import (
 			helm template \(generator.helm.chart.release) \\
 				./.cuebe/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)/\(generator.helm.chart.name) \\
 				--values \(outDir)/helm.\(generator.helm.chart.release).values.yaml \\
-				{{if "\(generator.helm.namespace)"}}--namespace \(generator.helm.namespace){{end}} \\
-				--api-versions '\(strings.Join(generator.helm.apiVersions, ","))' \\
+				\(namespaceArg) \\
+				\(apiVersionArg) \\
 				--atomic \\
 				{{if not \(generator.helm.enableHooks)}}--no-hooks{{end}} \\
 				> \(outDir)/\(generator.output)

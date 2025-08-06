@@ -4,16 +4,14 @@ import (
 	"list"
 	"path"
 	"strings"
+
+	"github.com/holos-run/holos/api/core/v1alpha5:core"
 )
 
 #Validator: {
-	validator: {
-		kind: "Command"
-		inputs: [...string]
-		...
-	}
-	srcDir: string
-	outDir: string
+	validator: core.#Validator
+	srcDir:    string
+	outDir:    string
 
 	task: {
 		sources: [
@@ -25,12 +23,7 @@ import (
 		...
 	}
 } & ({
-	validator: {
-		kind: "Command"
-		command: {
-			args: [...string]
-		}
-	}
+	validator: kind: "Command"
 	outDir: string
 
 	task: {
