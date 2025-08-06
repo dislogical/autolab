@@ -4,18 +4,13 @@ import (
 	"path"
 	"encoding/yaml"
 
-	kustomize "sigs.k8s.io/kustomize/api/types"
+	"github.com/holos-run/holos/api/core/v1alpha5:core"
 )
 
 #Transformer: {
-	transformer: {
-		kind:   "Kustomize"
-		output: string
-		inputs: [...string]
-		...
-	}
-	srcDir: string
-	outDir: string
+	transformer: core.#Transformer
+	srcDir:      string
+	outDir:      string
 
 	task: {
 		sources: [
@@ -27,10 +22,7 @@ import (
 		...
 	}
 } & ({
-	transformer: {
-		kind:          "Kustomize"
-		kustomization: kustomize.#Kustomization
-	}
+	transformer: kind: "Kustomize"
 	outDir: string
 
 	// Transformer output includes the componentPath

@@ -1,7 +1,7 @@
 package cuebe
 
 import (
-  "encoding/yaml"
+	"encoding/yaml"
 
 	kustomize "sigs.k8s.io/kustomize/api/types"
 )
