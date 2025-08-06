@@ -17,13 +17,13 @@ package cuebe
 				"echo Pulling...",
 				"mkdir -p \(dest)",
 				"""
-					echo '#!/usr/bin/env bash
-					helm pull \(generator.helm.chart.name) \\
-						--repo \(generator.helm.chart.repository.url) \\
-						--version \(generator.helm.chart.version) \\
-						--destination \(dest) \\
-						--untar' > \(dest)/pull.sh
-					""",
+				echo '#!/usr/bin/env bash
+				helm pull \(generator.helm.chart.name) \\
+					--repo \(generator.helm.chart.repository.url) \\
+					--version \(generator.helm.chart.version) \\
+					--destination \(dest) \\
+					--untar' > \(dest)/pull.sh
+				""",
 				"chmod +x \(dest)/pull.sh",
 				"\(dest)/pull.sh",
 			]

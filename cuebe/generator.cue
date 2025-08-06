@@ -45,12 +45,12 @@ import (
 	generator: kind: "Helm"
 	outDir: string
 
-  let namespaceArg = [
-    if generator.helm.namespace != _|_ {
-      "--namespace \(generator.helm.namespace)"
-    }
-    ""
-  ][0]
+	let namespaceArg = [
+		if generator.helm.namespace != _|_ {
+			"--namespace \(generator.helm.namespace)"
+		},
+		"",
+	][0]
 	let apiVersionArg = [
 		if generator.helm.apiVersions != _|_ {
 			"--api-versions '\(strings.Join(generator.helm.apiVersions, ","))'"
