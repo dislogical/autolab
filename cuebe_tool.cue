@@ -89,7 +89,15 @@ let Envs = ["dev", "prod"]
 		]
 	}
 } | {
-	generator: kind: "Helm"
+	generator: {
+		kind: "Helm"
+		helm: {
+			namespace: string | *""
+			apiVersions: [...string]
+			enableHooks: bool
+			...
+		}
+	}
 	outDir: string
 
 	task: {
@@ -104,6 +112,8 @@ let Envs = ["dev", "prod"]
 			helm template \(generator.helm.chart.release) \\
 				./.cuebe/helm-cache/\(generator.helm.chart.repository.name)/\(generator.helm.chart.name)/\(generator.helm.chart.version)/\(generator.helm.chart.name) \\
 				--values \(outDir)/helm.\(generator.helm.chart.release).values.yaml \\
+				{{if "\(generator.helm.namespace)"}}--namespace \(generator.helm.namespace){{end}} \\
+				--api-versions '\(strings.Join(generator.helm.apiVersions, ","))' \\
 				--atomic \\
 				{{if not \(generator.helm.enableHooks)}}--no-hooks{{end}} \\
 				> \(outDir)/\(generator.output)
