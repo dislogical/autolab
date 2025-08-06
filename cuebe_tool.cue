@@ -145,7 +145,7 @@ let Envs = ["dev", "prod"]
 	}
 } & ({
 	transformer: {
-		kind: "Kustomize"
+		kind:          "Kustomize"
 		kustomization: kustomize.#Kustomization
 	}
 	outDir: string
@@ -283,11 +283,28 @@ let Taskfile = {
 			}
 
 			// Create <env> task that depends on all components
-			(env): deps: [
-				for _, component in #Components {
-					"component:\(env):\(component.name)"
-				},
-			]
+			(env): {
+				deps: [
+					for _, component in #Components {
+						"component:\(env):\(component.name)"
+					},
+				]
+				let kustomization = kustomize.#Kustomization & {
+					apiVersion: kustomize.#KustomizationVersion
+					kind:       kustomize.#KustomizationKind
+					resources: [
+						for _, component in #Components
+						for _, artifact in component.spec.artifacts {
+							artifact.artifact
+						},
+					]
+				}
+				cmds: [
+					"echo Kustomizing...",
+					"echo '\(yaml.Marshal(kustomization))' > \(envDir)/kustomization.yaml",
+					"kustomize build \(envDir) > \(envDir)/kustomized.yaml",
+				]
+			}
 		}
 
 		default: {

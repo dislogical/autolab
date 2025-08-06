@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/holos-run/holos/api/author/v1alpha5:author"
-	kustomize "sigs.k8s.io/kustomize/api/types"
 )
 
 Platform: author.#Platform & {
@@ -30,12 +29,3 @@ Platform: author.#Platform & {
 
 // Render a Platform resource for holos to process
 holos: Platform.Resource
-
-// Used to emit a kustomization file
-kustomization: kustomize.#Kustomization & {
-	apiVersion: kustomize.#KustomizationVersion
-	kind:       kustomize.#KustomizationKind
-	resources: [
-		for component in Platform.Components {"./components/\(component.name)/\(component.name).gen.yaml"},
-	]
-}
