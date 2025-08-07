@@ -4,14 +4,12 @@
   # https://devenv.sh/packages/
   packages = with pkgs; [
     # Build Tools
-    go-task
     cue
-    holos
+    go-task
     kubectl
     kustomize
     kubernetes-helm
     kubeconform
-    yq
 
     # Deployment
     fluxcd
