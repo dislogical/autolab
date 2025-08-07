@@ -73,6 +73,7 @@ import (
 		helm template \(#generator.helm.chart.release) \\
 			./.cuebe/helm-cache/\(#generator.helm.chart.repository.name)/\(#generator.helm.chart.name)/\(#generator.helm.chart.version)/\(#generator.helm.chart.name) \\
 			--values \(#outDir)/helm.\(#generator.helm.chart.release).values.yaml \\
+			--include-crds \\
 			\(namespaceArg) \\
 			\(apiVersionArg) \\
 			--atomic \\
