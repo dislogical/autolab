@@ -26,7 +26,7 @@ package holos
 	config: {
 		kind: "Command"
 		command: args: [
-			"holos", "cue", "vet", "-c", "./config",
+			"cue", "vet", "-c", "./config",
 		]
 	}
 }
