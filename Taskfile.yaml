@@ -312,6 +312,7 @@ tasks:
         helm template metrics-server \
         	./.cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server \
         	--values .cuebe/dev/components/metrics-server/helm.metrics-server.values.yaml \
+        	--include-crds \
         	 \
         	 \
         	--atomic \
@@ -449,6 +450,7 @@ tasks:
         helm template coredns \
         	./.cuebe/helm-cache/coredns/coredns/1.43.1/coredns \
         	--values .cuebe/dev/components/dns/helm.coredns.values.yaml \
+        	--include-crds \
         	--namespace dns \
         	 \
         	--atomic \
@@ -622,6 +624,7 @@ tasks:
         helm template traefik \
         	./.cuebe/helm-cache/traefik/traefik/37.0.0/traefik \
         	--values .cuebe/dev/components/gateway/helm.traefik.values.yaml \
+        	--include-crds \
         	--namespace gateway \
         	--api-versions 'monitoring.coreos.com/v1' \
         	--atomic \
@@ -746,6 +749,7 @@ tasks:
         helm template cert-manager \
         	./.cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/cert-manager \
         	--values .cuebe/dev/components/cert-manager/helm.cert-manager.values.yaml \
+        	--include-crds \
         	--namespace gateway \
         	 \
         	--atomic \
@@ -871,6 +875,7 @@ tasks:
         helm template metallb \
         	./.cuebe/helm-cache/metallb/metallb/0.15.2/metallb \
         	--values .cuebe/dev/components/load-balancer/helm.metallb.values.yaml \
+        	--include-crds \
         	--namespace load-balancer \
         	 \
         	--atomic \
@@ -1005,6 +1010,7 @@ tasks:
         helm template kube-prometheus-stack \
         	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
         	--values .cuebe/dev/components/metrics/helm.kube-prometheus-stack.values.yaml \
+        	--include-crds \
         	--namespace metrics \
         	 \
         	--atomic \
@@ -1093,6 +1099,7 @@ tasks:
         helm template postgres \
         	./.cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg \
         	--values .cuebe/dev/components/postgres/helm.postgres.values.yaml \
+        	--include-crds \
         	--namespace postgres \
         	 \
         	--atomic \
@@ -1193,6 +1200,7 @@ tasks:
         helm template headlamp \
         	./.cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp \
         	--values .cuebe/dev/components/headlamp/helm.headlamp.values.yaml \
+        	--include-crds \
         	 \
         	 \
         	--atomic \
@@ -1294,6 +1302,7 @@ tasks:
         helm template metrics-server \
         	./.cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server \
         	--values .cuebe/prod/components/metrics-server/helm.metrics-server.values.yaml \
+        	--include-crds \
         	 \
         	 \
         	--atomic \
@@ -1431,6 +1440,7 @@ tasks:
         helm template coredns \
         	./.cuebe/helm-cache/coredns/coredns/1.43.1/coredns \
         	--values .cuebe/prod/components/dns/helm.coredns.values.yaml \
+        	--include-crds \
         	--namespace dns \
         	 \
         	--atomic \
@@ -1604,6 +1614,7 @@ tasks:
         helm template traefik \
         	./.cuebe/helm-cache/traefik/traefik/37.0.0/traefik \
         	--values .cuebe/prod/components/gateway/helm.traefik.values.yaml \
+        	--include-crds \
         	--namespace gateway \
         	--api-versions 'monitoring.coreos.com/v1' \
         	--atomic \
@@ -1728,6 +1739,7 @@ tasks:
         helm template cert-manager \
         	./.cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/cert-manager \
         	--values .cuebe/prod/components/cert-manager/helm.cert-manager.values.yaml \
+        	--include-crds \
         	--namespace gateway \
         	 \
         	--atomic \
@@ -1853,6 +1865,7 @@ tasks:
         helm template metallb \
         	./.cuebe/helm-cache/metallb/metallb/0.15.2/metallb \
         	--values .cuebe/prod/components/load-balancer/helm.metallb.values.yaml \
+        	--include-crds \
         	--namespace load-balancer \
         	 \
         	--atomic \
@@ -1987,6 +2000,7 @@ tasks:
         helm template kube-prometheus-stack \
         	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
         	--values .cuebe/prod/components/metrics/helm.kube-prometheus-stack.values.yaml \
+        	--include-crds \
         	--namespace metrics \
         	 \
         	--atomic \
@@ -2075,6 +2089,7 @@ tasks:
         helm template postgres \
         	./.cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg \
         	--values .cuebe/prod/components/postgres/helm.postgres.values.yaml \
+        	--include-crds \
         	--namespace postgres \
         	 \
         	--atomic \
@@ -2175,6 +2190,7 @@ tasks:
         helm template headlamp \
         	./.cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp \
         	--values .cuebe/prod/components/headlamp/helm.headlamp.values.yaml \
+        	--include-crds \
         	 \
         	 \
         	--atomic \
