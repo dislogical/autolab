@@ -8,8 +8,7 @@ import (
 
 #Taskfile: {
 	// Input
-	#Envs: [...string]
-	#Components: [...]
+	#Envs: { [string]: [...] }
 
 	version: 3
 	silent:  true
@@ -18,7 +17,8 @@ import (
 
 	tasks: {
 		// Make shared tasks to pull the helm charts
-		for _, component in #Components
+		for env, components in #Envs
+		for _, component in components
 		for _, artifact in component.spec.artifacts
 		for _, generator in artifact.generators
 		if generator.kind == "Helm" {
@@ -26,10 +26,10 @@ import (
 		}
 
 		// Make tasks to render the components
-		for _, env in #Envs {
+		for env, components in #Envs {
 			let envDir = ".cuebe/\(env)"
 
-			for _, component in #Components {
+			for _, component in components {
 				let taskName = "component:\(env):\(component.name)"
 				let _outDir = "\(envDir)/\(component.path)"
 				let artifact = component.spec.artifacts[0]
@@ -84,7 +84,7 @@ import (
 			// Create <env> task that depends on all components
 			(env): {
 				deps: [
-					for _, component in #Components {
+					for _, component in components {
 						"component:\(env):\(component.name)"
 					},
 				]
@@ -92,7 +92,7 @@ import (
 					apiVersion: kustomize.#KustomizationVersion
 					kind:       kustomize.#KustomizationKind
 					resources: [
-						for _, component in #Components
+						for _, component in components
 						for _, artifact in component.spec.artifacts {
 							artifact.artifact
 						},
@@ -111,7 +111,7 @@ import (
 		}
 
 		default: {
-			deps: [for _, env in #Envs {env}]
+			deps: [for env, _ in #Envs {env}]
 			cmd: "echo Done!"
 		}
 	}

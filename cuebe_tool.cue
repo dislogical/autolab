@@ -25,8 +25,9 @@ command: build: {
 	let components = project_def.spec.components
 
 	describe: {
+		for _, env in Envs
 		for _, component in components {
-			(component.name): exec.Run & {
+			(env): (component.name): exec.Run & {
 				$after: project
 
 				cmd: [
@@ -34,26 +35,31 @@ command: build: {
 					"--out=yaml",
 					"-t", "holos_component_name=" + component.name,
 					"-t", "holos_component_path=" + component.path,
+					"-t", "env=" + env,
 					"-e", "holos",
 				]
+
 				stdout: string
+				descriptor: yaml.Unmarshal(stdout)
 			}
 		}
 	}
 
 	let Taskfile = cuebe.#Taskfile & {
-		#Envs: Envs
-		#Components: [
-			for _, component in components {
-				component & yaml.Unmarshal(describe[component.name].stdout)
-			},
-		]
+		for _, env in Envs {
+			#Envs: (env): [
+				for _, component in components {
+					component & describe[env][component.name].descriptor
+				},
+			]
+		}
 	}
 
 	task: exec.Run & {
 		$after: [
+			for _, env in Envs
 			for _, component in components {
-				describe[component.name]
+				describe[env][component.name]
 			},
 		]
 

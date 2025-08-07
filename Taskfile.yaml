@@ -159,25 +159,25 @@ tasks:
       - .cuebe/helm-cache/metallb/metallb/0.15.2/pull.sh
     generates:
       - .cuebe/helm-cache/metallb/metallb/0.15.2/metallb/Chart.yaml
-  helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.15.2:
+  helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1:
     cmds:
       - echo Pulling...
-      - mkdir -p .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2
+      - mkdir -p .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1
       - |-
-        cat << EOF > .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/pull.sh
+        cat << EOF > .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
         #!/usr/bin/env bash
         helm pull kube-prometheus-stack \
         	--repo https://prometheus-community.github.io/helm-charts \
-        	--version 75.15.2 \
-        	--destination .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2 \
+        	--version 75.18.1 \
+        	--destination .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1 \
         	--untar
         EOF
-      - chmod +x .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/pull.sh
-      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/pull.sh
+      - chmod +x .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
+      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
     sources:
-      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/pull.sh
+      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
     generates:
-      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/kube-prometheus-stack/Chart.yaml
+      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack/Chart.yaml
   helm-pull:cloudnative-pg:cloudnative-pg:0.25.0:
     cmds:
       - echo Pulling...
@@ -197,25 +197,25 @@ tasks:
       - .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/pull.sh
     generates:
       - .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg/Chart.yaml
-  helm-pull:headlamp:headlamp:0.33.0:
+  helm-pull:headlamp:headlamp:0.34.0:
     cmds:
       - echo Pulling...
-      - mkdir -p .cuebe/helm-cache/headlamp/headlamp/0.33.0
+      - mkdir -p .cuebe/helm-cache/headlamp/headlamp/0.34.0
       - |-
-        cat << EOF > .cuebe/helm-cache/headlamp/headlamp/0.33.0/pull.sh
+        cat << EOF > .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
         #!/usr/bin/env bash
         helm pull headlamp \
         	--repo https://kubernetes-sigs.github.io/headlamp \
-        	--version 0.33.0 \
-        	--destination .cuebe/helm-cache/headlamp/headlamp/0.33.0 \
+        	--version 0.34.0 \
+        	--destination .cuebe/helm-cache/headlamp/headlamp/0.34.0 \
         	--untar
         EOF
-      - chmod +x .cuebe/helm-cache/headlamp/headlamp/0.33.0/pull.sh
-      - .cuebe/helm-cache/headlamp/headlamp/0.33.0/pull.sh
+      - chmod +x .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
+      - .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
     sources:
-      - .cuebe/helm-cache/headlamp/headlamp/0.33.0/pull.sh
+      - .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
     generates:
-      - .cuebe/helm-cache/headlamp/headlamp/0.33.0/headlamp/Chart.yaml
+      - .cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp/Chart.yaml
   component:dev:metrics-server:
     deps:
       - component:dev:metrics-server:transformer-0
@@ -319,6 +319,8 @@ tasks:
         	> .cuebe/dev/components/metrics-server/helm.gen.yaml
     sources:
       - components/metrics-server/*.cue
+    generates:
+      - .cuebe/dev/components/metrics-server/helm.gen.yaml
   component:dev:metrics-server:generator-1:
     cmds:
       - echo Exporting Resources
@@ -327,10 +329,10 @@ tasks:
         cat << EOF > .cuebe/dev/components/metrics-server/resources.gen.yaml
 
         EOF
-    generates:
-      - .cuebe/dev/components/metrics-server/resources.gen.yaml
     sources:
       - components/metrics-server/*.cue
+    generates:
+      - .cuebe/dev/components/metrics-server/resources.gen.yaml
   component:dev:metrics-server:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -454,6 +456,8 @@ tasks:
         	> .cuebe/dev/components/dns/helm.gen.yaml
     sources:
       - components/dns/*.cue
+    generates:
+      - .cuebe/dev/components/dns/helm.gen.yaml
   component:dev:dns:generator-1:
     cmds:
       - echo Exporting Resources
@@ -521,10 +525,10 @@ tasks:
           name: dns
 
         EOF
-    generates:
-      - .cuebe/dev/components/dns/resources.gen.yaml
     sources:
       - components/dns/*.cue
+    generates:
+      - .cuebe/dev/components/dns/resources.gen.yaml
   component:dev:dns:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -625,6 +629,8 @@ tasks:
         	> .cuebe/dev/components/gateway/helm.gen.yaml
     sources:
       - components/gateway/*.cue
+    generates:
+      - .cuebe/dev/components/gateway/helm.gen.yaml
   component:dev:gateway:generator-1:
     cmds:
       - echo Exporting Resources
@@ -668,10 +674,10 @@ tasks:
           name: gateway
 
         EOF
-    generates:
-      - .cuebe/dev/components/gateway/resources.gen.yaml
     sources:
       - components/gateway/*.cue
+    generates:
+      - .cuebe/dev/components/gateway/resources.gen.yaml
   component:dev:gateway:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -747,6 +753,8 @@ tasks:
         	> .cuebe/dev/components/cert-manager/helm.gen.yaml
     sources:
       - components/cert-manager/*.cue
+    generates:
+      - .cuebe/dev/components/cert-manager/helm.gen.yaml
   component:dev:cert-manager:generator-1:
     cmds:
       - echo Exporting Resources
@@ -796,10 +804,10 @@ tasks:
                       name: cloudflare-api-token
 
         EOF
-    generates:
-      - .cuebe/dev/components/cert-manager/resources.gen.yaml
     sources:
       - components/cert-manager/*.cue
+    generates:
+      - .cuebe/dev/components/cert-manager/resources.gen.yaml
   component:dev:cert-manager:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -870,6 +878,8 @@ tasks:
         	> .cuebe/dev/components/load-balancer/helm.gen.yaml
     sources:
       - components/load-balancer/*.cue
+    generates:
+      - .cuebe/dev/components/load-balancer/helm.gen.yaml
   component:dev:load-balancer:generator-1:
     cmds:
       - echo Exporting Resources
@@ -905,10 +915,10 @@ tasks:
             - default
 
         EOF
-    generates:
-      - .cuebe/dev/components/load-balancer/resources.gen.yaml
     sources:
       - components/load-balancer/*.cue
+    generates:
+      - .cuebe/dev/components/load-balancer/resources.gen.yaml
   component:dev:load-balancer:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -953,7 +963,7 @@ tasks:
       - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
   component:dev:metrics:generator-0:
     deps:
-      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.15.2
+      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1
     cmds:
       - echo Rendering Chart...
       - mkdir -p .cuebe/dev/components/metrics
@@ -993,7 +1003,7 @@ tasks:
         EOF
       - |-
         helm template kube-prometheus-stack \
-        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/kube-prometheus-stack \
+        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
         	--values .cuebe/dev/components/metrics/helm.kube-prometheus-stack.values.yaml \
         	--namespace metrics \
         	 \
@@ -1002,6 +1012,8 @@ tasks:
         	> .cuebe/dev/components/metrics/helm.gen.yaml
     sources:
       - components/metrics/*.cue
+    generates:
+      - .cuebe/dev/components/metrics/helm.gen.yaml
   component:dev:metrics:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1018,10 +1030,10 @@ tasks:
           name: metrics
 
         EOF
-    generates:
-      - .cuebe/dev/components/metrics/resources.gen.yaml
     sources:
       - components/metrics/*.cue
+    generates:
+      - .cuebe/dev/components/metrics/resources.gen.yaml
   component:dev:metrics:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1088,6 +1100,8 @@ tasks:
         	> .cuebe/dev/components/postgres/helm.postgres.gen.yaml
     sources:
       - components/postgres/*.cue
+    generates:
+      - .cuebe/dev/components/postgres/helm.postgres.gen.yaml
   component:dev:postgres:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1100,10 +1114,10 @@ tasks:
           name: postgres
 
         EOF
-    generates:
-      - .cuebe/dev/components/postgres/resources.gen.yaml
     sources:
       - components/postgres/*.cue
+    generates:
+      - .cuebe/dev/components/postgres/resources.gen.yaml
   component:dev:postgres:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1147,7 +1161,7 @@ tasks:
       - .cuebe/dev/components/postgres/postgres.gen.yaml
   component:dev:headlamp:generator-0:
     deps:
-      - helm-pull:headlamp:headlamp:0.33.0
+      - helm-pull:headlamp:headlamp:0.34.0
     cmds:
       - echo Rendering Chart...
       - mkdir -p .cuebe/dev/components/headlamp
@@ -1177,7 +1191,7 @@ tasks:
         EOF
       - |-
         helm template headlamp \
-        	./.cuebe/helm-cache/headlamp/headlamp/0.33.0/headlamp \
+        	./.cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp \
         	--values .cuebe/dev/components/headlamp/helm.headlamp.values.yaml \
         	 \
         	 \
@@ -1186,6 +1200,8 @@ tasks:
         	> .cuebe/dev/components/headlamp/helm.gen.yaml
     sources:
       - components/headlamp/*.cue
+    generates:
+      - .cuebe/dev/components/headlamp/helm.gen.yaml
   component:dev:headlamp:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1216,10 +1232,10 @@ tasks:
           name: headlamp
 
         EOF
-    generates:
-      - .cuebe/dev/components/headlamp/resources.gen.yaml
     sources:
       - components/headlamp/*.cue
+    generates:
+      - .cuebe/dev/components/headlamp/resources.gen.yaml
   component:dev:headlamp:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1285,6 +1301,8 @@ tasks:
         	> .cuebe/prod/components/metrics-server/helm.gen.yaml
     sources:
       - components/metrics-server/*.cue
+    generates:
+      - .cuebe/prod/components/metrics-server/helm.gen.yaml
   component:prod:metrics-server:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1293,10 +1311,10 @@ tasks:
         cat << EOF > .cuebe/prod/components/metrics-server/resources.gen.yaml
 
         EOF
-    generates:
-      - .cuebe/prod/components/metrics-server/resources.gen.yaml
     sources:
       - components/metrics-server/*.cue
+    generates:
+      - .cuebe/prod/components/metrics-server/resources.gen.yaml
   component:prod:metrics-server:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1359,7 +1377,7 @@ tasks:
           loadBalancerIP: 10.0.1.2
         servers:
           - zones:
-              - zone: ballard.localhost
+              - zone: ballard.coldencullen.com
             port: 53
             plugins:
               - name: cache
@@ -1369,7 +1387,7 @@ tasks:
               - name: forward
                 parameters: . 10.0.1.1
           - zones:
-              - zone: mission.localhost
+              - zone: mission.coldencullen.com
             port: 53
             plugins:
               - name: cache
@@ -1379,7 +1397,7 @@ tasks:
               - name: forward
                 parameters: . 10.1.1.1
           - zones:
-              - zone: localhost
+              - zone: coldencullen.com
             port: 53
             plugins:
               - name: cache
@@ -1420,6 +1438,8 @@ tasks:
         	> .cuebe/prod/components/dns/helm.gen.yaml
     sources:
       - components/dns/*.cue
+    generates:
+      - .cuebe/prod/components/dns/helm.gen.yaml
   component:prod:dns:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1487,10 +1507,10 @@ tasks:
           name: dns
 
         EOF
-    generates:
-      - .cuebe/prod/components/dns/resources.gen.yaml
     sources:
       - components/dns/*.cue
+    generates:
+      - .cuebe/prod/components/dns/resources.gen.yaml
   component:prod:dns:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1573,7 +1593,7 @@ tasks:
               namespacePolicy:
                 from: All
               certificateRefs:
-                - name: gw-tls-self-signed
+                - name: gw-tls-acme-prod
         metrics:
           prometheus:
             serviceMonitor:
@@ -1591,6 +1611,8 @@ tasks:
         	> .cuebe/prod/components/gateway/helm.gen.yaml
     sources:
       - components/gateway/*.cue
+    generates:
+      - .cuebe/prod/components/gateway/helm.gen.yaml
   component:prod:gateway:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1604,13 +1626,13 @@ tasks:
           namespace: gateway
         spec:
           dnsNames:
-            - localhost
-            - '*.localhost'
-            - '*.services.localhost'
+            - coldencullen.com
+            - '*.coldencullen.com'
+            - '*.services.coldencullen.com'
           issuerRef:
             kind: Issuer
-            name: self-signed
-          secretName: gw-tls-self-signed
+            name: acme-prod
+          secretName: gw-tls-acme-prod
         ---
         apiVersion: gateway.networking.k8s.io/v1
         kind: HTTPRoute
@@ -1619,7 +1641,7 @@ tasks:
           namespace: gateway
         spec:
           hostnames:
-            - traefik.localhost
+            - traefik.coldencullen.com
           parentRefs:
             - kind: Gateway
               name: traefik-gateway
@@ -1634,10 +1656,10 @@ tasks:
           name: gateway
 
         EOF
-    generates:
-      - .cuebe/prod/components/gateway/resources.gen.yaml
     sources:
       - components/gateway/*.cue
+    generates:
+      - .cuebe/prod/components/gateway/resources.gen.yaml
   component:prod:gateway:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1713,6 +1735,8 @@ tasks:
         	> .cuebe/prod/components/cert-manager/helm.gen.yaml
     sources:
       - components/cert-manager/*.cue
+    generates:
+      - .cuebe/prod/components/cert-manager/helm.gen.yaml
   component:prod:cert-manager:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1762,10 +1786,10 @@ tasks:
                       name: cloudflare-api-token
 
         EOF
-    generates:
-      - .cuebe/prod/components/cert-manager/resources.gen.yaml
     sources:
       - components/cert-manager/*.cue
+    generates:
+      - .cuebe/prod/components/cert-manager/resources.gen.yaml
   component:prod:cert-manager:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1836,6 +1860,8 @@ tasks:
         	> .cuebe/prod/components/load-balancer/helm.gen.yaml
     sources:
       - components/load-balancer/*.cue
+    generates:
+      - .cuebe/prod/components/load-balancer/helm.gen.yaml
   component:prod:load-balancer:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1871,10 +1897,10 @@ tasks:
             - default
 
         EOF
-    generates:
-      - .cuebe/prod/components/load-balancer/resources.gen.yaml
     sources:
       - components/load-balancer/*.cue
+    generates:
+      - .cuebe/prod/components/load-balancer/resources.gen.yaml
   component:prod:load-balancer:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1919,7 +1945,7 @@ tasks:
       - .cuebe/prod/components/load-balancer/load-balancer.gen.yaml
   component:prod:metrics:generator-0:
     deps:
-      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.15.2
+      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1
     cmds:
       - echo Rendering Chart...
       - mkdir -p .cuebe/prod/components/metrics
@@ -1937,7 +1963,7 @@ tasks:
             main:
               enabled: true
               hostnames:
-                - prometheus.services.localhost
+                - prometheus.services.coldencullen.com
               parentRefs:
                 - kind: Gateway
                   name: traefik-gateway
@@ -1950,7 +1976,7 @@ tasks:
             main:
               enabled: true
               hostnames:
-                - grafana.services.localhost
+                - grafana.services.coldencullen.com
               parentRefs:
                 - kind: Gateway
                   name: traefik-gateway
@@ -1959,7 +1985,7 @@ tasks:
         EOF
       - |-
         helm template kube-prometheus-stack \
-        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.15.2/kube-prometheus-stack \
+        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
         	--values .cuebe/prod/components/metrics/helm.kube-prometheus-stack.values.yaml \
         	--namespace metrics \
         	 \
@@ -1968,6 +1994,8 @@ tasks:
         	> .cuebe/prod/components/metrics/helm.gen.yaml
     sources:
       - components/metrics/*.cue
+    generates:
+      - .cuebe/prod/components/metrics/helm.gen.yaml
   component:prod:metrics:generator-1:
     cmds:
       - echo Exporting Resources
@@ -1984,10 +2012,10 @@ tasks:
           name: metrics
 
         EOF
-    generates:
-      - .cuebe/prod/components/metrics/resources.gen.yaml
     sources:
       - components/metrics/*.cue
+    generates:
+      - .cuebe/prod/components/metrics/resources.gen.yaml
   component:prod:metrics:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -2054,6 +2082,8 @@ tasks:
         	> .cuebe/prod/components/postgres/helm.postgres.gen.yaml
     sources:
       - components/postgres/*.cue
+    generates:
+      - .cuebe/prod/components/postgres/helm.postgres.gen.yaml
   component:prod:postgres:generator-1:
     cmds:
       - echo Exporting Resources
@@ -2066,10 +2096,10 @@ tasks:
           name: postgres
 
         EOF
-    generates:
-      - .cuebe/prod/components/postgres/resources.gen.yaml
     sources:
       - components/postgres/*.cue
+    generates:
+      - .cuebe/prod/components/postgres/resources.gen.yaml
   component:prod:postgres:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -2113,7 +2143,7 @@ tasks:
       - .cuebe/prod/components/postgres/postgres.gen.yaml
   component:prod:headlamp:generator-0:
     deps:
-      - helm-pull:headlamp:headlamp:0.33.0
+      - helm-pull:headlamp:headlamp:0.34.0
     cmds:
       - echo Rendering Chart...
       - mkdir -p .cuebe/prod/components/headlamp
@@ -2143,7 +2173,7 @@ tasks:
         EOF
       - |-
         helm template headlamp \
-        	./.cuebe/helm-cache/headlamp/headlamp/0.33.0/headlamp \
+        	./.cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp \
         	--values .cuebe/prod/components/headlamp/helm.headlamp.values.yaml \
         	 \
         	 \
@@ -2152,6 +2182,8 @@ tasks:
         	> .cuebe/prod/components/headlamp/helm.gen.yaml
     sources:
       - components/headlamp/*.cue
+    generates:
+      - .cuebe/prod/components/headlamp/helm.gen.yaml
   component:prod:headlamp:generator-1:
     cmds:
       - echo Exporting Resources
@@ -2165,7 +2197,7 @@ tasks:
           namespace: headlamp
         spec:
           hostnames:
-            - services.localhost
+            - services.coldencullen.com
           parentRefs:
             - kind: Gateway
               name: traefik-gateway
@@ -2182,10 +2214,10 @@ tasks:
           name: headlamp
 
         EOF
-    generates:
-      - .cuebe/prod/components/headlamp/resources.gen.yaml
     sources:
       - components/headlamp/*.cue
+    generates:
+      - .cuebe/prod/components/headlamp/resources.gen.yaml
   component:prod:headlamp:transformer-0:
     cmds:
       - echo Kustomizing...
