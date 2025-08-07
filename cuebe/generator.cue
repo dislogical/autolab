@@ -16,6 +16,9 @@ import (
 	sources: [
 		#srcDir + "/*.cue",
 	]
+	generates: [
+		"\(#outDir)/\(#generator.output)",
+	]
 
 	...
 } & ({
@@ -37,9 +40,6 @@ import (
 		]))
 		EOF
 		""",
-	]
-	generates: [
-		outPath,
 	]
 } | {
 	#generator: kind: "Helm"
