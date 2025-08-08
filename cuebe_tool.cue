@@ -39,7 +39,7 @@ command: build: {
 					"-e", "holos",
 				]
 
-				stdout: string
+				stdout:     string
 				descriptor: yaml.Unmarshal(stdout)
 			}
 		}

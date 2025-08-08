@@ -23,6 +23,7 @@ import (
 	...
 } & ({
 	#generator: kind: "Resources"
+	#srcDir: string
 	#outDir: string
 
 	let outPath = "\(#outDir)/\(#generator.output)"
@@ -31,14 +32,15 @@ import (
 		"echo Exporting Resources",
 		"mkdir -p \(#outDir)",
 		"""
-		cat << EOF > \(outPath)
-		\(yaml.MarshalStream([
-			for _, type in #generator.resources
-			for _, resource in type {
-				resource
-			},
-		]))
-		EOF
+		cue export ./\(#srcDir) -o text:\(outPath) -e 'yaml.MarshalStream([
+				for artifact in holos.spec.artifacts
+				for generator in artifact.generators
+				if generator.kind == "Resources"
+				for _, resources in generator.resources
+				for _, resource in resources {
+					resource
+				}
+			])'
 		""",
 	]
 } | {
