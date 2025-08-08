@@ -327,9 +327,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/metrics-server
       - |-
-        cat << EOF > .cuebe/dev/components/metrics-server/resources.gen.yaml
-
-        EOF
+        cue export ./components/metrics-server -o text:.cuebe/dev/components/metrics-server/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/metrics-server/*.cue
     generates:
@@ -369,8 +375,8 @@ tasks:
       - .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
   component:dev:metrics-server:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/metrics-server/metrics-server.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/metrics-server/metrics-server.gen.yaml` }}'
     deps:
       - component:dev:metrics-server:transformer-0
     sources:
@@ -465,68 +471,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/dns
       - |-
-        cat << EOF > .cuebe/dev/components/dns/resources.gen.yaml
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRole
-        metadata:
-          name: gateway
-        rules:
-          - apiGroups:
-              - ""
-            resources:
-              - endpoints
-              - services
-              - pods
-              - namespaces
-            verbs:
-              - list
-              - watch
-          - apiGroups:
-              - apiextensions.k8s.io
-            resources:
-              - customresourcedefinitions
-            verbs:
-              - get
-              - list
-              - watch
-          - apiGroups:
-              - gateway.networking.k8s.io
-            resources:
-              - gateways
-              - gatewayclasses
-              - httproutes
-              - tlsroutes
-              - grpcroutes
-            verbs:
-              - watch
-              - list
-          - apiGroups:
-              - externaldns.k8s.io
-            resources:
-              - dnsendpoints
-            verbs:
-              - watch
-              - list
-        ---
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRoleBinding
-        metadata:
-          name: gateway
-        roleRef:
-          apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: gateway
-        subjects:
-          - kind: ServiceAccount
-            name: coredns
-            namespace: dns
-        ---
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: dns
-
-        EOF
+        cue export ./components/dns -o text:.cuebe/dev/components/dns/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/dns/*.cue
     generates:
@@ -565,8 +518,8 @@ tasks:
       - .cuebe/dev/components/dns/dns.gen.yaml
   component:dev:dns:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/dns/dns.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/dns/dns.gen.yaml` }}'
     deps:
       - component:dev:dns:transformer-0
     sources:
@@ -639,44 +592,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/gateway
       - |-
-        cat << EOF > .cuebe/dev/components/gateway/resources.gen.yaml
-        apiVersion: cert-manager.io/v1
-        kind: Certificate
-        metadata:
-          name: default
-          namespace: gateway
-        spec:
-          dnsNames:
-            - localhost
-            - '*.localhost'
-            - '*.services.localhost'
-          issuerRef:
-            kind: Issuer
-            name: self-signed
-          secretName: gw-tls-self-signed
-        ---
-        apiVersion: gateway.networking.k8s.io/v1
-        kind: HTTPRoute
-        metadata:
-          name: traefik
-          namespace: gateway
-        spec:
-          hostnames:
-            - traefik.localhost
-          parentRefs:
-            - kind: Gateway
-              name: traefik-gateway
-          rules:
-            - backendRefs:
-                - kind: TraefikService
-                  name: api@internal
-        ---
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: gateway
-
-        EOF
+        cue export ./components/gateway -o text:.cuebe/dev/components/gateway/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/gateway/*.cue
     generates:
@@ -715,8 +639,8 @@ tasks:
       - .cuebe/dev/components/gateway/gateway.gen.yaml
   component:dev:gateway:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/gateway/gateway.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/gateway/gateway.gen.yaml` }}'
     deps:
       - component:dev:gateway:transformer-0
     sources:
@@ -764,50 +688,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/cert-manager
       - |-
-        cat << EOF > .cuebe/dev/components/cert-manager/resources.gen.yaml
-        apiVersion: cert-manager.io/v1
-        kind: Issuer
-        metadata:
-          name: self-signed
-          namespace: gateway
-        spec:
-          selfSigned: {}
-        ---
-        apiVersion: cert-manager.io/v1
-        kind: Issuer
-        metadata:
-          name: acme-staging
-          namespace: gateway
-        spec:
-          acme:
-            privateKeySecretRef:
-              name: acme-staging-account-key
-            server: https://acme-staging-v02.api.letsencrypt.org/directory
-            solvers:
-              - dns01:
-                  cloudflare:
-                    apiTokenSecretRef:
-                      key: api-token
-                      name: cloudflare-api-token
-        ---
-        apiVersion: cert-manager.io/v1
-        kind: Issuer
-        metadata:
-          name: acme-prod
-          namespace: gateway
-        spec:
-          acme:
-            privateKeySecretRef:
-              name: acme-prod-account-key
-            server: https://acme-v02.api.letsencrypt.org/directory
-            solvers:
-              - dns01:
-                  cloudflare:
-                    apiTokenSecretRef:
-                      key: api-token
-                      name: cloudflare-api-token
-
-        EOF
+        cue export ./components/cert-manager -o text:.cuebe/dev/components/cert-manager/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/cert-manager/*.cue
     generates:
@@ -846,8 +735,8 @@ tasks:
       - .cuebe/dev/components/cert-manager/cert-manager.gen.yaml
   component:dev:cert-manager:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/cert-manager/cert-manager.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/cert-manager/cert-manager.gen.yaml` }}'
     deps:
       - component:dev:cert-manager:transformer-0
     sources:
@@ -890,36 +779,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/load-balancer
       - |-
-        cat << EOF > .cuebe/dev/components/load-balancer/resources.gen.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/warn: privileged
-          name: load-balancer
-        ---
-        apiVersion: metallb.io/v1beta1
-        kind: IPAddressPool
-        metadata:
-          name: default
-          namespace: load-balancer
-        spec:
-          avoidBuggyIPs: true
-          addresses:
-            - 10.0.1.0/29
-        ---
-        apiVersion: metallb.io/v1beta1
-        kind: L2Advertisement
-        metadata:
-          name: default
-          namespace: load-balancer
-        spec:
-          ipAddressPools:
-            - default
-
-        EOF
+        cue export ./components/load-balancer -o text:.cuebe/dev/components/load-balancer/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/load-balancer/*.cue
     generates:
@@ -959,8 +827,8 @@ tasks:
       - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
   component:dev:load-balancer:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/load-balancer/load-balancer.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/load-balancer/load-balancer.gen.yaml` }}'
     deps:
       - component:dev:load-balancer:transformer-0
     sources:
@@ -1025,17 +893,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/metrics
       - |-
-        cat << EOF > .cuebe/dev/components/metrics/resources.gen.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          labels:
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/warn: privileged
-          name: metrics
-
-        EOF
+        cue export ./components/metrics -o text:.cuebe/dev/components/metrics/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/metrics/*.cue
     generates:
@@ -1074,8 +940,8 @@ tasks:
       - .cuebe/dev/components/metrics/metrics.gen.yaml
   component:dev:metrics:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/metrics/metrics.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/metrics/metrics.gen.yaml` }}'
     deps:
       - component:dev:metrics:transformer-0
     sources:
@@ -1114,13 +980,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/postgres
       - |-
-        cat << EOF > .cuebe/dev/components/postgres/resources.gen.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: postgres
-
-        EOF
+        cue export ./components/postgres -o text:.cuebe/dev/components/postgres/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/postgres/*.cue
     generates:
@@ -1159,8 +1027,8 @@ tasks:
       - .cuebe/dev/components/postgres/postgres.gen.yaml
   component:dev:postgres:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/postgres/postgres.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/postgres/postgres.gen.yaml` }}'
     deps:
       - component:dev:postgres:transformer-0
     sources:
@@ -1215,31 +1083,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/headlamp
       - |-
-        cat << EOF > .cuebe/dev/components/headlamp/resources.gen.yaml
-        apiVersion: gateway.networking.k8s.io/v1
-        kind: HTTPRoute
-        metadata:
-          name: headlamp
-          namespace: headlamp
-        spec:
-          hostnames:
-            - services.localhost
-          parentRefs:
-            - kind: Gateway
-              name: traefik-gateway
-              namespace: gateway
-          rules:
-            - backendRefs:
-                - kind: Service
-                  name: headlamp
-                  port: 80
-        ---
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: headlamp
-
-        EOF
+        cue export ./components/headlamp -o text:.cuebe/dev/components/headlamp/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/headlamp/*.cue
     generates:
@@ -1279,8 +1131,8 @@ tasks:
       - .cuebe/dev/components/headlamp/headlamp.gen.yaml
   component:dev:headlamp:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/dev/components/headlamp/headlamp.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/dev/components/headlamp/headlamp.gen.yaml` }}'
     deps:
       - component:dev:headlamp:transformer-0
     sources:
@@ -1317,9 +1169,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/metrics-server
       - |-
-        cat << EOF > .cuebe/prod/components/metrics-server/resources.gen.yaml
-
-        EOF
+        cue export ./components/metrics-server -o text:.cuebe/prod/components/metrics-server/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/metrics-server/*.cue
     generates:
@@ -1359,8 +1217,8 @@ tasks:
       - .cuebe/prod/components/metrics-server/metrics-server.gen.yaml
   component:prod:metrics-server:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/metrics-server/metrics-server.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/metrics-server/metrics-server.gen.yaml` }}'
     deps:
       - component:prod:metrics-server:transformer-0
     sources:
@@ -1455,68 +1313,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/dns
       - |-
-        cat << EOF > .cuebe/prod/components/dns/resources.gen.yaml
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRole
-        metadata:
-          name: gateway
-        rules:
-          - apiGroups:
-              - ""
-            resources:
-              - endpoints
-              - services
-              - pods
-              - namespaces
-            verbs:
-              - list
-              - watch
-          - apiGroups:
-              - apiextensions.k8s.io
-            resources:
-              - customresourcedefinitions
-            verbs:
-              - get
-              - list
-              - watch
-          - apiGroups:
-              - gateway.networking.k8s.io
-            resources:
-              - gateways
-              - gatewayclasses
-              - httproutes
-              - tlsroutes
-              - grpcroutes
-            verbs:
-              - watch
-              - list
-          - apiGroups:
-              - externaldns.k8s.io
-            resources:
-              - dnsendpoints
-            verbs:
-              - watch
-              - list
-        ---
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRoleBinding
-        metadata:
-          name: gateway
-        roleRef:
-          apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: gateway
-        subjects:
-          - kind: ServiceAccount
-            name: coredns
-            namespace: dns
-        ---
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: dns
-
-        EOF
+        cue export ./components/dns -o text:.cuebe/prod/components/dns/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/dns/*.cue
     generates:
@@ -1555,8 +1360,8 @@ tasks:
       - .cuebe/prod/components/dns/dns.gen.yaml
   component:prod:dns:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/dns/dns.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/dns/dns.gen.yaml` }}'
     deps:
       - component:prod:dns:transformer-0
     sources:
@@ -1629,44 +1434,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/gateway
       - |-
-        cat << EOF > .cuebe/prod/components/gateway/resources.gen.yaml
-        apiVersion: cert-manager.io/v1
-        kind: Certificate
-        metadata:
-          name: default
-          namespace: gateway
-        spec:
-          dnsNames:
-            - coldencullen.com
-            - '*.coldencullen.com'
-            - '*.services.coldencullen.com'
-          issuerRef:
-            kind: Issuer
-            name: acme-prod
-          secretName: gw-tls-acme-prod
-        ---
-        apiVersion: gateway.networking.k8s.io/v1
-        kind: HTTPRoute
-        metadata:
-          name: traefik
-          namespace: gateway
-        spec:
-          hostnames:
-            - traefik.coldencullen.com
-          parentRefs:
-            - kind: Gateway
-              name: traefik-gateway
-          rules:
-            - backendRefs:
-                - kind: TraefikService
-                  name: api@internal
-        ---
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: gateway
-
-        EOF
+        cue export ./components/gateway -o text:.cuebe/prod/components/gateway/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/gateway/*.cue
     generates:
@@ -1705,8 +1481,8 @@ tasks:
       - .cuebe/prod/components/gateway/gateway.gen.yaml
   component:prod:gateway:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/gateway/gateway.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/gateway/gateway.gen.yaml` }}'
     deps:
       - component:prod:gateway:transformer-0
     sources:
@@ -1754,50 +1530,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/cert-manager
       - |-
-        cat << EOF > .cuebe/prod/components/cert-manager/resources.gen.yaml
-        apiVersion: cert-manager.io/v1
-        kind: Issuer
-        metadata:
-          name: self-signed
-          namespace: gateway
-        spec:
-          selfSigned: {}
-        ---
-        apiVersion: cert-manager.io/v1
-        kind: Issuer
-        metadata:
-          name: acme-staging
-          namespace: gateway
-        spec:
-          acme:
-            privateKeySecretRef:
-              name: acme-staging-account-key
-            server: https://acme-staging-v02.api.letsencrypt.org/directory
-            solvers:
-              - dns01:
-                  cloudflare:
-                    apiTokenSecretRef:
-                      key: api-token
-                      name: cloudflare-api-token
-        ---
-        apiVersion: cert-manager.io/v1
-        kind: Issuer
-        metadata:
-          name: acme-prod
-          namespace: gateway
-        spec:
-          acme:
-            privateKeySecretRef:
-              name: acme-prod-account-key
-            server: https://acme-v02.api.letsencrypt.org/directory
-            solvers:
-              - dns01:
-                  cloudflare:
-                    apiTokenSecretRef:
-                      key: api-token
-                      name: cloudflare-api-token
-
-        EOF
+        cue export ./components/cert-manager -o text:.cuebe/prod/components/cert-manager/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/cert-manager/*.cue
     generates:
@@ -1836,8 +1577,8 @@ tasks:
       - .cuebe/prod/components/cert-manager/cert-manager.gen.yaml
   component:prod:cert-manager:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/cert-manager/cert-manager.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/cert-manager/cert-manager.gen.yaml` }}'
     deps:
       - component:prod:cert-manager:transformer-0
     sources:
@@ -1880,36 +1621,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/load-balancer
       - |-
-        cat << EOF > .cuebe/prod/components/load-balancer/resources.gen.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          labels:
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/warn: privileged
-          name: load-balancer
-        ---
-        apiVersion: metallb.io/v1beta1
-        kind: IPAddressPool
-        metadata:
-          name: default
-          namespace: load-balancer
-        spec:
-          avoidBuggyIPs: true
-          addresses:
-            - 10.0.1.0/29
-        ---
-        apiVersion: metallb.io/v1beta1
-        kind: L2Advertisement
-        metadata:
-          name: default
-          namespace: load-balancer
-        spec:
-          ipAddressPools:
-            - default
-
-        EOF
+        cue export ./components/load-balancer -o text:.cuebe/prod/components/load-balancer/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/load-balancer/*.cue
     generates:
@@ -1949,8 +1669,8 @@ tasks:
       - .cuebe/prod/components/load-balancer/load-balancer.gen.yaml
   component:prod:load-balancer:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/load-balancer/load-balancer.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/load-balancer/load-balancer.gen.yaml` }}'
     deps:
       - component:prod:load-balancer:transformer-0
     sources:
@@ -2015,17 +1735,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/metrics
       - |-
-        cat << EOF > .cuebe/prod/components/metrics/resources.gen.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          labels:
-            pod-security.kubernetes.io/audit: privileged
-            pod-security.kubernetes.io/enforce: privileged
-            pod-security.kubernetes.io/warn: privileged
-          name: metrics
-
-        EOF
+        cue export ./components/metrics -o text:.cuebe/prod/components/metrics/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/metrics/*.cue
     generates:
@@ -2064,8 +1782,8 @@ tasks:
       - .cuebe/prod/components/metrics/metrics.gen.yaml
   component:prod:metrics:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/metrics/metrics.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/metrics/metrics.gen.yaml` }}'
     deps:
       - component:prod:metrics:transformer-0
     sources:
@@ -2104,13 +1822,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/postgres
       - |-
-        cat << EOF > .cuebe/prod/components/postgres/resources.gen.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: postgres
-
-        EOF
+        cue export ./components/postgres -o text:.cuebe/prod/components/postgres/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/postgres/*.cue
     generates:
@@ -2149,8 +1869,8 @@ tasks:
       - .cuebe/prod/components/postgres/postgres.gen.yaml
   component:prod:postgres:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/postgres/postgres.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/postgres/postgres.gen.yaml` }}'
     deps:
       - component:prod:postgres:transformer-0
     sources:
@@ -2205,31 +1925,15 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/headlamp
       - |-
-        cat << EOF > .cuebe/prod/components/headlamp/resources.gen.yaml
-        apiVersion: gateway.networking.k8s.io/v1
-        kind: HTTPRoute
-        metadata:
-          name: headlamp
-          namespace: headlamp
-        spec:
-          hostnames:
-            - services.coldencullen.com
-          parentRefs:
-            - kind: Gateway
-              name: traefik-gateway
-              namespace: gateway
-          rules:
-            - backendRefs:
-                - kind: Service
-                  name: headlamp
-                  port: 80
-        ---
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: headlamp
-
-        EOF
+        cue export ./components/headlamp -o text:.cuebe/prod/components/headlamp/resources.gen.yaml -e 'yaml.MarshalStream([
+        		for artifact in holos.spec.artifacts
+        		for generator in artifact.generators
+        		if generator.kind == "Resources"
+        		for _, resources in generator.resources
+        		for _, resource in resources {
+        			resource
+        		}
+        	])'
     sources:
       - components/headlamp/*.cue
     generates:
@@ -2269,8 +1973,8 @@ tasks:
       - .cuebe/prod/components/headlamp/headlamp.gen.yaml
   component:prod:headlamp:validator-1:
     cmds:
-      - echo Validating with holos...
-      - '{{ `holos cue vet -c ./config .cuebe/prod/components/headlamp/headlamp.gen.yaml` }}'
+      - echo Validating with cue...
+      - '{{ `cue vet -c ./config .cuebe/prod/components/headlamp/headlamp.gen.yaml` }}'
     deps:
       - component:prod:headlamp:transformer-0
     sources:
