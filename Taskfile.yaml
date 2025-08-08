@@ -1,69 +1,96 @@
 version: 3
 silent: true
 output: prefixed
-run: once
+run: when_changed
 tasks:
   default:
     deps:
       - dev
       - prod
     cmd: echo Done!
-  dev:
-    deps:
-      - component:dev:metrics-server
-      - component:dev:dns
-      - component:dev:gateway
-      - component:dev:cert-manager
-      - component:dev:load-balancer
-      - component:dev:metrics
-      - component:dev:postgres
-      - component:dev:headlamp
+  generator:resources:
     cmds:
-      - echo Kustomizing...
+      - echo Exporting Resources from {{.SRC_DIR}}...
+      - mkdir -p {{.OUT_DIR}}
       - |-
-        cat << EOF > .cuebe/dev/kustomization.yaml
-        apiVersion: kustomize.config.k8s.io/v1beta1
-        kind: Kustomization
-        resources:
-          - components/metrics-server/metrics-server.gen.yaml
-          - components/dns/dns.gen.yaml
-          - components/gateway/gateway.gen.yaml
-          - components/cert-manager/cert-manager.gen.yaml
-          - components/load-balancer/load-balancer.gen.yaml
-          - components/metrics/metrics.gen.yaml
-          - components/postgres/postgres.gen.yaml
-          - components/headlamp/headlamp.gen.yaml
+        cat << EOF > {{.OUT_DIR}}/{{.GENERATOR.output}}
+        {{- range $_, $kind := .GENERATOR.resources}}
+        {{- range $_, $resource := $kind}}
+        ---
+        {{toYaml $resource}}
+        {{- end}}
+        {{- end}}
+        EOF
+    requires:
+      vars:
+        - GENERATOR
+        - SRC_DIR
+        - OUT_DIR
+    sources:
+      - '{{.SRC_DIR}}/*'
+    generates:
+      - '{{.OUT_FILE}}/{{.GENERATOR.output}}'
+  generator:helm:
+    prefix: generator:helm:{{.GENERATOR.helm.chart.release}}
+    cmds:
+      - echo Rendering Chart {{.GENERATOR.helm.chart.release}} from {{.SRC_DIR}}...
+      - mkdir -p {{.OUT_DIR}}
+      - |-
+        cat << EOF > {{.OUT_DIR}}/helm.{{.GENERATOR.helm.chart.release}}.values.yaml
+
+        {{toYaml .GENERATOR.helm.values}}
 
         EOF
-      - kustomize build .cuebe/dev > .cuebe/dev/kustomized.yaml
-  prod:
-    deps:
-      - component:prod:metrics-server
-      - component:prod:dns
-      - component:prod:gateway
-      - component:prod:cert-manager
-      - component:prod:load-balancer
-      - component:prod:metrics
-      - component:prod:postgres
-      - component:prod:headlamp
-    cmds:
-      - echo Kustomizing...
       - |-
-        cat << EOF > .cuebe/prod/kustomization.yaml
-        apiVersion: kustomize.config.k8s.io/v1beta1
-        kind: Kustomization
-        resources:
-          - components/metrics-server/metrics-server.gen.yaml
-          - components/dns/dns.gen.yaml
-          - components/gateway/gateway.gen.yaml
-          - components/cert-manager/cert-manager.gen.yaml
-          - components/load-balancer/load-balancer.gen.yaml
-          - components/metrics/metrics.gen.yaml
-          - components/postgres/postgres.gen.yaml
-          - components/headlamp/headlamp.gen.yaml
-
-        EOF
-      - kustomize build .cuebe/prod > .cuebe/prod/kustomized.yaml
+        helm template {{.GENERATOR.helm.chart.release}} \
+        	./.cuebe/helm-cache/{{.GENERATOR.helm.chart.repository.name}}/{{.GENERATOR.helm.chart.name}}/{{.GENERATOR.helm.chart.version}}/{{.GENERATOR.helm.chart.name}} \
+        	--values {{.OUT_DIR}}/helm.{{.GENERATOR.helm.chart.release}}.values.yaml \
+        	--include-crds \
+        	{{if .GENERATOR.helm.namespace}}--namespace {{.GENERATOR.helm.namespace}}{{end}} \
+        	{{if .GENERATOR.helm.apiVersions}}--api-versions '{{.GENERATOR.helm.apiVersions | join ","}}'{{end}} \
+        	--atomic \
+        	{{if not .GENERATOR.helm.enableHooks}}--no-hooks{{end}} \
+        	> {{.OUT_DIR}}/{{.GENERATOR.output}}
+    requires:
+      vars:
+        - GENERATOR
+        - SRC_DIR
+        - OUT_DIR
+    sources:
+      - '{{.SRC_DIR}}/*'
+    generates:
+      - '{{.OUT_FILE}}/{{.GENERATOR.output}}'
+  component:dev:metrics-server:generator-0:
+    deps:
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: metrics-server
+                  version: 3.13.0
+                  release: metrics-server
+                  repository:
+                    name: metrics-server
+                    url: https://kubernetes-sigs.github.io/metrics-server/
+                values:
+                  args:
+                    - --kubelet-insecure-tls
+                enableHooks: false
+          SRC_DIR: components/metrics-server
+          OUT_DIR: .cuebe/dev/components/metrics-server
+  component:dev:metrics-server:validator-0:
+    cmds:
+      - echo Validating with kubeconform...
+      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/metrics-server/metrics-server.gen.yaml` }}'
+    deps:
+      - component:dev:metrics-server:transformer-0
+    sources:
+      - components/metrics-server/*.cue
+      - .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
   helm-pull:metrics-server:metrics-server:3.13.0:
     cmds:
       - echo Pulling...
@@ -296,50 +323,98 @@ tasks:
       - component:prod:headlamp:transformer-0
       - component:prod:headlamp:validator-0
       - component:prod:headlamp:validator-1
-  component:dev:metrics-server:generator-0:
-    deps:
-      - helm-pull:metrics-server:metrics-server:3.13.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/metrics-server
-      - |-
-        cat << EOF > .cuebe/dev/components/metrics-server/helm.metrics-server.values.yaml
-        args:
-          - --kubelet-insecure-tls
-
-        EOF
-      - |-
-        helm template metrics-server \
-        	./.cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server \
-        	--values .cuebe/dev/components/metrics-server/helm.metrics-server.values.yaml \
-        	--include-crds \
-        	 \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/metrics-server/helm.gen.yaml
-    sources:
-      - components/metrics-server/*.cue
-    generates:
-      - .cuebe/dev/components/metrics-server/helm.gen.yaml
   component:dev:metrics-server:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/metrics-server
-      - |-
-        cue export ./components/metrics-server -o text:.cuebe/dev/components/metrics-server/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/metrics-server/*.cue
-    generates:
-      - .cuebe/dev/components/metrics-server/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources: {}
+          SRC_DIR: components/metrics-server
+          OUT_DIR: .cuebe/dev/components/metrics-server
+  component:dev:dns:generator-0:
+    deps:
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: coredns
+                  version: 1.43.1
+                  release: coredns
+                  repository:
+                    name: coredns
+                    url: https://coredns.github.io/helm
+                values:
+                  isClusterService: false
+                  image:
+                    repository: ghcr.io/k8s-gateway/k8s_gateway
+                    tag: 1.5.1
+                    pullPolicy: IfNotPresent
+                  serviceAccount:
+                    create: true
+                  serviceType: LoadBalancer
+                  service:
+                    loadBalancerIP: 10.0.1.2
+                  servers:
+                    - zones:
+                        - zone: ballard.localhost
+                      port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: forward
+                          parameters: . 10.0.1.1
+                    - zones:
+                        - zone: mission.localhost
+                      port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: forward
+                          parameters: . 10.1.1.1
+                    - zones:
+                        - zone: localhost
+                      port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: k8s_gateway
+                          configBlock: resources HTTPRoute
+                    - port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: any
+                        - name: errors
+                        - name: health
+                        - name: ready
+                        - name: prometheus
+                          parameters: "0.0.0.0:9153"
+                        - name: reload
+                          parameters: 30s 5s
+                        - name: forward
+                          parameters: . tls://1.1.1.1 tls://1.0.0.1
+                          configBlock: |-
+                            tls
+                            tls_servername one.one.one.one
+                enableHooks: false
+                namespace: dns
+          SRC_DIR: components/dns
+          OUT_DIR: .cuebe/dev/components/dns
   component:dev:metrics-server:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -355,8 +430,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/metrics-server > .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
     deps:
-      - component:dev:metrics-server:generator-0
-      - component:dev:metrics-server:generator-1
+      - task: component:dev:metrics-server:generator-0
+      - task: component:dev:metrics-server:generator-1
     generates:
       - .cuebe/dev/components/metrics-server/kustomization.yaml
       - .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
@@ -364,15 +439,6 @@ tasks:
       - components/metrics-server/*.cue
       - .cuebe/dev/components/metrics-server/helm.gen.yaml
       - .cuebe/dev/components/metrics-server/resources.gen.yaml
-  component:dev:metrics-server:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/metrics-server/metrics-server.gen.yaml` }}'
-    deps:
-      - component:dev:metrics-server:transformer-0
-    sources:
-      - components/metrics-server/*.cue
-      - .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
   component:dev:metrics-server:validator-1:
     cmds:
       - echo Validating with cue...
@@ -382,108 +448,150 @@ tasks:
     sources:
       - components/metrics-server/*.cue
       - .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
-  component:dev:dns:generator-0:
+  component:dev:dns:validator-0:
+    cmds:
+      - echo Validating with kubeconform...
+      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/dns/dns.gen.yaml` }}'
     deps:
-      - helm-pull:coredns:coredns:1.43.1
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/dns
-      - |-
-        cat << EOF > .cuebe/dev/components/dns/helm.coredns.values.yaml
-        isClusterService: false
-        image:
-          repository: ghcr.io/k8s-gateway/k8s_gateway
-          tag: 1.5.1
-          pullPolicy: IfNotPresent
-        serviceAccount:
-          create: true
-        serviceType: LoadBalancer
-        service:
-          loadBalancerIP: 10.0.1.2
-        servers:
-          - zones:
-              - zone: ballard.localhost
-            port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: forward
-                parameters: . 10.0.1.1
-          - zones:
-              - zone: mission.localhost
-            port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: forward
-                parameters: . 10.1.1.1
-          - zones:
-              - zone: localhost
-            port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: k8s_gateway
-                configBlock: resources HTTPRoute
-          - port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: any
-              - name: errors
-              - name: health
-              - name: ready
-              - name: prometheus
-                parameters: "0.0.0.0:9153"
-              - name: reload
-                parameters: 30s 5s
-              - name: forward
-                parameters: . tls://1.1.1.1 tls://1.0.0.1
-                configBlock: |-
-                  tls
-                  tls_servername one.one.one.one
-
-        EOF
-      - |-
-        helm template coredns \
-        	./.cuebe/helm-cache/coredns/coredns/1.43.1/coredns \
-        	--values .cuebe/dev/components/dns/helm.coredns.values.yaml \
-        	--include-crds \
-        	--namespace dns \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/dns/helm.gen.yaml
+      - component:dev:dns:transformer-0
     sources:
       - components/dns/*.cue
-    generates:
-      - .cuebe/dev/components/dns/helm.gen.yaml
+      - .cuebe/dev/components/dns/dns.gen.yaml
   component:dev:dns:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/dns
-      - |-
-        cue export ./components/dns -o text:.cuebe/dev/components/dns/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/dns/*.cue
-    generates:
-      - .cuebe/dev/components/dns/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                ClusterRole:
+                  gateway:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: ClusterRole
+                    metadata:
+                      name: gateway
+                    rules:
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - endpoints
+                          - services
+                          - pods
+                          - namespaces
+                        verbs:
+                          - list
+                          - watch
+                      - apiGroups:
+                          - apiextensions.k8s.io
+                        resources:
+                          - customresourcedefinitions
+                        verbs:
+                          - get
+                          - list
+                          - watch
+                      - apiGroups:
+                          - gateway.networking.k8s.io
+                        resources:
+                          - gateways
+                          - gatewayclasses
+                          - httproutes
+                          - tlsroutes
+                          - grpcroutes
+                        verbs:
+                          - watch
+                          - list
+                      - apiGroups:
+                          - externaldns.k8s.io
+                        resources:
+                          - dnsendpoints
+                        verbs:
+                          - watch
+                          - list
+                ClusterRoleBinding:
+                  gateway:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: ClusterRoleBinding
+                    metadata:
+                      name: gateway
+                    roleRef:
+                      apiGroup: rbac.authorization.k8s.io
+                      kind: ClusterRole
+                      name: gateway
+                    subjects:
+                      - kind: ServiceAccount
+                        name: coredns
+                        namespace: dns
+                Namespace:
+                  dns:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: dns
+          SRC_DIR: components/dns
+          OUT_DIR: .cuebe/dev/components/dns
+  component:dev:gateway:generator-0:
+    deps:
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: traefik
+                  version: 37.0.0
+                  release: traefik
+                  repository:
+                    name: traefik
+                    url: https://traefik.github.io/charts
+                values:
+                  providers:
+                    kubernetesIngress:
+                      enabled: false
+                    kubernetesCRD:
+                      enabled: false
+                    kubernetesGateway:
+                      enabled: true
+                      statusAddress:
+                        service:
+                          enabled: true
+                  service:
+                    annotations:
+                      metallb.io/loadBalancerIPs: 10.0.1.3
+                      tilt.dev/port-forward: "8080:80"
+                  ports:
+                    web:
+                      redirections:
+                        entryPoint:
+                          to: websecure
+                          scheme: https
+                    websecure:
+                      asDefault: true
+                  gateway:
+                    listeners:
+                      web:
+                        namespacePolicy:
+                          from: All
+                      websecure:
+                        port: 8443
+                        protocol: HTTPS
+                        namespacePolicy:
+                          from: All
+                        certificateRefs:
+                          - name: gw-tls-self-signed
+                  metrics:
+                    prometheus:
+                      serviceMonitor:
+                        enabled: true
+                enableHooks: false
+                namespace: gateway
+                apiVersions:
+                  - monitoring.coreos.com/v1
+          SRC_DIR: components/gateway
+          OUT_DIR: .cuebe/dev/components/gateway
   component:dev:dns:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -498,8 +606,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/dns > .cuebe/dev/components/dns/dns.gen.yaml
     deps:
-      - component:dev:dns:generator-0
-      - component:dev:dns:generator-1
+      - task: component:dev:dns:generator-0
+      - task: component:dev:dns:generator-1
     generates:
       - .cuebe/dev/components/dns/kustomization.yaml
       - .cuebe/dev/components/dns/dns.gen.yaml
@@ -507,15 +615,6 @@ tasks:
       - components/dns/*.cue
       - .cuebe/dev/components/dns/helm.gen.yaml
       - .cuebe/dev/components/dns/resources.gen.yaml
-  component:dev:dns:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/dns/dns.gen.yaml` }}'
-    deps:
-      - component:dev:dns:transformer-0
-    sources:
-      - components/dns/*.cue
-      - .cuebe/dev/components/dns/dns.gen.yaml
   component:dev:dns:validator-1:
     cmds:
       - echo Validating with cue...
@@ -525,86 +624,93 @@ tasks:
     sources:
       - components/dns/*.cue
       - .cuebe/dev/components/dns/dns.gen.yaml
-  component:dev:gateway:generator-0:
-    deps:
-      - helm-pull:traefik:traefik:37.0.0
+  component:dev:gateway:validator-0:
     cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/gateway
+      - echo Validating with kubeconform...
+      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/gateway/gateway.gen.yaml` }}'
+    deps:
+      - component:dev:gateway:transformer-0
+    sources:
+      - components/gateway/*.cue
+      - .cuebe/dev/components/gateway/gateway.gen.yaml
+  component:dev:gateway:generator-1:
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Certificate:
+                  default:
+                    apiVersion: cert-manager.io/v1
+                    kind: Certificate
+                    metadata:
+                      name: default
+                      namespace: gateway
+                    spec:
+                      dnsNames:
+                        - localhost
+                        - '*.localhost'
+                        - '*.services.localhost'
+                      issuerRef:
+                        kind: Issuer
+                        name: self-signed
+                      secretName: gw-tls-self-signed
+                HTTPRoute:
+                  traefik:
+                    apiVersion: gateway.networking.k8s.io/v1
+                    kind: HTTPRoute
+                    metadata:
+                      name: traefik
+                      namespace: gateway
+                    spec:
+                      hostnames:
+                        - traefik.localhost
+                      parentRefs:
+                        - kind: Gateway
+                          name: traefik-gateway
+                      rules:
+                        - backendRefs:
+                            - kind: TraefikService
+                              name: api@internal
+                Namespace:
+                  gateway:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: gateway
+          SRC_DIR: components/gateway
+          OUT_DIR: .cuebe/dev/components/gateway
+  dev:
+    deps:
+      - component:dev:metrics-server
+      - component:dev:dns
+      - component:dev:gateway
+      - component:dev:cert-manager
+      - component:dev:load-balancer
+      - component:dev:metrics
+      - component:dev:postgres
+      - component:dev:headlamp
+    cmds:
+      - echo Kustomizing...
       - |-
-        cat << EOF > .cuebe/dev/components/gateway/helm.traefik.values.yaml
-        providers:
-          kubernetesIngress:
-            enabled: false
-          kubernetesCRD:
-            enabled: false
-          kubernetesGateway:
-            enabled: true
-            statusAddress:
-              service:
-                enabled: true
-        service:
-          annotations:
-            metallb.io/loadBalancerIPs: 10.0.1.3
-            tilt.dev/port-forward: "8080:80"
-        ports:
-          web:
-            redirections:
-              entryPoint:
-                to: websecure
-                scheme: https
-          websecure:
-            asDefault: true
-        gateway:
-          listeners:
-            web:
-              namespacePolicy:
-                from: All
-            websecure:
-              port: 8443
-              protocol: HTTPS
-              namespacePolicy:
-                from: All
-              certificateRefs:
-                - name: gw-tls-self-signed
-        metrics:
-          prometheus:
-            serviceMonitor:
-              enabled: true
+        cat << EOF > .cuebe/dev/kustomization.yaml
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+          - components/metrics-server/metrics-server.gen.yaml
+          - components/dns/dns.gen.yaml
+          - components/gateway/gateway.gen.yaml
+          - components/cert-manager/cert-manager.gen.yaml
+          - components/load-balancer/load-balancer.gen.yaml
+          - components/metrics/metrics.gen.yaml
+          - components/postgres/postgres.gen.yaml
+          - components/headlamp/headlamp.gen.yaml
 
         EOF
-      - |-
-        helm template traefik \
-        	./.cuebe/helm-cache/traefik/traefik/37.0.0/traefik \
-        	--values .cuebe/dev/components/gateway/helm.traefik.values.yaml \
-        	--include-crds \
-        	--namespace gateway \
-        	--api-versions 'monitoring.coreos.com/v1' \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/gateway/helm.gen.yaml
-    sources:
-      - components/gateway/*.cue
-    generates:
-      - .cuebe/dev/components/gateway/helm.gen.yaml
-  component:dev:gateway:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/gateway
-      - |-
-        cue export ./components/gateway -o text:.cuebe/dev/components/gateway/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/gateway/*.cue
-    generates:
-      - .cuebe/dev/components/gateway/resources.gen.yaml
+      - kustomize build .cuebe/dev > .cuebe/dev/kustomized.yaml
   component:dev:gateway:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -619,8 +725,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/gateway > .cuebe/dev/components/gateway/gateway.gen.yaml
     deps:
-      - component:dev:gateway:generator-0
-      - component:dev:gateway:generator-1
+      - task: component:dev:gateway:generator-0
+      - task: component:dev:gateway:generator-1
     generates:
       - .cuebe/dev/components/gateway/kustomization.yaml
       - .cuebe/dev/components/gateway/gateway.gen.yaml
@@ -628,15 +734,6 @@ tasks:
       - components/gateway/*.cue
       - .cuebe/dev/components/gateway/helm.gen.yaml
       - .cuebe/dev/components/gateway/resources.gen.yaml
-  component:dev:gateway:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/gateway/gateway.gen.yaml` }}'
-    deps:
-      - component:dev:gateway:transformer-0
-    sources:
-      - components/gateway/*.cue
-      - .cuebe/dev/components/gateway/gateway.gen.yaml
   component:dev:gateway:validator-1:
     cmds:
       - echo Validating with cue...
@@ -646,61 +743,103 @@ tasks:
     sources:
       - components/gateway/*.cue
       - .cuebe/dev/components/gateway/gateway.gen.yaml
+  component:dev:cert-manager:validator-0:
+    cmds:
+      - echo Validating with kubeconform...
+      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/cert-manager/cert-manager.gen.yaml` }}'
+    deps:
+      - component:dev:cert-manager:transformer-0
+    sources:
+      - components/cert-manager/*.cue
+      - .cuebe/dev/components/cert-manager/cert-manager.gen.yaml
   component:dev:cert-manager:generator-0:
     deps:
-      - helm-pull:cert-manager:cert-manager:v1.18.2
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/cert-manager
-      - |-
-        cat << EOF > .cuebe/dev/components/cert-manager/helm.cert-manager.values.yaml
-        crds:
-          enabled: true
-        global:
-          leaderElection:
-            namespace: gateway
-        config:
-          featureGates:
-            ServerSideApply: true
-        prometheus:
-          servicemonitor:
-            enabled: true
-          podmonitor:
-            enabled: false
-
-        EOF
-      - |-
-        helm template cert-manager \
-        	./.cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/cert-manager \
-        	--values .cuebe/dev/components/cert-manager/helm.cert-manager.values.yaml \
-        	--include-crds \
-        	--namespace gateway \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/cert-manager/helm.gen.yaml
-    sources:
-      - components/cert-manager/*.cue
-    generates:
-      - .cuebe/dev/components/cert-manager/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: cert-manager
+                  version: v1.18.2
+                  release: cert-manager
+                  repository:
+                    name: cert-manager
+                    url: https://charts.jetstack.io
+                values:
+                  crds:
+                    enabled: true
+                  global:
+                    leaderElection:
+                      namespace: gateway
+                  config:
+                    featureGates:
+                      ServerSideApply: true
+                  prometheus:
+                    servicemonitor:
+                      enabled: true
+                    podmonitor:
+                      enabled: false
+                enableHooks: false
+                namespace: gateway
+          SRC_DIR: components/cert-manager
+          OUT_DIR: .cuebe/dev/components/cert-manager
   component:dev:cert-manager:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/cert-manager
-      - |-
-        cue export ./components/cert-manager -o text:.cuebe/dev/components/cert-manager/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/cert-manager/*.cue
-    generates:
-      - .cuebe/dev/components/cert-manager/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Issuer:
+                  self-signed:
+                    apiVersion: cert-manager.io/v1
+                    kind: Issuer
+                    metadata:
+                      name: self-signed
+                      namespace: gateway
+                    spec:
+                      selfSigned: {}
+                  acme-staging:
+                    apiVersion: cert-manager.io/v1
+                    kind: Issuer
+                    metadata:
+                      name: acme-staging
+                      namespace: gateway
+                    spec:
+                      acme:
+                        privateKeySecretRef:
+                          name: acme-staging-account-key
+                        server: https://acme-staging-v02.api.letsencrypt.org/directory
+                        solvers:
+                          - dns01:
+                              cloudflare:
+                                apiTokenSecretRef:
+                                  key: api-token
+                                  name: cloudflare-api-token
+                  acme-prod:
+                    apiVersion: cert-manager.io/v1
+                    kind: Issuer
+                    metadata:
+                      name: acme-prod
+                      namespace: gateway
+                    spec:
+                      acme:
+                        privateKeySecretRef:
+                          name: acme-prod-account-key
+                        server: https://acme-v02.api.letsencrypt.org/directory
+                        solvers:
+                          - dns01:
+                              cloudflare:
+                                apiTokenSecretRef:
+                                  key: api-token
+                                  name: cloudflare-api-token
+          SRC_DIR: components/cert-manager
+          OUT_DIR: .cuebe/dev/components/cert-manager
   component:dev:cert-manager:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -715,8 +854,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/cert-manager > .cuebe/dev/components/cert-manager/cert-manager.gen.yaml
     deps:
-      - component:dev:cert-manager:generator-0
-      - component:dev:cert-manager:generator-1
+      - task: component:dev:cert-manager:generator-0
+      - task: component:dev:cert-manager:generator-1
     generates:
       - .cuebe/dev/components/cert-manager/kustomization.yaml
       - .cuebe/dev/components/cert-manager/cert-manager.gen.yaml
@@ -724,15 +863,6 @@ tasks:
       - components/cert-manager/*.cue
       - .cuebe/dev/components/cert-manager/helm.gen.yaml
       - .cuebe/dev/components/cert-manager/resources.gen.yaml
-  component:dev:cert-manager:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/cert-manager/cert-manager.gen.yaml` }}'
-    deps:
-      - component:dev:cert-manager:transformer-0
-    sources:
-      - components/cert-manager/*.cue
-      - .cuebe/dev/components/cert-manager/cert-manager.gen.yaml
   component:dev:cert-manager:validator-1:
     cmds:
       - echo Validating with cue...
@@ -742,56 +872,86 @@ tasks:
     sources:
       - components/cert-manager/*.cue
       - .cuebe/dev/components/cert-manager/cert-manager.gen.yaml
+  component:dev:load-balancer:validator-0:
+    cmds:
+      - echo Validating with kubeconform...
+      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/load-balancer/load-balancer.gen.yaml` }}'
+    deps:
+      - component:dev:load-balancer:transformer-0
+    sources:
+      - components/load-balancer/*.cue
+      - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
   component:dev:load-balancer:generator-0:
     deps:
-      - helm-pull:metallb:metallb:0.15.2
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/load-balancer
-      - |-
-        cat << EOF > .cuebe/dev/components/load-balancer/helm.metallb.values.yaml
-        speaker:
-          frr:
-            enabled: false
-        prometheus:
-          serviceAccount: prometheus-kube-prometheus-prometheus
-          namespace: metrics
-          serviceMonitor:
-            enabled: true
-
-        EOF
-      - |-
-        helm template metallb \
-        	./.cuebe/helm-cache/metallb/metallb/0.15.2/metallb \
-        	--values .cuebe/dev/components/load-balancer/helm.metallb.values.yaml \
-        	--include-crds \
-        	--namespace load-balancer \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/load-balancer/helm.gen.yaml
-    sources:
-      - components/load-balancer/*.cue
-    generates:
-      - .cuebe/dev/components/load-balancer/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: metallb
+                  release: metallb
+                  version: 0.15.2
+                  repository:
+                    name: metallb
+                    url: https://metallb.github.io/metallb
+                values:
+                  speaker:
+                    frr:
+                      enabled: false
+                  prometheus:
+                    serviceAccount: prometheus-kube-prometheus-prometheus
+                    namespace: metrics
+                    serviceMonitor:
+                      enabled: true
+                enableHooks: false
+                namespace: load-balancer
+          SRC_DIR: components/load-balancer
+          OUT_DIR: .cuebe/dev/components/load-balancer
   component:dev:load-balancer:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/load-balancer
-      - |-
-        cue export ./components/load-balancer -o text:.cuebe/dev/components/load-balancer/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/load-balancer/*.cue
-    generates:
-      - .cuebe/dev/components/load-balancer/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Namespace:
+                  load_balancer:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      labels:
+                        pod-security.kubernetes.io/enforce: privileged
+                        pod-security.kubernetes.io/audit: privileged
+                        pod-security.kubernetes.io/warn: privileged
+                      name: load-balancer
+                IPAddressPool:
+                  default:
+                    apiVersion: metallb.io/v1beta1
+                    kind: IPAddressPool
+                    metadata:
+                      name: default
+                      namespace: load-balancer
+                    spec:
+                      avoidBuggyIPs: true
+                      addresses:
+                        - 10.0.1.0/29
+                L2Advertisement:
+                  default:
+                    apiVersion: metallb.io/v1beta1
+                    kind: L2Advertisement
+                    metadata:
+                      name: default
+                      namespace: load-balancer
+                    spec:
+                      ipAddressPools:
+                        - default
+          SRC_DIR: components/load-balancer
+          OUT_DIR: .cuebe/dev/components/load-balancer
   component:dev:load-balancer:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -807,8 +967,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/load-balancer > .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
     deps:
-      - component:dev:load-balancer:generator-0
-      - component:dev:load-balancer:generator-1
+      - task: component:dev:load-balancer:generator-0
+      - task: component:dev:load-balancer:generator-1
     generates:
       - .cuebe/dev/components/load-balancer/kustomization.yaml
       - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
@@ -816,15 +976,34 @@ tasks:
       - components/load-balancer/*.cue
       - .cuebe/dev/components/load-balancer/helm.gen.yaml
       - .cuebe/dev/components/load-balancer/resources.gen.yaml
-  component:dev:load-balancer:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/load-balancer/load-balancer.gen.yaml` }}'
+  prod:
     deps:
-      - component:dev:load-balancer:transformer-0
-    sources:
-      - components/load-balancer/*.cue
-      - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
+      - component:prod:metrics-server
+      - component:prod:dns
+      - component:prod:gateway
+      - component:prod:cert-manager
+      - component:prod:load-balancer
+      - component:prod:metrics
+      - component:prod:postgres
+      - component:prod:headlamp
+    cmds:
+      - echo Kustomizing...
+      - |-
+        cat << EOF > .cuebe/prod/kustomization.yaml
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+          - components/metrics-server/metrics-server.gen.yaml
+          - components/dns/dns.gen.yaml
+          - components/gateway/gateway.gen.yaml
+          - components/cert-manager/cert-manager.gen.yaml
+          - components/load-balancer/load-balancer.gen.yaml
+          - components/metrics/metrics.gen.yaml
+          - components/postgres/postgres.gen.yaml
+          - components/headlamp/headlamp.gen.yaml
+
+        EOF
+      - kustomize build .cuebe/prod > .cuebe/prod/kustomized.yaml
   component:dev:load-balancer:validator-1:
     cmds:
       - echo Validating with cue...
@@ -836,76 +1015,76 @@ tasks:
       - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
   component:dev:metrics:generator-0:
     deps:
-      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/metrics
-      - |-
-        cat << EOF > .cuebe/dev/components/metrics/helm.kube-prometheus-stack.values.yaml
-        prometheus:
-          prometheusSpec:
-            maximumStartupDurationSeconds: null
-            ruleSelectorNilUsesHelmValues: false
-            serviceMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelectorNilUsesHelmValues: false
-            probeSelectorNilUsesHelmValues: false
-            scrapeConfigSelectorNilUsesHelmValues: false
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - prometheus.services.localhost
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-        prometheusOperator:
-          tls:
-            enabled: false
-        grafana:
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - grafana.services.localhost
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-
-        EOF
-      - |-
-        helm template kube-prometheus-stack \
-        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
-        	--values .cuebe/dev/components/metrics/helm.kube-prometheus-stack.values.yaml \
-        	--include-crds \
-        	--namespace metrics \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/metrics/helm.gen.yaml
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/dev/components/metrics/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: kube-prometheus-stack
+                  version: 75.18.1
+                  release: kube-prometheus-stack
+                  repository:
+                    name: kube-prometheus-stack
+                    url: https://prometheus-community.github.io/helm-charts
+                values:
+                  prometheus:
+                    prometheusSpec:
+                      maximumStartupDurationSeconds: null
+                      ruleSelectorNilUsesHelmValues: false
+                      serviceMonitorSelectorNilUsesHelmValues: false
+                      podMonitorSelectorNilUsesHelmValues: false
+                      probeSelectorNilUsesHelmValues: false
+                      scrapeConfigSelectorNilUsesHelmValues: false
+                    route:
+                      main:
+                        enabled: true
+                        hostnames:
+                          - prometheus.services.localhost
+                        parentRefs:
+                          - kind: Gateway
+                            name: traefik-gateway
+                            namespace: gateway
+                  prometheusOperator:
+                    tls:
+                      enabled: false
+                  grafana:
+                    route:
+                      main:
+                        enabled: true
+                        hostnames:
+                          - grafana.services.localhost
+                        parentRefs:
+                          - kind: Gateway
+                            name: traefik-gateway
+                            namespace: gateway
+                enableHooks: false
+                namespace: metrics
+          SRC_DIR: components/metrics
+          OUT_DIR: .cuebe/dev/components/metrics
   component:dev:metrics:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/metrics
-      - |-
-        cue export ./components/metrics -o text:.cuebe/dev/components/metrics/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/dev/components/metrics/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Namespace:
+                  metrics:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      labels:
+                        pod-security.kubernetes.io/audit: privileged
+                        pod-security.kubernetes.io/enforce: privileged
+                        pod-security.kubernetes.io/warn: privileged
+                      name: metrics
+          SRC_DIR: components/metrics
+          OUT_DIR: .cuebe/dev/components/metrics
   component:dev:metrics:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -920,8 +1099,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/metrics > .cuebe/dev/components/metrics/metrics.gen.yaml
     deps:
-      - component:dev:metrics:generator-0
-      - component:dev:metrics:generator-1
+      - task: component:dev:metrics:generator-0
+      - task: component:dev:metrics:generator-1
     generates:
       - .cuebe/dev/components/metrics/kustomization.yaml
       - .cuebe/dev/components/metrics/metrics.gen.yaml
@@ -949,50 +1128,46 @@ tasks:
       - .cuebe/dev/components/metrics/metrics.gen.yaml
   component:dev:postgres:generator-0:
     deps:
-      - helm-pull:cloudnative-pg:cloudnative-pg:0.25.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/postgres
-      - |-
-        cat << EOF > .cuebe/dev/components/postgres/helm.postgres.values.yaml
-        cluster:
-          instances: 2
-          monitoring:
-            enabled: true
-
-        EOF
-      - |-
-        helm template postgres \
-        	./.cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg \
-        	--values .cuebe/dev/components/postgres/helm.postgres.values.yaml \
-        	--include-crds \
-        	--namespace postgres \
-        	 \
-        	--atomic \
-        	{{if not true}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/postgres/helm.postgres.gen.yaml
-    sources:
-      - components/postgres/*.cue
-    generates:
-      - .cuebe/dev/components/postgres/helm.postgres.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.postgres.gen.yaml
+              helm:
+                chart:
+                  name: cloudnative-pg
+                  release: postgres
+                  version: 0.25.0
+                  repository:
+                    name: cloudnative-pg
+                    url: https://cloudnative-pg.github.io/charts
+                enableHooks: true
+                namespace: postgres
+                values:
+                  cluster:
+                    instances: 2
+                    monitoring:
+                      enabled: true
+          SRC_DIR: components/postgres
+          OUT_DIR: .cuebe/dev/components/postgres
   component:dev:postgres:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/postgres
-      - |-
-        cue export ./components/postgres -o text:.cuebe/dev/components/postgres/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/postgres/*.cue
-    generates:
-      - .cuebe/dev/components/postgres/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Namespace:
+                  postgres:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: postgres
+          SRC_DIR: components/postgres
+          OUT_DIR: .cuebe/dev/components/postgres
   component:dev:postgres:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1007,8 +1182,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/postgres > .cuebe/dev/components/postgres/postgres.gen.yaml
     deps:
-      - component:dev:postgres:generator-0
-      - component:dev:postgres:generator-1
+      - task: component:dev:postgres:generator-0
+      - task: component:dev:postgres:generator-1
     generates:
       - .cuebe/dev/components/postgres/kustomization.yaml
       - .cuebe/dev/components/postgres/postgres.gen.yaml
@@ -1036,66 +1211,80 @@ tasks:
       - .cuebe/dev/components/postgres/postgres.gen.yaml
   component:dev:headlamp:generator-0:
     deps:
-      - helm-pull:headlamp:headlamp:0.34.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/headlamp
-      - |-
-        cat << EOF > .cuebe/dev/components/headlamp/helm.headlamp.values.yaml
-        config:
-          watchPlugins: true
-          extraArgs:
-            - -otlp-endpoint=''
-        pluginsManager:
-          enabled: true
-          configContent: |
-            installOptions:
-              parallel: true
-              maxConcurrent: 2
-            plugins:
-              - name: flux
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_flux
-                version: 0.3.0
-              - name: cert-manager
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_cert-manager
-                version: 0.1.0
-              - name: kompose
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_kompose
-                version: 0.1.0-beta-1
-
-        EOF
-      - |-
-        helm template headlamp \
-        	./.cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp \
-        	--values .cuebe/dev/components/headlamp/helm.headlamp.values.yaml \
-        	--include-crds \
-        	 \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/headlamp/helm.gen.yaml
-    sources:
-      - components/headlamp/*.cue
-    generates:
-      - .cuebe/dev/components/headlamp/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: headlamp
+                  version: 0.34.0
+                  release: headlamp
+                  repository:
+                    name: headlamp
+                    url: https://kubernetes-sigs.github.io/headlamp
+                values:
+                  config:
+                    watchPlugins: true
+                    extraArgs:
+                      - -otlp-endpoint=''
+                  pluginsManager:
+                    enabled: true
+                    configContent: |
+                      installOptions:
+                        parallel: true
+                        maxConcurrent: 2
+                      plugins:
+                        - name: flux
+                          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_flux
+                          version: 0.3.0
+                        - name: cert-manager
+                          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_cert-manager
+                          version: 0.1.0
+                        - name: kompose
+                          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_kompose
+                          version: 0.1.0-beta-1
+                enableHooks: false
+          SRC_DIR: components/headlamp
+          OUT_DIR: .cuebe/dev/components/headlamp
   component:dev:headlamp:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/headlamp
-      - |-
-        cue export ./components/headlamp -o text:.cuebe/dev/components/headlamp/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/headlamp/*.cue
-    generates:
-      - .cuebe/dev/components/headlamp/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                HTTPRoute:
+                  headlamp:
+                    apiVersion: gateway.networking.k8s.io/v1
+                    kind: HTTPRoute
+                    metadata:
+                      name: headlamp
+                      namespace: headlamp
+                    spec:
+                      hostnames:
+                        - services.localhost
+                      parentRefs:
+                        - kind: Gateway
+                          name: traefik-gateway
+                          namespace: gateway
+                      rules:
+                        - backendRefs:
+                            - kind: Service
+                              name: headlamp
+                              port: 80
+                Namespace:
+                  headlamp:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: headlamp
+          SRC_DIR: components/headlamp
+          OUT_DIR: .cuebe/dev/components/headlamp
   component:dev:headlamp:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1111,8 +1300,8 @@ tasks:
         EOF
       - kustomize build .cuebe/dev/components/headlamp > .cuebe/dev/components/headlamp/headlamp.gen.yaml
     deps:
-      - component:dev:headlamp:generator-0
-      - component:dev:headlamp:generator-1
+      - task: component:dev:headlamp:generator-0
+      - task: component:dev:headlamp:generator-1
     generates:
       - .cuebe/dev/components/headlamp/kustomization.yaml
       - .cuebe/dev/components/headlamp/headlamp.gen.yaml
@@ -1140,48 +1329,37 @@ tasks:
       - .cuebe/dev/components/headlamp/headlamp.gen.yaml
   component:prod:metrics-server:generator-0:
     deps:
-      - helm-pull:metrics-server:metrics-server:3.13.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/metrics-server
-      - |-
-        cat << EOF > .cuebe/prod/components/metrics-server/helm.metrics-server.values.yaml
-        args:
-          - --kubelet-insecure-tls
-
-        EOF
-      - |-
-        helm template metrics-server \
-        	./.cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server \
-        	--values .cuebe/prod/components/metrics-server/helm.metrics-server.values.yaml \
-        	--include-crds \
-        	 \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/metrics-server/helm.gen.yaml
-    sources:
-      - components/metrics-server/*.cue
-    generates:
-      - .cuebe/prod/components/metrics-server/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: metrics-server
+                  version: 3.13.0
+                  release: metrics-server
+                  repository:
+                    name: metrics-server
+                    url: https://kubernetes-sigs.github.io/metrics-server/
+                values:
+                  args:
+                    - --kubelet-insecure-tls
+                enableHooks: false
+          SRC_DIR: components/metrics-server
+          OUT_DIR: .cuebe/prod/components/metrics-server
   component:prod:metrics-server:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/metrics-server
-      - |-
-        cue export ./components/metrics-server -o text:.cuebe/prod/components/metrics-server/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/metrics-server/*.cue
-    generates:
-      - .cuebe/prod/components/metrics-server/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources: {}
+          SRC_DIR: components/metrics-server
+          OUT_DIR: .cuebe/prod/components/metrics-server
   component:prod:metrics-server:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1197,8 +1375,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/metrics-server > .cuebe/prod/components/metrics-server/metrics-server.gen.yaml
     deps:
-      - component:prod:metrics-server:generator-0
-      - component:prod:metrics-server:generator-1
+      - task: component:prod:metrics-server:generator-0
+      - task: component:prod:metrics-server:generator-1
     generates:
       - .cuebe/prod/components/metrics-server/kustomization.yaml
       - .cuebe/prod/components/metrics-server/metrics-server.gen.yaml
@@ -1226,106 +1404,159 @@ tasks:
       - .cuebe/prod/components/metrics-server/metrics-server.gen.yaml
   component:prod:dns:generator-0:
     deps:
-      - helm-pull:coredns:coredns:1.43.1
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/dns
-      - |-
-        cat << EOF > .cuebe/prod/components/dns/helm.coredns.values.yaml
-        isClusterService: false
-        image:
-          repository: ghcr.io/k8s-gateway/k8s_gateway
-          tag: 1.5.1
-          pullPolicy: IfNotPresent
-        serviceAccount:
-          create: true
-        serviceType: LoadBalancer
-        service:
-          loadBalancerIP: 10.0.1.2
-        servers:
-          - zones:
-              - zone: ballard.coldencullen.com
-            port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: forward
-                parameters: . 10.0.1.1
-          - zones:
-              - zone: mission.coldencullen.com
-            port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: forward
-                parameters: . 10.1.1.1
-          - zones:
-              - zone: coldencullen.com
-            port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: k8s_gateway
-                configBlock: resources HTTPRoute
-          - port: 53
-            plugins:
-              - name: cache
-              - name: log
-                parameters: . "{combined}"
-                configBlock: class denial error
-              - name: any
-              - name: errors
-              - name: health
-              - name: ready
-              - name: prometheus
-                parameters: "0.0.0.0:9153"
-              - name: reload
-                parameters: 30s 5s
-              - name: forward
-                parameters: . tls://1.1.1.1 tls://1.0.0.1
-                configBlock: |-
-                  tls
-                  tls_servername one.one.one.one
-
-        EOF
-      - |-
-        helm template coredns \
-        	./.cuebe/helm-cache/coredns/coredns/1.43.1/coredns \
-        	--values .cuebe/prod/components/dns/helm.coredns.values.yaml \
-        	--include-crds \
-        	--namespace dns \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/dns/helm.gen.yaml
-    sources:
-      - components/dns/*.cue
-    generates:
-      - .cuebe/prod/components/dns/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: coredns
+                  version: 1.43.1
+                  release: coredns
+                  repository:
+                    name: coredns
+                    url: https://coredns.github.io/helm
+                values:
+                  isClusterService: false
+                  image:
+                    repository: ghcr.io/k8s-gateway/k8s_gateway
+                    tag: 1.5.1
+                    pullPolicy: IfNotPresent
+                  serviceAccount:
+                    create: true
+                  serviceType: LoadBalancer
+                  service:
+                    loadBalancerIP: 10.0.1.2
+                  servers:
+                    - zones:
+                        - zone: ballard.coldencullen.com
+                      port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: forward
+                          parameters: . 10.0.1.1
+                    - zones:
+                        - zone: mission.coldencullen.com
+                      port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: forward
+                          parameters: . 10.1.1.1
+                    - zones:
+                        - zone: coldencullen.com
+                      port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: k8s_gateway
+                          configBlock: resources HTTPRoute
+                    - port: 53
+                      plugins:
+                        - name: cache
+                        - name: log
+                          parameters: . "{combined}"
+                          configBlock: class denial error
+                        - name: any
+                        - name: errors
+                        - name: health
+                        - name: ready
+                        - name: prometheus
+                          parameters: "0.0.0.0:9153"
+                        - name: reload
+                          parameters: 30s 5s
+                        - name: forward
+                          parameters: . tls://1.1.1.1 tls://1.0.0.1
+                          configBlock: |-
+                            tls
+                            tls_servername one.one.one.one
+                enableHooks: false
+                namespace: dns
+          SRC_DIR: components/dns
+          OUT_DIR: .cuebe/prod/components/dns
   component:prod:dns:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/dns
-      - |-
-        cue export ./components/dns -o text:.cuebe/prod/components/dns/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/dns/*.cue
-    generates:
-      - .cuebe/prod/components/dns/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                ClusterRole:
+                  gateway:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: ClusterRole
+                    metadata:
+                      name: gateway
+                    rules:
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - endpoints
+                          - services
+                          - pods
+                          - namespaces
+                        verbs:
+                          - list
+                          - watch
+                      - apiGroups:
+                          - apiextensions.k8s.io
+                        resources:
+                          - customresourcedefinitions
+                        verbs:
+                          - get
+                          - list
+                          - watch
+                      - apiGroups:
+                          - gateway.networking.k8s.io
+                        resources:
+                          - gateways
+                          - gatewayclasses
+                          - httproutes
+                          - tlsroutes
+                          - grpcroutes
+                        verbs:
+                          - watch
+                          - list
+                      - apiGroups:
+                          - externaldns.k8s.io
+                        resources:
+                          - dnsendpoints
+                        verbs:
+                          - watch
+                          - list
+                ClusterRoleBinding:
+                  gateway:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: ClusterRoleBinding
+                    metadata:
+                      name: gateway
+                    roleRef:
+                      apiGroup: rbac.authorization.k8s.io
+                      kind: ClusterRole
+                      name: gateway
+                    subjects:
+                      - kind: ServiceAccount
+                        name: coredns
+                        namespace: dns
+                Namespace:
+                  dns:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: dns
+          SRC_DIR: components/dns
+          OUT_DIR: .cuebe/prod/components/dns
   component:prod:dns:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1340,8 +1571,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/dns > .cuebe/prod/components/dns/dns.gen.yaml
     deps:
-      - component:prod:dns:generator-0
-      - component:prod:dns:generator-1
+      - task: component:prod:dns:generator-0
+      - task: component:prod:dns:generator-1
     generates:
       - .cuebe/prod/components/dns/kustomization.yaml
       - .cuebe/prod/components/dns/dns.gen.yaml
@@ -1369,84 +1600,115 @@ tasks:
       - .cuebe/prod/components/dns/dns.gen.yaml
   component:prod:gateway:generator-0:
     deps:
-      - helm-pull:traefik:traefik:37.0.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/gateway
-      - |-
-        cat << EOF > .cuebe/prod/components/gateway/helm.traefik.values.yaml
-        providers:
-          kubernetesIngress:
-            enabled: false
-          kubernetesCRD:
-            enabled: false
-          kubernetesGateway:
-            enabled: true
-            statusAddress:
-              service:
-                enabled: true
-        service:
-          annotations:
-            metallb.io/loadBalancerIPs: 10.0.1.3
-            tilt.dev/port-forward: "8080:80"
-        ports:
-          web:
-            redirections:
-              entryPoint:
-                to: websecure
-                scheme: https
-          websecure:
-            asDefault: true
-        gateway:
-          listeners:
-            web:
-              namespacePolicy:
-                from: All
-            websecure:
-              port: 8443
-              protocol: HTTPS
-              namespacePolicy:
-                from: All
-              certificateRefs:
-                - name: gw-tls-acme-prod
-        metrics:
-          prometheus:
-            serviceMonitor:
-              enabled: true
-
-        EOF
-      - |-
-        helm template traefik \
-        	./.cuebe/helm-cache/traefik/traefik/37.0.0/traefik \
-        	--values .cuebe/prod/components/gateway/helm.traefik.values.yaml \
-        	--include-crds \
-        	--namespace gateway \
-        	--api-versions 'monitoring.coreos.com/v1' \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/gateway/helm.gen.yaml
-    sources:
-      - components/gateway/*.cue
-    generates:
-      - .cuebe/prod/components/gateway/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: traefik
+                  version: 37.0.0
+                  release: traefik
+                  repository:
+                    name: traefik
+                    url: https://traefik.github.io/charts
+                values:
+                  providers:
+                    kubernetesIngress:
+                      enabled: false
+                    kubernetesCRD:
+                      enabled: false
+                    kubernetesGateway:
+                      enabled: true
+                      statusAddress:
+                        service:
+                          enabled: true
+                  service:
+                    annotations:
+                      metallb.io/loadBalancerIPs: 10.0.1.3
+                      tilt.dev/port-forward: "8080:80"
+                  ports:
+                    web:
+                      redirections:
+                        entryPoint:
+                          to: websecure
+                          scheme: https
+                    websecure:
+                      asDefault: true
+                  gateway:
+                    listeners:
+                      web:
+                        namespacePolicy:
+                          from: All
+                      websecure:
+                        port: 8443
+                        protocol: HTTPS
+                        namespacePolicy:
+                          from: All
+                        certificateRefs:
+                          - name: gw-tls-acme-prod
+                  metrics:
+                    prometheus:
+                      serviceMonitor:
+                        enabled: true
+                enableHooks: false
+                namespace: gateway
+                apiVersions:
+                  - monitoring.coreos.com/v1
+          SRC_DIR: components/gateway
+          OUT_DIR: .cuebe/prod/components/gateway
   component:prod:gateway:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/gateway
-      - |-
-        cue export ./components/gateway -o text:.cuebe/prod/components/gateway/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/gateway/*.cue
-    generates:
-      - .cuebe/prod/components/gateway/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Certificate:
+                  default:
+                    apiVersion: cert-manager.io/v1
+                    kind: Certificate
+                    metadata:
+                      name: default
+                      namespace: gateway
+                    spec:
+                      dnsNames:
+                        - coldencullen.com
+                        - '*.coldencullen.com'
+                        - '*.services.coldencullen.com'
+                      issuerRef:
+                        kind: Issuer
+                        name: acme-prod
+                      secretName: gw-tls-acme-prod
+                HTTPRoute:
+                  traefik:
+                    apiVersion: gateway.networking.k8s.io/v1
+                    kind: HTTPRoute
+                    metadata:
+                      name: traefik
+                      namespace: gateway
+                    spec:
+                      hostnames:
+                        - traefik.coldencullen.com
+                      parentRefs:
+                        - kind: Gateway
+                          name: traefik-gateway
+                      rules:
+                        - backendRefs:
+                            - kind: TraefikService
+                              name: api@internal
+                Namespace:
+                  gateway:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: gateway
+          SRC_DIR: components/gateway
+          OUT_DIR: .cuebe/prod/components/gateway
   component:prod:gateway:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1461,8 +1723,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/gateway > .cuebe/prod/components/gateway/gateway.gen.yaml
     deps:
-      - component:prod:gateway:generator-0
-      - component:prod:gateway:generator-1
+      - task: component:prod:gateway:generator-0
+      - task: component:prod:gateway:generator-1
     generates:
       - .cuebe/prod/components/gateway/kustomization.yaml
       - .cuebe/prod/components/gateway/gateway.gen.yaml
@@ -1490,59 +1752,92 @@ tasks:
       - .cuebe/prod/components/gateway/gateway.gen.yaml
   component:prod:cert-manager:generator-0:
     deps:
-      - helm-pull:cert-manager:cert-manager:v1.18.2
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/cert-manager
-      - |-
-        cat << EOF > .cuebe/prod/components/cert-manager/helm.cert-manager.values.yaml
-        crds:
-          enabled: true
-        global:
-          leaderElection:
-            namespace: gateway
-        config:
-          featureGates:
-            ServerSideApply: true
-        prometheus:
-          servicemonitor:
-            enabled: true
-          podmonitor:
-            enabled: false
-
-        EOF
-      - |-
-        helm template cert-manager \
-        	./.cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/cert-manager \
-        	--values .cuebe/prod/components/cert-manager/helm.cert-manager.values.yaml \
-        	--include-crds \
-        	--namespace gateway \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/cert-manager/helm.gen.yaml
-    sources:
-      - components/cert-manager/*.cue
-    generates:
-      - .cuebe/prod/components/cert-manager/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: cert-manager
+                  version: v1.18.2
+                  release: cert-manager
+                  repository:
+                    name: cert-manager
+                    url: https://charts.jetstack.io
+                values:
+                  crds:
+                    enabled: true
+                  global:
+                    leaderElection:
+                      namespace: gateway
+                  config:
+                    featureGates:
+                      ServerSideApply: true
+                  prometheus:
+                    servicemonitor:
+                      enabled: true
+                    podmonitor:
+                      enabled: false
+                enableHooks: false
+                namespace: gateway
+          SRC_DIR: components/cert-manager
+          OUT_DIR: .cuebe/prod/components/cert-manager
   component:prod:cert-manager:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/cert-manager
-      - |-
-        cue export ./components/cert-manager -o text:.cuebe/prod/components/cert-manager/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/cert-manager/*.cue
-    generates:
-      - .cuebe/prod/components/cert-manager/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Issuer:
+                  self-signed:
+                    apiVersion: cert-manager.io/v1
+                    kind: Issuer
+                    metadata:
+                      name: self-signed
+                      namespace: gateway
+                    spec:
+                      selfSigned: {}
+                  acme-staging:
+                    apiVersion: cert-manager.io/v1
+                    kind: Issuer
+                    metadata:
+                      name: acme-staging
+                      namespace: gateway
+                    spec:
+                      acme:
+                        privateKeySecretRef:
+                          name: acme-staging-account-key
+                        server: https://acme-staging-v02.api.letsencrypt.org/directory
+                        solvers:
+                          - dns01:
+                              cloudflare:
+                                apiTokenSecretRef:
+                                  key: api-token
+                                  name: cloudflare-api-token
+                  acme-prod:
+                    apiVersion: cert-manager.io/v1
+                    kind: Issuer
+                    metadata:
+                      name: acme-prod
+                      namespace: gateway
+                    spec:
+                      acme:
+                        privateKeySecretRef:
+                          name: acme-prod-account-key
+                        server: https://acme-v02.api.letsencrypt.org/directory
+                        solvers:
+                          - dns01:
+                              cloudflare:
+                                apiTokenSecretRef:
+                                  key: api-token
+                                  name: cloudflare-api-token
+          SRC_DIR: components/cert-manager
+          OUT_DIR: .cuebe/prod/components/cert-manager
   component:prod:cert-manager:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1557,8 +1852,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/cert-manager > .cuebe/prod/components/cert-manager/cert-manager.gen.yaml
     deps:
-      - component:prod:cert-manager:generator-0
-      - component:prod:cert-manager:generator-1
+      - task: component:prod:cert-manager:generator-0
+      - task: component:prod:cert-manager:generator-1
     generates:
       - .cuebe/prod/components/cert-manager/kustomization.yaml
       - .cuebe/prod/components/cert-manager/cert-manager.gen.yaml
@@ -1586,54 +1881,75 @@ tasks:
       - .cuebe/prod/components/cert-manager/cert-manager.gen.yaml
   component:prod:load-balancer:generator-0:
     deps:
-      - helm-pull:metallb:metallb:0.15.2
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/load-balancer
-      - |-
-        cat << EOF > .cuebe/prod/components/load-balancer/helm.metallb.values.yaml
-        speaker:
-          frr:
-            enabled: false
-        prometheus:
-          serviceAccount: prometheus-kube-prometheus-prometheus
-          namespace: metrics
-          serviceMonitor:
-            enabled: true
-
-        EOF
-      - |-
-        helm template metallb \
-        	./.cuebe/helm-cache/metallb/metallb/0.15.2/metallb \
-        	--values .cuebe/prod/components/load-balancer/helm.metallb.values.yaml \
-        	--include-crds \
-        	--namespace load-balancer \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/load-balancer/helm.gen.yaml
-    sources:
-      - components/load-balancer/*.cue
-    generates:
-      - .cuebe/prod/components/load-balancer/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: metallb
+                  release: metallb
+                  version: 0.15.2
+                  repository:
+                    name: metallb
+                    url: https://metallb.github.io/metallb
+                values:
+                  speaker:
+                    frr:
+                      enabled: false
+                  prometheus:
+                    serviceAccount: prometheus-kube-prometheus-prometheus
+                    namespace: metrics
+                    serviceMonitor:
+                      enabled: true
+                enableHooks: false
+                namespace: load-balancer
+          SRC_DIR: components/load-balancer
+          OUT_DIR: .cuebe/prod/components/load-balancer
   component:prod:load-balancer:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/load-balancer
-      - |-
-        cue export ./components/load-balancer -o text:.cuebe/prod/components/load-balancer/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/load-balancer/*.cue
-    generates:
-      - .cuebe/prod/components/load-balancer/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Namespace:
+                  load_balancer:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      labels:
+                        pod-security.kubernetes.io/enforce: privileged
+                        pod-security.kubernetes.io/audit: privileged
+                        pod-security.kubernetes.io/warn: privileged
+                      name: load-balancer
+                IPAddressPool:
+                  default:
+                    apiVersion: metallb.io/v1beta1
+                    kind: IPAddressPool
+                    metadata:
+                      name: default
+                      namespace: load-balancer
+                    spec:
+                      avoidBuggyIPs: true
+                      addresses:
+                        - 10.0.1.0/29
+                L2Advertisement:
+                  default:
+                    apiVersion: metallb.io/v1beta1
+                    kind: L2Advertisement
+                    metadata:
+                      name: default
+                      namespace: load-balancer
+                    spec:
+                      ipAddressPools:
+                        - default
+          SRC_DIR: components/load-balancer
+          OUT_DIR: .cuebe/prod/components/load-balancer
   component:prod:load-balancer:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1649,8 +1965,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/load-balancer > .cuebe/prod/components/load-balancer/load-balancer.gen.yaml
     deps:
-      - component:prod:load-balancer:generator-0
-      - component:prod:load-balancer:generator-1
+      - task: component:prod:load-balancer:generator-0
+      - task: component:prod:load-balancer:generator-1
     generates:
       - .cuebe/prod/components/load-balancer/kustomization.yaml
       - .cuebe/prod/components/load-balancer/load-balancer.gen.yaml
@@ -1678,76 +1994,76 @@ tasks:
       - .cuebe/prod/components/load-balancer/load-balancer.gen.yaml
   component:prod:metrics:generator-0:
     deps:
-      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/metrics
-      - |-
-        cat << EOF > .cuebe/prod/components/metrics/helm.kube-prometheus-stack.values.yaml
-        prometheus:
-          prometheusSpec:
-            maximumStartupDurationSeconds: null
-            ruleSelectorNilUsesHelmValues: false
-            serviceMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelectorNilUsesHelmValues: false
-            probeSelectorNilUsesHelmValues: false
-            scrapeConfigSelectorNilUsesHelmValues: false
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - prometheus.services.coldencullen.com
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-        prometheusOperator:
-          tls:
-            enabled: false
-        grafana:
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - grafana.services.coldencullen.com
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-
-        EOF
-      - |-
-        helm template kube-prometheus-stack \
-        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
-        	--values .cuebe/prod/components/metrics/helm.kube-prometheus-stack.values.yaml \
-        	--include-crds \
-        	--namespace metrics \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/metrics/helm.gen.yaml
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/prod/components/metrics/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: kube-prometheus-stack
+                  version: 75.18.1
+                  release: kube-prometheus-stack
+                  repository:
+                    name: kube-prometheus-stack
+                    url: https://prometheus-community.github.io/helm-charts
+                values:
+                  prometheus:
+                    prometheusSpec:
+                      maximumStartupDurationSeconds: null
+                      ruleSelectorNilUsesHelmValues: false
+                      serviceMonitorSelectorNilUsesHelmValues: false
+                      podMonitorSelectorNilUsesHelmValues: false
+                      probeSelectorNilUsesHelmValues: false
+                      scrapeConfigSelectorNilUsesHelmValues: false
+                    route:
+                      main:
+                        enabled: true
+                        hostnames:
+                          - prometheus.services.coldencullen.com
+                        parentRefs:
+                          - kind: Gateway
+                            name: traefik-gateway
+                            namespace: gateway
+                  prometheusOperator:
+                    tls:
+                      enabled: false
+                  grafana:
+                    route:
+                      main:
+                        enabled: true
+                        hostnames:
+                          - grafana.services.coldencullen.com
+                        parentRefs:
+                          - kind: Gateway
+                            name: traefik-gateway
+                            namespace: gateway
+                enableHooks: false
+                namespace: metrics
+          SRC_DIR: components/metrics
+          OUT_DIR: .cuebe/prod/components/metrics
   component:prod:metrics:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/metrics
-      - |-
-        cue export ./components/metrics -o text:.cuebe/prod/components/metrics/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/prod/components/metrics/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Namespace:
+                  metrics:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      labels:
+                        pod-security.kubernetes.io/audit: privileged
+                        pod-security.kubernetes.io/enforce: privileged
+                        pod-security.kubernetes.io/warn: privileged
+                      name: metrics
+          SRC_DIR: components/metrics
+          OUT_DIR: .cuebe/prod/components/metrics
   component:prod:metrics:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1762,8 +2078,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/metrics > .cuebe/prod/components/metrics/metrics.gen.yaml
     deps:
-      - component:prod:metrics:generator-0
-      - component:prod:metrics:generator-1
+      - task: component:prod:metrics:generator-0
+      - task: component:prod:metrics:generator-1
     generates:
       - .cuebe/prod/components/metrics/kustomization.yaml
       - .cuebe/prod/components/metrics/metrics.gen.yaml
@@ -1791,50 +2107,46 @@ tasks:
       - .cuebe/prod/components/metrics/metrics.gen.yaml
   component:prod:postgres:generator-0:
     deps:
-      - helm-pull:cloudnative-pg:cloudnative-pg:0.25.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/postgres
-      - |-
-        cat << EOF > .cuebe/prod/components/postgres/helm.postgres.values.yaml
-        cluster:
-          instances: 2
-          monitoring:
-            enabled: true
-
-        EOF
-      - |-
-        helm template postgres \
-        	./.cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg \
-        	--values .cuebe/prod/components/postgres/helm.postgres.values.yaml \
-        	--include-crds \
-        	--namespace postgres \
-        	 \
-        	--atomic \
-        	{{if not true}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/postgres/helm.postgres.gen.yaml
-    sources:
-      - components/postgres/*.cue
-    generates:
-      - .cuebe/prod/components/postgres/helm.postgres.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.postgres.gen.yaml
+              helm:
+                chart:
+                  name: cloudnative-pg
+                  release: postgres
+                  version: 0.25.0
+                  repository:
+                    name: cloudnative-pg
+                    url: https://cloudnative-pg.github.io/charts
+                enableHooks: true
+                namespace: postgres
+                values:
+                  cluster:
+                    instances: 2
+                    monitoring:
+                      enabled: true
+          SRC_DIR: components/postgres
+          OUT_DIR: .cuebe/prod/components/postgres
   component:prod:postgres:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/postgres
-      - |-
-        cue export ./components/postgres -o text:.cuebe/prod/components/postgres/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/postgres/*.cue
-    generates:
-      - .cuebe/prod/components/postgres/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                Namespace:
+                  postgres:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: postgres
+          SRC_DIR: components/postgres
+          OUT_DIR: .cuebe/prod/components/postgres
   component:prod:postgres:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1849,8 +2161,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/postgres > .cuebe/prod/components/postgres/postgres.gen.yaml
     deps:
-      - component:prod:postgres:generator-0
-      - component:prod:postgres:generator-1
+      - task: component:prod:postgres:generator-0
+      - task: component:prod:postgres:generator-1
     generates:
       - .cuebe/prod/components/postgres/kustomization.yaml
       - .cuebe/prod/components/postgres/postgres.gen.yaml
@@ -1878,66 +2190,80 @@ tasks:
       - .cuebe/prod/components/postgres/postgres.gen.yaml
   component:prod:headlamp:generator-0:
     deps:
-      - helm-pull:headlamp:headlamp:0.34.0
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/headlamp
-      - |-
-        cat << EOF > .cuebe/prod/components/headlamp/helm.headlamp.values.yaml
-        config:
-          watchPlugins: true
-          extraArgs:
-            - -otlp-endpoint=''
-        pluginsManager:
-          enabled: true
-          configContent: |
-            installOptions:
-              parallel: true
-              maxConcurrent: 2
-            plugins:
-              - name: flux
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_flux
-                version: 0.3.0
-              - name: cert-manager
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_cert-manager
-                version: 0.1.0
-              - name: kompose
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_kompose
-                version: 0.1.0-beta-1
-
-        EOF
-      - |-
-        helm template headlamp \
-        	./.cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp \
-        	--values .cuebe/prod/components/headlamp/helm.headlamp.values.yaml \
-        	--include-crds \
-        	 \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/headlamp/helm.gen.yaml
-    sources:
-      - components/headlamp/*.cue
-    generates:
-      - .cuebe/prod/components/headlamp/helm.gen.yaml
+      - task: generator:helm
+        vars:
+          GENERATOR:
+            map:
+              kind: Helm
+              output: helm.gen.yaml
+              helm:
+                chart:
+                  name: headlamp
+                  version: 0.34.0
+                  release: headlamp
+                  repository:
+                    name: headlamp
+                    url: https://kubernetes-sigs.github.io/headlamp
+                values:
+                  config:
+                    watchPlugins: true
+                    extraArgs:
+                      - -otlp-endpoint=''
+                  pluginsManager:
+                    enabled: true
+                    configContent: |
+                      installOptions:
+                        parallel: true
+                        maxConcurrent: 2
+                      plugins:
+                        - name: flux
+                          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_flux
+                          version: 0.3.0
+                        - name: cert-manager
+                          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_cert-manager
+                          version: 0.1.0
+                        - name: kompose
+                          source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_kompose
+                          version: 0.1.0-beta-1
+                enableHooks: false
+          SRC_DIR: components/headlamp
+          OUT_DIR: .cuebe/prod/components/headlamp
   component:prod:headlamp:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/headlamp
-      - |-
-        cue export ./components/headlamp -o text:.cuebe/prod/components/headlamp/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/headlamp/*.cue
-    generates:
-      - .cuebe/prod/components/headlamp/resources.gen.yaml
+    deps:
+      - task: generator:resources
+        vars:
+          GENERATOR:
+            map:
+              kind: Resources
+              output: resources.gen.yaml
+              resources:
+                HTTPRoute:
+                  headlamp:
+                    apiVersion: gateway.networking.k8s.io/v1
+                    kind: HTTPRoute
+                    metadata:
+                      name: headlamp
+                      namespace: headlamp
+                    spec:
+                      hostnames:
+                        - services.coldencullen.com
+                      parentRefs:
+                        - kind: Gateway
+                          name: traefik-gateway
+                          namespace: gateway
+                      rules:
+                        - backendRefs:
+                            - kind: Service
+                              name: headlamp
+                              port: 80
+                Namespace:
+                  headlamp:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: headlamp
+          SRC_DIR: components/headlamp
+          OUT_DIR: .cuebe/prod/components/headlamp
   component:prod:headlamp:transformer-0:
     cmds:
       - echo Kustomizing...
@@ -1953,8 +2279,8 @@ tasks:
         EOF
       - kustomize build .cuebe/prod/components/headlamp > .cuebe/prod/components/headlamp/headlamp.gen.yaml
     deps:
-      - component:prod:headlamp:generator-0
-      - component:prod:headlamp:generator-1
+      - task: component:prod:headlamp:generator-0
+      - task: component:prod:headlamp:generator-1
     generates:
       - .cuebe/prod/components/headlamp/kustomization.yaml
       - .cuebe/prod/components/headlamp/headlamp.gen.yaml

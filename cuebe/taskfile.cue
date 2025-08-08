@@ -1,21 +1,25 @@
 package cuebe
 
 import (
+	"strings"
 	"encoding/yaml"
 
 	kustomize "sigs.k8s.io/kustomize/api/types"
 )
 
-#Taskfile: {
+Taskfile: {
 	// Input
-	#Envs: { [string]: [...] }
+	#Envs: {[string]: [...]}
 
 	version: 3
 	silent:  true
 	output:  "prefixed"
-	run:     "once"
+	run:     "when_changed"
 
 	tasks: {
+		// Include the generic generator tasks
+		#GeneratorTasks
+
 		// Make shared tasks to pull the helm charts
 		for env, components in #Envs
 		for _, component in components
@@ -35,11 +39,14 @@ import (
 				let artifact = component.spec.artifacts[0]
 
 				for index, generator in artifact.generators {
-					"\(taskName):generator-\(index)": #Generator & {
-						#generator: generator
-						#srcDir:    component.path
-						#outDir:    _outDir
-					}
+					"\(taskName):generator-\(index)": deps: [{
+						task: "generator:\(strings.ToLower(generator.kind))"
+						vars: {
+							GENERATOR: map: generator
+							SRC_DIR: component.path
+							OUT_DIR: _outDir
+						}
+					}]
 				}
 
 				for index, transformer in artifact.transformers {
@@ -50,7 +57,7 @@ import (
 					} & {
 						deps: [
 							for genIndex, _ in artifact.generators {
-								"\(taskName):generator-\(genIndex)"
+								task: "\(taskName):generator-\(genIndex)"
 							},
 						]
 					}

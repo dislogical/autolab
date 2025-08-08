@@ -45,7 +45,7 @@ command: build: {
 		}
 	}
 
-	let Taskfile = cuebe.#Taskfile & {
+	let Taskfile = cuebe.Taskfile & {
 		for _, env in Envs {
 			#Envs: (env): [
 				for _, component in components {
