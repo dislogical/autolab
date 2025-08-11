@@ -10,7 +10,6 @@ jobs:
       matrix:
         runtime:
           - name: Kind
-            create: kind create cluster --config=kind.yaml
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
@@ -25,9 +24,6 @@ jobs:
 
       - name: Install devenv.sh
         run: nix profile add nixpkgs#devenv
-
-      - name: Setup Cluster
-        run: devenv shell ${{ matrix.runtime.create }}
 
       - name: Run Tilt CI
         run: devenv ci

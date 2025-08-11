@@ -32,7 +32,22 @@
   };
 
   tasks = {
-    "devenv:enterTest".exec = "tilt ci";
+    "kind:create" = {
+      before = [
+        "devenv:enterTest"
+      ];
+      status = "kind get clusters | grep autolab";
+      exec = "kind create cluster --config kind.yaml";
+    };
+    "kind:delete" = {
+      after = [
+        "devenv:enterTest"
+      ];
+      status = "! kind get clusters | grep autolab";
+      exec = "cat kind.yaml | ${pkgs.yq}/bin/yq '.name' | xargs kind delete cluster --name";
+    };
+
+    "devenv:enterTest".exec = "tilt ci --context kind-autolab";
   };
 
   scripts = {
