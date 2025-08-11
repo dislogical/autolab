@@ -22,7 +22,6 @@ Platform: author.#Platform & {
 		gateway:        _
 		cert_manager:   _
 		load_balancer:  _
-		metrics:        _
 		postgres:       _
 		headlamp:       _
 	}

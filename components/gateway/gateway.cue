@@ -92,7 +92,7 @@ Gateway: #Helm & {
 				}]
 			}
 		}
-		metrics: prometheus: serviceMonitor: enabled: true
+		// metrics: prometheus: serviceMonitor: enabled: true
 	}
 	APIVersions: [
 		"monitoring.coreos.com/v1",
