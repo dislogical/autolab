@@ -75,10 +75,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/pull.sh
       - .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/pull.sh
-    sources:
-      - .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/pull.sh
-    generates:
-      - .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server/Chart.yaml
   helm-pull:coredns:coredns:1.43.2:
     cmds:
       - echo Pulling...
@@ -94,10 +92,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
       - .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
-    sources:
-      - .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
-    generates:
-      - .cuebe/helm-cache/coredns/coredns/1.43.2/coredns/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/coredns/coredns/1.43.2/coredns/Chart.yaml
   helm-pull:traefik:traefik:37.0.0:
     cmds:
       - echo Pulling...
@@ -113,10 +109,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/traefik/traefik/37.0.0/pull.sh
       - .cuebe/helm-cache/traefik/traefik/37.0.0/pull.sh
-    sources:
-      - .cuebe/helm-cache/traefik/traefik/37.0.0/pull.sh
-    generates:
-      - .cuebe/helm-cache/traefik/traefik/37.0.0/traefik/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/traefik/traefik/37.0.0/traefik/Chart.yaml
   helm-pull:cert-manager:cert-manager:v1.18.2:
     cmds:
       - echo Pulling...
@@ -132,10 +126,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/pull.sh
       - .cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/pull.sh
-    sources:
-      - .cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/pull.sh
-    generates:
-      - .cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/cert-manager/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/cert-manager/cert-manager/v1.18.2/cert-manager/Chart.yaml
   helm-pull:metallb:metallb:0.15.2:
     cmds:
       - echo Pulling...
@@ -151,10 +143,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/metallb/metallb/0.15.2/pull.sh
       - .cuebe/helm-cache/metallb/metallb/0.15.2/pull.sh
-    sources:
-      - .cuebe/helm-cache/metallb/metallb/0.15.2/pull.sh
-    generates:
-      - .cuebe/helm-cache/metallb/metallb/0.15.2/metallb/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/metallb/metallb/0.15.2/metallb/Chart.yaml
   helm-pull:cloudnative-pg:cloudnative-pg:0.25.0:
     cmds:
       - echo Pulling...
@@ -170,10 +160,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/pull.sh
       - .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/pull.sh
-    sources:
-      - .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/pull.sh
-    generates:
-      - .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/cloudnative-pg/cloudnative-pg/0.25.0/cloudnative-pg/Chart.yaml
   helm-pull:headlamp:headlamp:0.34.0:
     cmds:
       - echo Pulling...
@@ -189,10 +177,8 @@ tasks:
         EOF
       - chmod +x .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
       - .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
-    sources:
-      - .cuebe/helm-cache/headlamp/headlamp/0.34.0/pull.sh
-    generates:
-      - .cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp/Chart.yaml
+    status:
+      - stat .cuebe/helm-cache/headlamp/headlamp/0.34.0/headlamp/Chart.yaml
   component:dev:metrics-server:
     deps:
       - component:dev:metrics-server:transformer-0

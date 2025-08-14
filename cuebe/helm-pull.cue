@@ -32,11 +32,8 @@ import (
 				"\(dest)/pull.sh",
 			]
 
-			sources: [
-				"\(dest)/pull.sh",
-			]
-			generates: [
-				"\(dest)/\(#Generator.helm.chart.name)/Chart.yaml",
+			status: [
+				"stat \(dest)/\(#Generator.helm.chart.name)/Chart.yaml",
 			]
 		}
 	}
