@@ -56,32 +56,15 @@ command: build: {
 	}
 
 	task: exec.Run & {
-		$after: [
-			for _, env in Envs
-			for _, component in components {
-				describe[env][component.name]
-			},
-		]
-
 		cmd: [
 			"task",
 			"-t", "-",
 		]
 
-		env: {
-			// TASK_TEMP_DIR: ".cuebe/task"
-		}
-
 		stdin: yaml.Marshal(Taskfile)
 	}
 
 	write: file.Create & {
-		$after: [
-			for _, component in components {
-				describe[component.name]
-			},
-		]
-
 		filename: "Taskfile.yaml"
 		contents: yaml.Marshal(Taskfile)
 	}

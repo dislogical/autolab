@@ -15,7 +15,6 @@ tasks:
       - component:dev:gateway
       - component:dev:cert-manager
       - component:dev:load-balancer
-      - component:dev:metrics
       - component:dev:postgres
       - component:dev:headlamp
     cmds:
@@ -30,7 +29,6 @@ tasks:
           - components/gateway/gateway.gen.yaml
           - components/cert-manager/cert-manager.gen.yaml
           - components/load-balancer/load-balancer.gen.yaml
-          - components/metrics/metrics.gen.yaml
           - components/postgres/postgres.gen.yaml
           - components/headlamp/headlamp.gen.yaml
 
@@ -43,7 +41,6 @@ tasks:
       - component:prod:gateway
       - component:prod:cert-manager
       - component:prod:load-balancer
-      - component:prod:metrics
       - component:prod:postgres
       - component:prod:headlamp
     cmds:
@@ -58,7 +55,6 @@ tasks:
           - components/gateway/gateway.gen.yaml
           - components/cert-manager/cert-manager.gen.yaml
           - components/load-balancer/load-balancer.gen.yaml
-          - components/metrics/metrics.gen.yaml
           - components/postgres/postgres.gen.yaml
           - components/headlamp/headlamp.gen.yaml
 
@@ -83,25 +79,25 @@ tasks:
       - .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/pull.sh
     generates:
       - .cuebe/helm-cache/metrics-server/metrics-server/3.13.0/metrics-server/Chart.yaml
-  helm-pull:coredns:coredns:1.43.1:
+  helm-pull:coredns:coredns:1.43.2:
     cmds:
       - echo Pulling...
-      - mkdir -p .cuebe/helm-cache/coredns/coredns/1.43.1
+      - mkdir -p .cuebe/helm-cache/coredns/coredns/1.43.2
       - |-
-        cat << EOF > .cuebe/helm-cache/coredns/coredns/1.43.1/pull.sh
+        cat << EOF > .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
         #!/usr/bin/env bash
         helm pull coredns \
         	--repo https://coredns.github.io/helm \
-        	--version 1.43.1 \
-        	--destination .cuebe/helm-cache/coredns/coredns/1.43.1 \
+        	--version 1.43.2 \
+        	--destination .cuebe/helm-cache/coredns/coredns/1.43.2 \
         	--untar
         EOF
-      - chmod +x .cuebe/helm-cache/coredns/coredns/1.43.1/pull.sh
-      - .cuebe/helm-cache/coredns/coredns/1.43.1/pull.sh
+      - chmod +x .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
+      - .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
     sources:
-      - .cuebe/helm-cache/coredns/coredns/1.43.1/pull.sh
+      - .cuebe/helm-cache/coredns/coredns/1.43.2/pull.sh
     generates:
-      - .cuebe/helm-cache/coredns/coredns/1.43.1/coredns/Chart.yaml
+      - .cuebe/helm-cache/coredns/coredns/1.43.2/coredns/Chart.yaml
   helm-pull:traefik:traefik:37.0.0:
     cmds:
       - echo Pulling...
@@ -159,25 +155,6 @@ tasks:
       - .cuebe/helm-cache/metallb/metallb/0.15.2/pull.sh
     generates:
       - .cuebe/helm-cache/metallb/metallb/0.15.2/metallb/Chart.yaml
-  helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1:
-    cmds:
-      - echo Pulling...
-      - mkdir -p .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1
-      - |-
-        cat << EOF > .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
-        #!/usr/bin/env bash
-        helm pull kube-prometheus-stack \
-        	--repo https://prometheus-community.github.io/helm-charts \
-        	--version 75.18.1 \
-        	--destination .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1 \
-        	--untar
-        EOF
-      - chmod +x .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
-      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
-    sources:
-      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/pull.sh
-    generates:
-      - .cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack/Chart.yaml
   helm-pull:cloudnative-pg:cloudnative-pg:0.25.0:
     cmds:
       - echo Pulling...
@@ -241,11 +218,6 @@ tasks:
       - component:dev:load-balancer:transformer-0
       - component:dev:load-balancer:validator-0
       - component:dev:load-balancer:validator-1
-  component:dev:metrics:
-    deps:
-      - component:dev:metrics:transformer-0
-      - component:dev:metrics:validator-0
-      - component:dev:metrics:validator-1
   component:dev:postgres:
     deps:
       - component:dev:postgres:transformer-0
@@ -281,11 +253,6 @@ tasks:
       - component:prod:load-balancer:transformer-0
       - component:prod:load-balancer:validator-0
       - component:prod:load-balancer:validator-1
-  component:prod:metrics:
-    deps:
-      - component:prod:metrics:transformer-0
-      - component:prod:metrics:validator-0
-      - component:prod:metrics:validator-1
   component:prod:postgres:
     deps:
       - component:prod:postgres:transformer-0
@@ -384,7 +351,7 @@ tasks:
       - .cuebe/dev/components/metrics-server/metrics-server.gen.yaml
   component:dev:dns:generator-0:
     deps:
-      - helm-pull:coredns:coredns:1.43.1
+      - helm-pull:coredns:coredns:1.43.2
     cmds:
       - echo Rendering Chart...
       - mkdir -p .cuebe/dev/components/dns
@@ -454,7 +421,7 @@ tasks:
         EOF
       - |-
         helm template coredns \
-        	./.cuebe/helm-cache/coredns/coredns/1.43.1/coredns \
+        	./.cuebe/helm-cache/coredns/coredns/1.43.2/coredns \
         	--values .cuebe/dev/components/dns/helm.coredns.values.yaml \
         	--include-crds \
         	--namespace dns \
@@ -567,10 +534,6 @@ tasks:
                 from: All
               certificateRefs:
                 - name: gw-tls-self-signed
-        metrics:
-          prometheus:
-            serviceMonitor:
-              enabled: true
 
         EOF
       - |-
@@ -662,11 +625,6 @@ tasks:
         config:
           featureGates:
             ServerSideApply: true
-        prometheus:
-          servicemonitor:
-            enabled: true
-          podmonitor:
-            enabled: false
 
         EOF
       - |-
@@ -753,11 +711,6 @@ tasks:
         speaker:
           frr:
             enabled: false
-        prometheus:
-          serviceAccount: prometheus-kube-prometheus-prometheus
-          namespace: metrics
-          serviceMonitor:
-            enabled: true
 
         EOF
       - |-
@@ -834,119 +787,6 @@ tasks:
     sources:
       - components/load-balancer/*.cue
       - .cuebe/dev/components/load-balancer/load-balancer.gen.yaml
-  component:dev:metrics:generator-0:
-    deps:
-      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/dev/components/metrics
-      - |-
-        cat << EOF > .cuebe/dev/components/metrics/helm.kube-prometheus-stack.values.yaml
-        prometheus:
-          prometheusSpec:
-            maximumStartupDurationSeconds: null
-            ruleSelectorNilUsesHelmValues: false
-            serviceMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelectorNilUsesHelmValues: false
-            probeSelectorNilUsesHelmValues: false
-            scrapeConfigSelectorNilUsesHelmValues: false
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - prometheus.services.localhost
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-        prometheusOperator:
-          tls:
-            enabled: false
-        grafana:
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - grafana.services.localhost
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-
-        EOF
-      - |-
-        helm template kube-prometheus-stack \
-        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
-        	--values .cuebe/dev/components/metrics/helm.kube-prometheus-stack.values.yaml \
-        	--include-crds \
-        	--namespace metrics \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/dev/components/metrics/helm.gen.yaml
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/dev/components/metrics/helm.gen.yaml
-  component:dev:metrics:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/dev/components/metrics
-      - |-
-        cue export ./components/metrics -o text:.cuebe/dev/components/metrics/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/dev/components/metrics/resources.gen.yaml
-  component:dev:metrics:transformer-0:
-    cmds:
-      - echo Kustomizing...
-      - |-
-        cat << EOF > .cuebe/dev/components/metrics/kustomization.yaml
-        apiVersion: kustomize.config.k8s.io/v1beta1
-        kind: Kustomization
-        resources:
-          - helm.gen.yaml
-          - resources.gen.yaml
-
-        EOF
-      - kustomize build .cuebe/dev/components/metrics > .cuebe/dev/components/metrics/metrics.gen.yaml
-    deps:
-      - component:dev:metrics:generator-0
-      - component:dev:metrics:generator-1
-    generates:
-      - .cuebe/dev/components/metrics/kustomization.yaml
-      - .cuebe/dev/components/metrics/metrics.gen.yaml
-    sources:
-      - components/metrics/*.cue
-      - .cuebe/dev/components/metrics/helm.gen.yaml
-      - .cuebe/dev/components/metrics/resources.gen.yaml
-  component:dev:metrics:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/dev/components/metrics/metrics.gen.yaml` }}'
-    deps:
-      - component:dev:metrics:transformer-0
-    sources:
-      - components/metrics/*.cue
-      - .cuebe/dev/components/metrics/metrics.gen.yaml
-  component:dev:metrics:validator-1:
-    cmds:
-      - echo Validating with cue...
-      - '{{ `cue vet -c ./config .cuebe/dev/components/metrics/metrics.gen.yaml` }}'
-    deps:
-      - component:dev:metrics:transformer-0
-    sources:
-      - components/metrics/*.cue
-      - .cuebe/dev/components/metrics/metrics.gen.yaml
   component:dev:postgres:generator-0:
     deps:
       - helm-pull:cloudnative-pg:cloudnative-pg:0.25.0
@@ -1226,7 +1066,7 @@ tasks:
       - .cuebe/prod/components/metrics-server/metrics-server.gen.yaml
   component:prod:dns:generator-0:
     deps:
-      - helm-pull:coredns:coredns:1.43.1
+      - helm-pull:coredns:coredns:1.43.2
     cmds:
       - echo Rendering Chart...
       - mkdir -p .cuebe/prod/components/dns
@@ -1296,7 +1136,7 @@ tasks:
         EOF
       - |-
         helm template coredns \
-        	./.cuebe/helm-cache/coredns/coredns/1.43.1/coredns \
+        	./.cuebe/helm-cache/coredns/coredns/1.43.2/coredns \
         	--values .cuebe/prod/components/dns/helm.coredns.values.yaml \
         	--include-crds \
         	--namespace dns \
@@ -1409,10 +1249,6 @@ tasks:
                 from: All
               certificateRefs:
                 - name: gw-tls-acme-prod
-        metrics:
-          prometheus:
-            serviceMonitor:
-              enabled: true
 
         EOF
       - |-
@@ -1504,11 +1340,6 @@ tasks:
         config:
           featureGates:
             ServerSideApply: true
-        prometheus:
-          servicemonitor:
-            enabled: true
-          podmonitor:
-            enabled: false
 
         EOF
       - |-
@@ -1595,11 +1426,6 @@ tasks:
         speaker:
           frr:
             enabled: false
-        prometheus:
-          serviceAccount: prometheus-kube-prometheus-prometheus
-          namespace: metrics
-          serviceMonitor:
-            enabled: true
 
         EOF
       - |-
@@ -1676,119 +1502,6 @@ tasks:
     sources:
       - components/load-balancer/*.cue
       - .cuebe/prod/components/load-balancer/load-balancer.gen.yaml
-  component:prod:metrics:generator-0:
-    deps:
-      - helm-pull:kube-prometheus-stack:kube-prometheus-stack:75.18.1
-    cmds:
-      - echo Rendering Chart...
-      - mkdir -p .cuebe/prod/components/metrics
-      - |-
-        cat << EOF > .cuebe/prod/components/metrics/helm.kube-prometheus-stack.values.yaml
-        prometheus:
-          prometheusSpec:
-            maximumStartupDurationSeconds: null
-            ruleSelectorNilUsesHelmValues: false
-            serviceMonitorSelectorNilUsesHelmValues: false
-            podMonitorSelectorNilUsesHelmValues: false
-            probeSelectorNilUsesHelmValues: false
-            scrapeConfigSelectorNilUsesHelmValues: false
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - prometheus.services.coldencullen.com
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-        prometheusOperator:
-          tls:
-            enabled: false
-        grafana:
-          route:
-            main:
-              enabled: true
-              hostnames:
-                - grafana.services.coldencullen.com
-              parentRefs:
-                - kind: Gateway
-                  name: traefik-gateway
-                  namespace: gateway
-
-        EOF
-      - |-
-        helm template kube-prometheus-stack \
-        	./.cuebe/helm-cache/kube-prometheus-stack/kube-prometheus-stack/75.18.1/kube-prometheus-stack \
-        	--values .cuebe/prod/components/metrics/helm.kube-prometheus-stack.values.yaml \
-        	--include-crds \
-        	--namespace metrics \
-        	 \
-        	--atomic \
-        	{{if not false}}--no-hooks{{end}} \
-        	> .cuebe/prod/components/metrics/helm.gen.yaml
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/prod/components/metrics/helm.gen.yaml
-  component:prod:metrics:generator-1:
-    cmds:
-      - echo Exporting Resources
-      - mkdir -p .cuebe/prod/components/metrics
-      - |-
-        cue export ./components/metrics -o text:.cuebe/prod/components/metrics/resources.gen.yaml -e 'yaml.MarshalStream([
-        		for artifact in holos.spec.artifacts
-        		for generator in artifact.generators
-        		if generator.kind == "Resources"
-        		for _, resources in generator.resources
-        		for _, resource in resources {
-        			resource
-        		}
-        	])'
-    sources:
-      - components/metrics/*.cue
-    generates:
-      - .cuebe/prod/components/metrics/resources.gen.yaml
-  component:prod:metrics:transformer-0:
-    cmds:
-      - echo Kustomizing...
-      - |-
-        cat << EOF > .cuebe/prod/components/metrics/kustomization.yaml
-        apiVersion: kustomize.config.k8s.io/v1beta1
-        kind: Kustomization
-        resources:
-          - helm.gen.yaml
-          - resources.gen.yaml
-
-        EOF
-      - kustomize build .cuebe/prod/components/metrics > .cuebe/prod/components/metrics/metrics.gen.yaml
-    deps:
-      - component:prod:metrics:generator-0
-      - component:prod:metrics:generator-1
-    generates:
-      - .cuebe/prod/components/metrics/kustomization.yaml
-      - .cuebe/prod/components/metrics/metrics.gen.yaml
-    sources:
-      - components/metrics/*.cue
-      - .cuebe/prod/components/metrics/helm.gen.yaml
-      - .cuebe/prod/components/metrics/resources.gen.yaml
-  component:prod:metrics:validator-0:
-    cmds:
-      - echo Validating with kubeconform...
-      - '{{ `kubeconform -schema-location default -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json -schema-location https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{.NormalizedKubernetesVersion}}/{{.ResourceKind}}{{.KindSuffix}}.json -skip CustomResourceDefinition -summary .cuebe/prod/components/metrics/metrics.gen.yaml` }}'
-    deps:
-      - component:prod:metrics:transformer-0
-    sources:
-      - components/metrics/*.cue
-      - .cuebe/prod/components/metrics/metrics.gen.yaml
-  component:prod:metrics:validator-1:
-    cmds:
-      - echo Validating with cue...
-      - '{{ `cue vet -c ./config .cuebe/prod/components/metrics/metrics.gen.yaml` }}'
-    deps:
-      - component:prod:metrics:transformer-0
-    sources:
-      - components/metrics/*.cue
-      - .cuebe/prod/components/metrics/metrics.gen.yaml
   component:prod:postgres:generator-0:
     deps:
       - helm-pull:cloudnative-pg:cloudnative-pg:0.25.0
