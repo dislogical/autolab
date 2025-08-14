@@ -30,7 +30,7 @@ import (
 			let envDir = ".cuebe/\(env)"
 
 			for _, component in components {
-				let taskName = "component:\(env):\(component.name)"
+				let taskName = "\(env):component:\(component.name)"
 				let _outDir = "\(envDir)/\(component.path)"
 				let artifact = component.spec.artifacts[0]
 
@@ -85,7 +85,7 @@ import (
 			(env): {
 				deps: [
 					for _, component in components {
-						"component:\(env):\(component.name)"
+						"\(env):component:\(component.name)"
 					},
 				]
 				let kustomization = kustomize.#Kustomization & {
