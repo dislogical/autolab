@@ -32,7 +32,7 @@ import (
 		"echo Exporting Resources",
 		"mkdir -p \(#outDir)",
 		"""
-		cue export ./\(#srcDir) -o text:\(outPath) -e 'yaml.MarshalStream([
+		cue export ./\(#srcDir) -o text:\(outPath) -f -e 'yaml.MarshalStream([
 				for artifact in holos.spec.artifacts
 				for generator in artifact.generators
 				if generator.kind == "Resources"

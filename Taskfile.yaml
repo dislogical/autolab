@@ -280,7 +280,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/metrics-server
       - |-
-        cue export ./components/metrics-server -o text:.cuebe/dev/components/metrics-server/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/metrics-server -o text:.cuebe/dev/components/metrics-server/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -424,7 +424,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/dns
       - |-
-        cue export ./components/dns -o text:.cuebe/dev/components/dns/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/dns -o text:.cuebe/dev/components/dns/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -541,7 +541,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/gateway
       - |-
-        cue export ./components/gateway -o text:.cuebe/dev/components/gateway/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/gateway -o text:.cuebe/dev/components/gateway/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -632,7 +632,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/cert-manager
       - |-
-        cue export ./components/cert-manager -o text:.cuebe/dev/components/cert-manager/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/cert-manager -o text:.cuebe/dev/components/cert-manager/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -718,7 +718,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/load-balancer
       - |-
-        cue export ./components/load-balancer -o text:.cuebe/dev/components/load-balancer/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/load-balancer -o text:.cuebe/dev/components/load-balancer/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -806,7 +806,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/postgres
       - |-
-        cue export ./components/postgres -o text:.cuebe/dev/components/postgres/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/postgres -o text:.cuebe/dev/components/postgres/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -909,7 +909,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/dev/components/headlamp
       - |-
-        cue export ./components/headlamp -o text:.cuebe/dev/components/headlamp/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/headlamp -o text:.cuebe/dev/components/headlamp/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -995,7 +995,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/metrics-server
       - |-
-        cue export ./components/metrics-server -o text:.cuebe/prod/components/metrics-server/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/metrics-server -o text:.cuebe/prod/components/metrics-server/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -1139,7 +1139,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/dns
       - |-
-        cue export ./components/dns -o text:.cuebe/prod/components/dns/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/dns -o text:.cuebe/prod/components/dns/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -1256,7 +1256,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/gateway
       - |-
-        cue export ./components/gateway -o text:.cuebe/prod/components/gateway/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/gateway -o text:.cuebe/prod/components/gateway/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -1347,7 +1347,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/cert-manager
       - |-
-        cue export ./components/cert-manager -o text:.cuebe/prod/components/cert-manager/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/cert-manager -o text:.cuebe/prod/components/cert-manager/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -1433,7 +1433,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/load-balancer
       - |-
-        cue export ./components/load-balancer -o text:.cuebe/prod/components/load-balancer/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/load-balancer -o text:.cuebe/prod/components/load-balancer/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -1521,7 +1521,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/postgres
       - |-
-        cue export ./components/postgres -o text:.cuebe/prod/components/postgres/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/postgres -o text:.cuebe/prod/components/postgres/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
@@ -1624,7 +1624,7 @@ tasks:
       - echo Exporting Resources
       - mkdir -p .cuebe/prod/components/headlamp
       - |-
-        cue export ./components/headlamp -o text:.cuebe/prod/components/headlamp/resources.gen.yaml -e 'yaml.MarshalStream([
+        cue export ./components/headlamp -o text:.cuebe/prod/components/headlamp/resources.gen.yaml -f -e 'yaml.MarshalStream([
         		for artifact in holos.spec.artifacts
         		for generator in artifact.generators
         		if generator.kind == "Resources"
