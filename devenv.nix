@@ -4,14 +4,12 @@
   # https://devenv.sh/packages/
   packages = with pkgs; [
     # Build Tools
-    go-task
     cue
-    holos
+    go-task
     kubectl
     kustomize
     kubernetes-helm
     kubeconform
-    yq
 
     # Deployment
     fluxcd
@@ -56,10 +54,10 @@
       IMAGE=$OCI_REPO:$(git rev-parse --short HEAD)
 
       # Render the manifests
-      task render:prod
+      cue cmd build
 
       # Push the manifest to the repo
-      flux push artifact $IMAGE -f deploy/prod/kustomized.yaml \
+      flux push artifact $IMAGE -f .cuebe/prod/kustomized.yaml \
         --reproducible \
         --source=$(git config --get remote.origin.url) \
         --revision=$(git branch --show-current)@sha1:$(git rev-parse HEAD) \

@@ -29,12 +29,3 @@ Platform: author.#Platform & {
 
 // Render a Platform resource for holos to process
 holos: Platform.Resource
-
-// Used to emit a kustomization file
-kustomization: {
-	apiVersion: "kustomize.config.k8s.io/v1beta1"
-	kind:       "Kustomization"
-	resources: [
-		for component in Platform.Components {"./components/\(component.name)/\(component.name).gen.yaml"},
-	]
-}
