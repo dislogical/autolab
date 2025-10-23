@@ -23,7 +23,7 @@ Postgres: #ComponentConfig & {
 					chart: {
 						name:    "cloudnative-pg"
 						release: "postgres"
-						version: "0.26.0"
+						version: "0.26.1"
 						repository: {
 							name: "cloudnative-pg"
 							url:  "https://cloudnative-pg.github.io/charts"
