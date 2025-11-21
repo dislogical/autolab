@@ -50,7 +50,7 @@ Gateway: #Helm & {
 
 	Chart: {
 		name:    "traefik"
-		version: "37.3.0"
+		version: "37.4.0"
 		repository: {
 			name: "traefik"
 			url:  "https://traefik.github.io/charts"
