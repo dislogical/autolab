@@ -1,0 +1,35 @@
+# Copyright © 2025 Colden Cullen
+# SPDX-License-Identifier: MIT
+
+[settings]
+experimental = true
+all_compile = false
+
+[env]
+PRE_COMMIT_HOME = "{{ env.MISE_DATA_DIR | default(value=xdg_data_home ~ '/mise') }}/pre-commit-hooks"
+
+[tools]
+# Languages
+cue = "0.15.1"
+# Developer tools
+docker-cli = "29.0.4"
+github-cli = "2.83.1"
+pre-commit = "4.5.0"
+"pipx:commitizen" = "4.10.0"
+
+[tasks]
+renovate.run = '''
+  docker run --rm \
+    --volume .:/usr/src/app \
+    --user $UID:$GID \
+    -e LOG_LEVEL=debug \
+    -e RENOVATE_GITHUB_COM_TOKEN=$(gh auth token) \
+    renovate/renovate \
+      --platform=local
+'''
+
+[hooks]
+postinstall = [
+  "gh extension install nektos/gh-act",
+  "gh extension install seachicken/gh-poi",
+]
