@@ -1,0 +1,48 @@
+# Copyright © 2025 Colden Cullen
+# SPDX-License-Identifier: MIT
+
+[settings]
+experimental = true
+all_compile = false
+
+[env]
+PRE_COMMIT_HOME = "{{ env.MISE_DATA_DIR | default(value=xdg_data_home ~ '/mise') }}/pre-commit-hooks"
+
+[tools]
+# Build tools
+"ubi:cue-lang/cue" = "0.15.1"
+task = "3.45.5"
+helm = "4.0.1"
+kustomize = "5.8.0"
+kubeconform = "0.7.0"
+# Developer tools
+github-cli = "2.83.1"
+kind = "0.30.0"
+tilt = "0.36.0"
+"pipx:pre-commit" = "4.5.0"
+"pipx:commitizen" = "4.10.0"
+
+[tasks]
+build.run = "cue cmd build"
+
+test.run = [
+  "kind create cluster --config kind.yaml",
+  "tilt ci --context kind-autolab",
+  "kind delete cluster --name autolab",
+]
+
+renovate.run = '''
+  docker run --rm \
+    --volume .:/usr/src/app \
+    --user $UID:$GID \
+    -e LOG_LEVEL=debug \
+    -e RENOVATE_GITHUB_COM_TOKEN=$(gh auth token) \
+    docker.io/renovate/renovate:latest \
+      --platform=local
+'''
+
+[hooks]
+postinstall = [
+  "gh extension install nektos/gh-act",
+  "gh extension install seachicken/gh-poi",
+]

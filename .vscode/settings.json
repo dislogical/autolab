@@ -1,4 +1,7 @@
 {
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
   "[cue]": {
     "editor.detectIndentation": false,
     "editor.insertSpaces": false
