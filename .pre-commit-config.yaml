@@ -10,19 +10,9 @@ ci:
   autofix_commit_msg: "fix(pre-commit.ci): auto fixes from pre-commit.com hooks\n\nfor more information, see https://pre-commit.ci"
   autoupdate_commit_msg: "chore(deps): pre-commit autoupdate"
   skip:
-    - devenv-build
     - renovate-config-validator
 
 repos:
-  - repo: local
-    hooks:
-      - id: devenv-build
-        name: devenv.sh build
-        files: 'devenv.*'
-        pass_filenames: false
-        language: system
-        entry: devenv build
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
