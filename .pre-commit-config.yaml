@@ -13,6 +13,11 @@ ci:
     - renovate-config-validator
 
 repos:
+  - repo: https://github.com/pre-commit-ci/pre-commit-ci-config
+    rev: v1.6.1
+    hooks:
+      - id: check-pre-commit-ci-config
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -36,7 +41,6 @@ repos:
       - id: double-quote-string-fixer
         types: [tiltfile]
       - id: no-commit-to-branch
-        args: [--branch, main]
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 42.29.4
