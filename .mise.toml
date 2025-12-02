@@ -21,6 +21,7 @@ kind = "0.30.0"
 tilt = "0.36.0"
 "pipx:pre-commit" = "4.5.0"
 "pipx:commitizen" = "4.10.0"
+flux2 = "2.7.5"
 
 [tasks]
 build.run = "cue cmd build"
