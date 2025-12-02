@@ -78,7 +78,6 @@ import (
 			--include-crds \\
 			\(namespaceArg) \\
 			\(apiVersionArg) \\
-			--atomic \\
 			{{if not \(#generator.helm.enableHooks)}}--no-hooks{{end}} \\
 			> \(#outDir)/\(#generator.output)
 		""",
