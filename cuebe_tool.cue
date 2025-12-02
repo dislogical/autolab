@@ -3,7 +3,6 @@ package holos
 import (
 	"encoding/yaml"
 
-	"tool/file"
 	"tool/exec"
 
 	"github.com/dislogical/autolab/cuebe"
@@ -62,10 +61,5 @@ command: build: {
 		]
 
 		stdin: yaml.Marshal(Taskfile)
-	}
-
-	write: file.Create & {
-		filename: "Taskfile.yaml"
-		contents: yaml.Marshal(Taskfile)
 	}
 }
