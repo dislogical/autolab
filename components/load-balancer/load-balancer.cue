@@ -19,11 +19,11 @@ LoadBalancer: #Helm & {
 		speaker: {
 			frr: enabled: false
 		}
-		// prometheus: {
-		// 	serviceAccount: "prometheus-kube-prometheus-prometheus"
-		// 	namespace:      "metrics"
-		// 	serviceMonitor: enabled: true
-		// }
+		prometheus: {
+			serviceAccount: "prometheus-kube-prometheus-prometheus"
+			namespace:      "metrics"
+			serviceMonitor: enabled: true
+		}
 	}
 }
 
