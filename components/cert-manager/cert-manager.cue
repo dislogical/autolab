@@ -19,7 +19,7 @@ CertManager: #Helm & {
 
 		config: featureGates: ServerSideApply: true
 
-		// prometheus: servicemonitor: enabled: true
+		prometheus: servicemonitor: enabled: true
 	}
 }
 

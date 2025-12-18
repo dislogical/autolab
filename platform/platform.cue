@@ -24,6 +24,7 @@ Platform: author.#Platform & {
 		load_balancer:  _
 		postgres:       _
 		headlamp:       _
+		prometheus:     _
 	}
 }
 
