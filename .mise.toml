@@ -17,7 +17,7 @@ kustomize = "5.8.0"
 kubeconform = "0.7.0"
 # Developer tools
 github-cli = "2.83.2"
-kind = "0.30.0"
+kind = "0.31.0"
 tilt = "0.36.0"
 "pipx:pre-commit" = "4.5.1"
 "pipx:commitizen" = "4.10.1"
