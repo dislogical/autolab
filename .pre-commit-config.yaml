@@ -43,12 +43,12 @@ repos:
       - id: no-commit-to-branch
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 42.92.10
+    rev: 43.2.1
     hooks:
       - id: renovate-config-validator
         args: [--strict]
 
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.13.0
+    rev: v4.12.1
     hooks:
       - id: commitizen
