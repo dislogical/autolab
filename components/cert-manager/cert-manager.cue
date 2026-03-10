@@ -7,7 +7,7 @@ CertManager: #Helm & {
 
 	Chart: {
 		name:    "cert-manager"
-		version: "v1.19.4"
+		version: "v1.20.0"
 		repository: {
 			name: "cert-manager"
 			url:  "https://charts.jetstack.io"
