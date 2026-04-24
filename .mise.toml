@@ -18,7 +18,7 @@ kubeconform = "0.7.0"
 # Developer tools
 github-cli = "2.91.0"
 kind = "0.31.0"
-tilt = "0.37.1"
+tilt = "0.37.2"
 "pipx:pre-commit" = "4.6.0"
 "pipx:commitizen" = "4.13.10"
 flux2 = "2.8.6"
