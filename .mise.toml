@@ -11,7 +11,7 @@ PRE_COMMIT_HOME = "{{ env.MISE_DATA_DIR | default(value=xdg_data_home ~ '/mise')
 [tools]
 # Build tools
 "ubi:cue-lang/cue" = "0.16.1"
-task = "3.45.5"
+task = "3.50.0"
 helm = "4.1.4"
 kustomize = "5.8.1"
 kubeconform = "0.7.0"
