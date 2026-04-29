@@ -5,12 +5,9 @@
 experimental = true
 all_compile = false
 
-[env]
-PRE_COMMIT_HOME = "{{ env.MISE_DATA_DIR | default(value=xdg_data_home ~ '/mise') }}/pre-commit-hooks"
-
 [tools]
 # Build tools
-"ubi:cue-lang/cue" = "0.16.1"
+"github:cue-lang/cue" = "0.16.1"
 task = "3.50.0"
 helm = "4.1.4"
 kustomize = "5.8.1"
@@ -19,7 +16,7 @@ kubeconform = "0.7.0"
 github-cli = "2.92.0"
 kind = "0.31.0"
 tilt = "0.37.2"
-"pipx:pre-commit" = "4.6.0"
+prek = "0.3.11"
 "pipx:commitizen" = "4.13.10"
 flux2 = "2.8.6"
 
