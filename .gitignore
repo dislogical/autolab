@@ -8,9 +8,6 @@ Thumbs.db
 vendor/
 node_modules/
 tmp/
-.task/
-.cuebe/
-
 
 # Devenv
 .devenv*
@@ -18,3 +15,6 @@ devenv.local.nix
 
 # direnv
 .direnv
+
+# For outputs
+/render/

@@ -34,7 +34,7 @@ jobs:
           IMAGE=$OCI_REPO:$(git rev-parse --short HEAD)
 
           # Push the manifest to the repo
-          flux push artifact $IMAGE -f .cuebe/prod/kustomized.yaml \
+          flux push artifact $IMAGE -f render/prod \
             --reproducible \
             --source=$(git config --get remote.origin.url) \
             --revision=$(git branch --show-current)@sha1:$(git rev-parse HEAD) \
