@@ -20,7 +20,7 @@
       "version:\\s*\"(?<currentValue>\\S+)\"\\s*repository:\\s*{\\s*name:\\s*\"(?<depName>\\S+)\"\\s*url:\\s*\"(?<registryUrl>\\S+)\"\\s*}"
     ]
   }],
-  "renovate-config-presets": {
+  "renovate-config": {
     "managerFilePatterns": [".github/renovate.json"]
   },
   "pre-commit": {
