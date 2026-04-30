@@ -29,7 +29,7 @@ Resources: {
 		"Namespace": "\(Namespace)": corev1.#Namespace & {
 			metadata: {
 				namespace: "default"
-				name: strings.ToLower(Namespace)
+				name:      strings.ToLower(Namespace)
 			}
 		}
 
@@ -40,7 +40,7 @@ Resources: {
 				if strings.ToLower(Kind) != "namespace" {
 					namespace: string | *Resources[Namespace].Namespace[Namespace].metadata.name
 				}
-				name:      string | *Name
+				name: string | *Name
 			}
 
 			[_]: _
@@ -55,6 +55,7 @@ Resources: {
 		Deployment?: [_]:         appsv1.#Deployment
 		HTTPRoute?: [_]:          gwv1.#HTTPRoute
 		Issuer?: [_]:             cmv1.#Issuer
+		ClusterIssuer?: [_]:      cmv1.#ClusterIssuer
 		Job?: [_]:                batchv1.#Job
 		ReferenceGrant?: [_]:     gwv1.#ReferenceGrant
 		Role?: [_]:               rbacv1.#Role

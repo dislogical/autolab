@@ -5,7 +5,7 @@ let certManagerVersion = "v1.20.2"
 
 Manifests: "cert-manager": "https://github.com/cert-manager/cert-manager/releases/download/\(certManagerVersion)/cert-manager.crds.yaml"
 
-Resources: CertManager: {
+Resources: "cert-manager": {
 	HelmRepository: "cert-manager": spec: {
 		url: "https://charts.jetstack.io"
 	}
@@ -18,7 +18,7 @@ Resources: CertManager: {
 		}
 		values: {
 			crds: enabled: false
-			global: leaderElection: namespace: Resources.CertManager.Namespace.CertManager.metadata.name
+			global: leaderElection: namespace: "cert-manager"
 
 			config: featureGates: ServerSideApply: true
 
@@ -26,7 +26,7 @@ Resources: CertManager: {
 		}
 	}
 
-	Issuer: {
+	ClusterIssuer: {
 		"self-signed": {
 			spec: selfSigned: {}
 		}
