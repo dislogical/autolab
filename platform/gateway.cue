@@ -80,7 +80,10 @@ Resources: Gateway: {
 				"*.\(env.external_url)",
 				"*.services.\(env.external_url)",
 			]
-			issuerRef: name: env.cert_issuer
+			issuerRef: {
+				name: env.cert_issuer
+				kind: "ClusterIssuer"
+			}
 		}
 	}
 }
