@@ -5,5 +5,8 @@
   "[cue]": {
     "editor.detectIndentation": false,
     "editor.insertSpaces": false
+  },
+  "files.associations": {
+    "Tiltfile": "python"
   }
 }

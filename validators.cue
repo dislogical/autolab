@@ -1,4 +1,4 @@
-package holos
+package autolab
 
 #ComponentConfig: Validators: {
 	k8svalidate: {
