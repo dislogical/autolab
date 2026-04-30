@@ -14,7 +14,7 @@ kustomize = "5.8.1"
 kubeconform = "0.7.0"
 # Developer tools
 kind = "0.31.0"
-tilt = "0.37.2"
+tilt = "0.37.3"
 prek = "0.3.11"
 "pipx:commitizen" = "4.13.10"
 flux2 = "2.8.6"
