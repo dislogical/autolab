@@ -9,7 +9,7 @@ import (
 )
 
 command: render: {
-	let outDir = "./render/\(env_name)"
+	let outDir = "./render/\(env.name)"
 
 	mkdir: file.Mkdir & {
 		path:          outDir
