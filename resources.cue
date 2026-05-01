@@ -26,7 +26,7 @@ Manifests: {
 Resources: {
 	[string]~(Namespace,_): {
 
-		"Namespace": "\(Namespace)": corev1.#Namespace & {
+		"Namespace": (Namespace): corev1.#Namespace & {
 			metadata: {
 				namespace: "default"
 				name:      strings.ToLower(Namespace)

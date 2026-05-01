@@ -17,7 +17,7 @@ command: render: {
 	}
 	writeNamespaces: {
 		for namespace, resources in Resources {
-			"\(namespace)": file.Create & {
+			(namespace): file.Create & {
 				$after: [mkdir]
 
 				filename: "\(outDir)/\(namespace).yaml"
