@@ -14,6 +14,8 @@ Resources: "kube-system": {
 			args: [
 				"--kubelet-insecure-tls",
 			]
+			metrics: enabled: true
+			serviceMonitor: enabled: true
 		}
 	}
 }
