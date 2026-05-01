@@ -20,5 +20,5 @@ import "net"
 }
 
 // Custom parameters
-env_name: string | *"dev" @tag(env, type=string)
-env:      #Config[env_name]
+_env_name: string | *"dev" @tag(env, type=string)
+env:       #Config[_env_name]
