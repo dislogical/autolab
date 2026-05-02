@@ -43,7 +43,7 @@ Resources: {
 				name: string | *Name
 			}
 
-			[_]: _
+			...
 		}
 
 		Certificate?: [_]:        cmv1.#Certificate
@@ -104,4 +104,36 @@ Resources: {
 		name:       #Resource.metadata.name
 		namespace:  #Resource.metadata.namespace
 	}
+}
+
+// Shorthand for deploying a helm chart
+#HelmDeployment: {
+	#url:     net.URL
+	#chart:   string
+	#version: string
+
+	#values?: null | {...}
+
+	HelmRepository: (#chart): {
+		spec: {
+			url: #url
+			...
+		}
+		...
+	}
+
+	HelmRelease: (#chart): {
+		spec: {
+			chart: spec: {
+				chart:   #chart
+				version: #version
+				sourceRef: #ReferenceOf & {#Resource: HelmRepository[#chart]}
+			}
+			values: #values
+			...
+		}
+		...
+	}
+
+	...
 }
