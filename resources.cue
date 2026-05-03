@@ -90,11 +90,6 @@ Resources: {
 	}
 }
 
-#DisableHelmCrds: {
-	install: crds: "Skip"
-	upgrade: crds: "Skip"
-}
-
 #ReferenceOf: {
 	#Resource: _
 
@@ -108,13 +103,19 @@ Resources: {
 
 // Shorthand for deploying a helm chart
 #HelmDeployment: {
+	// These 3 need to be first for Renovate
 	#url:     net.URL
 	#chart:   string
 	#version: string
 
+	// Extra options
+	#repoName:    string | *#chart
+	#releaseName: string | *#chart
+	#crds:        "Skip" | "Create" | *"CreateReplace"
 	#values?: null | {...}
 
-	HelmRepository: (#chart): {
+	// Embedded resources
+	HelmRepository: (#repoName): {
 		spec: {
 			url: #url
 			...
@@ -122,14 +123,17 @@ Resources: {
 		...
 	}
 
-	HelmRelease: (#chart): {
+	HelmRelease: (#releaseName): {
 		spec: {
 			chart: spec: {
 				chart:   #chart
 				version: #version
-				sourceRef: #ReferenceOf & {#Resource: HelmRepository[#chart]}
+				sourceRef: #ReferenceOf & {#Resource: HelmRepository[#repoName]}
 			}
 			values: #values
+
+			install: crds: #crds
+			upgrade: crds: #crds
 			...
 		}
 		...

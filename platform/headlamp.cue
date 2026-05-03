@@ -3,16 +3,11 @@ package autolab
 import "encoding/yaml"
 
 Resources: Headlamp: {
-	HelmRepository: headlamp: spec: {
-		url: "https://kubernetes-sigs.github.io/headlamp"
-	}
-	HelmRelease: headlamp: spec: {
-		chart: spec: {
-			chart:   "headlamp"
-			version: "0.41.0"
-			sourceRef: #ReferenceOf & {#Resource: HelmRepository.headlamp}
-		}
-		values: {
+	#HelmDeployment & {
+		#url:     "https://kubernetes-sigs.github.io/headlamp"
+		#chart:   "headlamp"
+		#version: "0.41.0"
+		#values: {
 			config: {
 				watchPlugins: true
 				extraArgs: [

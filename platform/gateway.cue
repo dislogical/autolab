@@ -4,17 +4,12 @@ package autolab
 Manifests: Gateway: "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml"
 
 Resources: Gateway: {
-	HelmRepository: traefik: spec: {
-		url: "https://traefik.github.io/charts"
-	}
-	HelmRelease: traefik: spec: {
-		#DisableHelmCrds...
-		chart: spec: {
-			chart:   "traefik"
-			version: "38.0.2"
-			sourceRef: #ReferenceOf & {#Resource: HelmRepository.traefik}
-		}
-		values: {
+	#HelmDeployment & {
+		#url:     "https://traefik.github.io/charts"
+		#chart:   "traefik"
+		#version: "38.0.2"
+		#crds:    "Skip"
+		#values: {
 			providers: {
 				kubernetesIngress: enabled: false
 				kubernetesCRD: enabled:     false
