@@ -1,22 +1,15 @@
 @experiment(explicitopen)
 package autolab
 
-let certManagerVersion = "v1.20.2"
-
-Manifests: "cert-manager": "https://github.com/cert-manager/cert-manager/releases/download/\(certManagerVersion)/cert-manager.crds.yaml"
+Manifests: "cert-manager": "https://github.com/cert-manager/cert-manager/releases/download/\(Resources["cert-manager"].#version)/cert-manager.crds.yaml"
 
 Resources: "cert-manager": {
-	HelmRepository: "cert-manager": spec: {
-		url: "https://charts.jetstack.io"
-	}
-	HelmRelease: "cert-manager": spec: {
-		#DisableHelmCrds...
-		chart: spec: {
-			chart:   "cert-manager"
-			version: certManagerVersion
-			sourceRef: #ReferenceOf & {#Resource: HelmRepository["cert-manager"]}
-		}
-		values: {
+	#HelmDeployment & {
+		#url:     "https://charts.jetstack.io"
+		#chart:   "cert-manager"
+		#version: "v1.20.2"
+		#crds:    "Skip"
+		#values: {
 			crds: enabled: false
 			global: leaderElection: namespace: "cert-manager"
 

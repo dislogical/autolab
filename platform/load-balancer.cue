@@ -1,8 +1,6 @@
 package autolab
 
-let metalLbVersion = "v0.15.3"
-
-Manifests: metallb: "https://github.com/metallb/metallb//config/crd?ref=\(metalLbVersion)"
+Manifests: metallb: "https://github.com/metallb/metallb//config/crd?ref=\(Resources.LoadBalancer.#version)"
 
 Resources: LoadBalancer: {
 	Namespace: LoadBalancer: metadata: labels: {
@@ -11,16 +9,12 @@ Resources: LoadBalancer: {
 		"pod-security.kubernetes.io/warn":    "privileged"
 	}
 
-	HelmRepository: metallb: spec: {
-		url: "https://metallb.github.io/metallb"
-	}
-	HelmRelease: metallb: spec: {
-		chart: spec: {
-			chart:   "metallb"
-			version: metalLbVersion
-			sourceRef: #ReferenceOf & {#Resource: HelmRepository.metallb}
-		}
-		values: {
+	#HelmDeployment & {
+		#url:     "https://metallb.github.io/metallb"
+		#chart:   "metallb"
+		#version: "v0.15.3"
+		#crds:    "Skip"
+		#values: {
 			speaker: {
 				frr: enabled: false
 			}
