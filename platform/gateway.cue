@@ -7,7 +7,7 @@ Resources: Gateway: {
 	#HelmDeployment & {
 		#url:     "https://traefik.github.io/charts"
 		#chart:   "traefik"
-		#version: "38.0.2"
+		#version: "39.0.8"
 		#crds:    "Skip"
 		#values: {
 			providers: {
