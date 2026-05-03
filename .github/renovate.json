@@ -15,16 +15,11 @@
   "customManagers": [{
     "customType": "regex",
     "datasourceTemplate": "helm",
-    "managerFilePatterns": ["$.*/.*\\.cue$/"],
-    "matchStringsStrategy": "recursive",
+    "managerFilePatterns": ["/\\.cue$/"],
     "matchStrings": [
-      "#HelmDeployment\\s*&\\s*{(.*)}",
-      "#url:\\s*\"(?<registryUrl>.+)\"|#version:\\s*\"(?<currentValue>.+)\"|#chart:\\s*\"(?<depName>.+)\""
+      "(?:(?:#url:\\s*\"(?<registryUrl>.+?)\"|#version:\\s*\"(?<currentValue>.+?)\"|#chart:\\s*\"(?<depName>.+?)\")\\s*)+"
     ]
   }],
-  "renovate-config": {
-    "managerFilePatterns": [".github/renovate.json"]
-  },
   "pre-commit": {
     "commitMessageTopic": "pre-commit hook {{depName}}",
     "enabled": true,
