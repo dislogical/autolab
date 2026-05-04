@@ -1,9 +1,9 @@
 package autolab
 
-Manifests: metallb: "https://github.com/metallb/metallb//config/crd?ref=\(Resources.LoadBalancer.#version)"
+Manifests: metallb: "https://github.com/metallb/metallb//config/crd?ref=\(Resources["metallb-system"].#version)"
 
-Resources: LoadBalancer: {
-	Namespace: LoadBalancer: metadata: labels: {
+Resources: "metallb-system": {
+	Namespace: "metallb-system": metadata: labels: {
 		"pod-security.kubernetes.io/enforce": "privileged"
 		"pod-security.kubernetes.io/audit":   "privileged"
 		"pod-security.kubernetes.io/warn":    "privileged"
@@ -20,7 +20,7 @@ Resources: LoadBalancer: {
 			}
 			prometheus: {
 				serviceAccount: "prometheus-kube-prometheus-prometheus"
-				namespace:      Resources.Metrics.Namespace.Metrics.metadata.name
+				namespace:      Resources["metallb-system"].Namespace["metallb-system"].metadata.name
 				serviceMonitor: enabled: true
 			}
 		}

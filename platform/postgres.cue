@@ -1,6 +1,6 @@
 package autolab
 
-Resources: Postgres: #HelmDeployment & {
+Resources: "cnpg-system": #HelmDeployment & {
 	#url:     "https://cloudnative-pg.github.io/charts"
 	#chart:   "cloudnative-pg"
 	#version: "0.28.0"

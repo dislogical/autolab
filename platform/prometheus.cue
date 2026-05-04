@@ -1,6 +1,6 @@
 package autolab
 
-Resources: Metrics: {
+Resources: Monitoring: {
 	GitRepository: "kube-prometheus": spec: {
 		url: "https://github.com/prometheus-operator/kube-prometheus"
 		ref: tag: "v0.17.0"
