@@ -12,7 +12,7 @@ helm = "4.1.4"
 kustomize = "5.8.1"
 kubeconform = "0.7.0"
 # Developer tools
-kubectl = "1.35.0"
+kubectl = "1.36.0"
 kind = "0.31.0"
 tilt = "0.37.3"
 prek = "0.3.11"
