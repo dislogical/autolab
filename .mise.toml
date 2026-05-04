@@ -12,6 +12,7 @@ helm = "4.1.4"
 kustomize = "5.8.1"
 kubeconform = "0.7.0"
 # Developer tools
+kubectl = "1.35.0"
 kind = "0.31.0"
 tilt = "0.37.3"
 prek = "0.3.11"
@@ -26,6 +27,8 @@ build.run = [
 test.run = [
   "kind create cluster --config kind.yaml",
   "tilt ci --context kind-autolab",
+  "kubectl wait -A --all --for=condition=ready --timeout=5m kustomization",
+  "kubectl wait -A --all --for=condition=ready --timeout=5m helmrelease ",
   "kind delete cluster --name autolab",
 ]
 
