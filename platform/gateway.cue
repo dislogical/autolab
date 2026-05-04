@@ -25,7 +25,7 @@ Resources: Gateway: {
 			}
 
 			ports: {
-				web: redirections: entryPoint: {
+				web: http: redirections: entryPoint: {
 					to:     "websecure"
 					scheme: "https"
 				}
