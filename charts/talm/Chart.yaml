@@ -1,0 +1,13 @@
+apiVersion: v2
+name: autolab
+type: application
+version: 0.1.0
+templateOptions:
+  talosVersion: "v1.13.0"
+  kubernetesVersion: "v1.36.0"
+applyOptions:
+  preserve: true
+upgradeOptions:
+  preserve: true
+  stage: false
+  force: false
