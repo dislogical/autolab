@@ -46,6 +46,16 @@ repos:
         types: [ tiltfile ]
       - id: no-commit-to-branch
 
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: v1.14.2
+    hooks:
+      - id: helm-docs-built
+        args:
+          # Enable strict checks
+          - -x
+          # Make the tool search for charts only under the `charts` directory
+          - --chart-search-root=charts
+
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 43.150.0
     hooks:

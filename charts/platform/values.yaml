@@ -1,0 +1,7 @@
+# Default values for autolab-platform.
+
+# -- The root external URL to hang services off of.
+externalUrl: "localhost"
+
+# -- The ClusterIssuer to use for the gateway certificate.
+certIssuer:  "self-signed"

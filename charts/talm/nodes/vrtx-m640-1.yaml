@@ -26,9 +26,6 @@ cluster:
   etcd:
     advertisedSubnets:
       - 10.0.1.0/24
-  # Include the Gateway API
-  extraManifests:
-    - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
     # -- Discovered interfaces:
     # eno1:
     #   hardwareAddr:28:f1:0e:a9:68:91

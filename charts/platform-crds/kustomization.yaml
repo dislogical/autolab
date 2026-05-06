@@ -1,0 +1,4 @@
+resources:
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
+  - https://github.com/cert-manager/cert-manager/releases/download/v1.20.2/cert-manager.crds.yaml
+  - https://github.com/metallb/metallb//config/crd?ref=v0.15.3

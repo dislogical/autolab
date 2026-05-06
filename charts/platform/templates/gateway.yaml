@@ -1,0 +1,116 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: traefik
+  namespace: gateway
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  {{- include "platform.fluxDefaults" . | nindent 2 }}
+  url: https://traefik.github.io/charts
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: traefik
+  namespace: gateway
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  {{- include "platform.helmReleaseDefaults" . | nindent 2 }}
+  chart:
+    spec:
+      chart: traefik
+      version: 40.0.0
+      sourceRef:
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        name: traefik
+        namespace: gateway
+  values:
+    providers:
+      kubernetesIngress:
+        enabled: false
+      kubernetesCRD:
+        enabled: false
+      kubernetesGateway:
+        enabled: true
+        statusAddress:
+          service:
+            enabled: true
+    service:
+      annotations:
+        metallb.io/loadBalancerIPs: 10.0.1.3
+        tilt.dev/port-forward: "8080:80"
+    ports:
+      web:
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
+      websecure:
+        asDefault: true
+    gateway:
+      listeners:
+        web:
+          namespacePolicy:
+            from: All
+        websecure:
+          port: 8443
+          protocol: HTTPS
+          namespacePolicy:
+            from: All
+          certificateRefs:
+            - name: gw-tls-certIssuer
+    metrics:
+      prometheus:
+        serviceMonitor:
+          enabled: true
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: traefik
+  namespace: gateway
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  hostnames:
+    - traefik.services.{{ .Values.externalUrl }}
+  parentRefs:
+    - kind: Gateway
+      name: traefik-gateway
+  rules:
+    - backendRefs:
+        - kind: TraefikService
+          name: api@internal
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default
+  namespace: gateway
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  dnsNames:
+    - {{ .Values.externalUrl }}
+    - '*.{{ .Values.externalUrl }}'
+    - '*.services.{{ .Values.externalUrl }}'
+  issuerRef:
+    kind: ClusterIssuer
+    name: certIssuer
+  secretName: gw-tls-certIssuer

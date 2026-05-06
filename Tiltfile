@@ -32,23 +32,18 @@ def _get_object_field(object, fields, default = None):
         current = current.get(field) if current else None
     return current or default
 
-# Don't watch intermediates
-watch_settings('./render')
-
 # Watch sources
-watch_file('./resources.cue')
-watch_file('./platform')
-local('cue cmd render ./platform', quiet=True)
 
 flux = './flux-system/gotk-components.yaml'
-built = kustomize('./render/dev')
+platform_crds = kustomize('./charts/platform-crds')
+platform = helm('./charts/platform', 'platform')
 
 # Make services get workloads
 k8s_kind('^Service$')
 
 crds = {}
 
-for kustomized in [flux, built]:
+for kustomized in [flux, platform_crds, platform]:
 
     k8s_yaml(kustomized)
 
