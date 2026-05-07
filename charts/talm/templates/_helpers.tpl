@@ -43,6 +43,10 @@ cluster:
   etcd:
     advertisedSubnets:
       {{- toYaml .Values.advertisedSubnets | nindent 6 }}
+
+  # Include the Gateway API
+  extraManifests:
+    - "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml"
   {{- end }}
 {{- end }}
 
