@@ -13,7 +13,27 @@ machine:
   kubelet:
     nodeIP:
       validSubnets:
+        {{- if .Values.advertisedSubnets }}
         {{- toYaml .Values.advertisedSubnets | nindent 8 }}
+        {{- else }}
+        {{- /* Fall back to the subnet of the node's default-gateway-bearing
+               link. cidrNetwork masks host bits so the emitted YAML is the
+               canonical network form (192.168.201.0/24) rather than the
+               host form (192.168.201.10/24). Dedupe after masking because
+               a link with a secondary address in the same subnet would
+               otherwise produce duplicate list entries. */ -}}
+        {{- $addrs := fromJsonArray (include "talm.discovered.default_addresses_by_gateway" .) }}
+        {{- if not $addrs }}
+        {{- fail "values.yaml: `advertisedSubnets` was left empty and talm could not derive a default from discovery. No default-gateway-bearing link was found on the node. This field is a cluster-wide subnet selector fed to kubelet and etcd; `talm template` is invoked once per node and cannot merge per-node values into one cluster value. Either set advertisedSubnets explicitly in values.yaml, or ensure the node has a default route before running `talm template`." }}
+        {{- end }}
+        {{- $subnets := list }}
+        {{- range $addrs }}
+        {{- $subnets = append $subnets (. | cidrNetwork) }}
+        {{- end }}
+        {{- range uniq $subnets }}
+        - {{ . }}
+        {{- end }}
+        {{- end }}
   {{- with .Values.certSANs }}
   certSANs:
   {{- toYaml . | nindent 2 }}
@@ -33,7 +53,7 @@ cluster:
       {{- toYaml .Values.serviceSubnets | nindent 6 }}
   clusterName: {{ .Values.clusterName | default .Chart.Name | quote }}
   controlPlane:
-    endpoint: "{{ .Values.endpoint }}"
+    endpoint: {{ required "values.yaml: `endpoint` must be set to the cluster control-plane URL (e.g. https://<vip>:6443). This field is cluster-wide: every node's kubelet and kube-proxy dials it, so it cannot be auto-derived from the current node's IP -- `talm template` runs once per node and has no way to reconcile per-node IPs into a single shared endpoint. For multi-node setups use a VIP or an external load balancer; for single-node clusters the node's routable IP works." .Values.endpoint | quote }}
   {{- if eq .MachineType "controlplane" }}
   apiServer:
     {{- with .Values.certSANs }}
@@ -42,7 +62,24 @@ cluster:
     {{- end }}
   etcd:
     advertisedSubnets:
+      {{- if .Values.advertisedSubnets }}
       {{- toYaml .Values.advertisedSubnets | nindent 6 }}
+
+      {{- else }}
+      {{- /* Fall back to the subnet of the node's default-gateway-bearing
+             link; cidrNetwork masks host bits to emit canonical network
+             form. Dedupe handled the same way as validSubnets above.
+             Empty discovery already errored via validSubnets' required()
+             guard, so we reach this block only when at least one address
+             was resolved. */ -}}
+      {{- $subnets := list }}
+      {{- range fromJsonArray (include "talm.discovered.default_addresses_by_gateway" .) }}
+      {{- $subnets = append $subnets (. | cidrNetwork) }}
+      {{- end }}
+      {{- range uniq $subnets }}
+      - {{ . }}
+      {{- end }}
+      {{- end }}
 
   # Include the Gateway API
   extraManifests:
@@ -73,7 +110,21 @@ nameservers:
 {{- else }}
   []
 {{- end }}
+{{- /* Operator-declared vipLink override: emit Layer2VIPConfig
+       regardless of discovery state. Useful when the target link
+       does not yet exist on the live system at first apply (typical
+       case: a VLAN sub-interface this template is about to bring up).
+       The discovery-derived block below skips its own Layer2VIPConfig
+       when this branch fires, so we never emit duplicates. */}}
+{{- if and .Values.floatingIP .Values.vipLink (eq .MachineType "controlplane") }}
+---
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: {{ .Values.floatingIP | quote }}
+link: {{ .Values.vipLink }}
+{{- end }}
 {{- $defaultLinkName := include "talm.discovered.default_link_name_by_gateway" . }}
+{{- if $defaultLinkName }}
 {{- $isVlan := include "talm.discovered.is_vlan" $defaultLinkName }}
 {{- $parentLinkName := "" }}
 {{- if $isVlan }}
@@ -148,16 +199,21 @@ addresses:
 routes:
   - gateway: {{ include "talm.discovered.default_gateway" . }}
 {{- end }}
+{{- /* Discovery-derived Layer2VIPConfig: skipped when the operator
+       has set .Values.vipLink, since the override-path block above
+       has already emitted the document with the operator's chosen
+       link. */}}
+{{- if and .Values.floatingIP (not .Values.vipLink) (eq .MachineType "controlplane") }}
 {{- $vipLinkName := $interfaceName }}
 {{- if $isVlan }}
 {{- $vipLinkName = $defaultLinkName }}
 {{- end }}
-{{- if and .Values.floatingIP (eq .MachineType "controlplane") }}
 ---
 apiVersion: v1alpha1
 kind: Layer2VIPConfig
 name: {{ .Values.floatingIP | quote }}
 link: {{ $vipLinkName }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -167,12 +223,23 @@ link: {{ $vipLinkName }}
     hostname: {{ include "talm.discovered.hostname" . | quote }}
     nameservers: {{ include "talm.discovered.default_resolvers" . }}
     {{- (include "talm.discovered.physical_links_info" .) | nindent 4 }}
-    interfaces:
     {{- $existingInterfacesConfiguration := include "talm.discovered.existing_interfaces_configuration" . }}
+    {{- $defaultLinkName := include "talm.discovered.default_link_name_by_gateway" . }}
+    {{- /* vipLink override on the legacy schema: legacy Talos has no
+       Layer2VIPConfig document, so the override is expressed as a
+       top-level interfaces[] entry that carries only the vip block.
+       When vipLink == $defaultLinkName the inline vip below already
+       lands on the right link, so no override entry is needed. */}}
+    {{- $vipOverride := and .Values.floatingIP .Values.vipLink (eq .MachineType "controlplane") (ne .Values.vipLink $defaultLinkName) }}
+    {{- /* Suppress the inline (discovery-derived) vip when the operator
+       has redirected it to a different link; otherwise the VIP would
+       be pinned twice on different interfaces. */}}
+    {{- $suppressInlineVip := and .Values.vipLink (ne .Values.vipLink $defaultLinkName) }}
+    {{- if or $existingInterfacesConfiguration $defaultLinkName $vipOverride }}
+    interfaces:
     {{- if $existingInterfacesConfiguration }}
     {{- $existingInterfacesConfiguration | nindent 4 }}
-    {{- else }}
-    {{- $defaultLinkName := include "talm.discovered.default_link_name_by_gateway" . }}
+    {{- else if $defaultLinkName }}
     {{- $isVlan := include "talm.discovered.is_vlan" $defaultLinkName }}
     {{- $parentLinkName := "" }}
     {{- if $isVlan }}
@@ -194,7 +261,7 @@ link: {{ $vipLinkName }}
           routes:
             - network: 0.0.0.0/0
               gateway: {{ include "talm.discovered.default_gateway" . }}
-          {{- if and .Values.floatingIP (eq .MachineType "controlplane") }}
+          {{- if and .Values.floatingIP (eq .MachineType "controlplane") (not $suppressInlineVip) }}
           vip:
             ip: {{ .Values.floatingIP }}
           {{- end }}
@@ -203,10 +270,16 @@ link: {{ $vipLinkName }}
       routes:
         - network: 0.0.0.0/0
           gateway: {{ include "talm.discovered.default_gateway" . }}
-      {{- if and .Values.floatingIP (eq .MachineType "controlplane") }}
+      {{- if and .Values.floatingIP (eq .MachineType "controlplane") (not $suppressInlineVip) }}
       vip:
         ip: {{ .Values.floatingIP }}
       {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if $vipOverride }}
+    - interface: {{ .Values.vipLink }}
+      vip:
+        ip: {{ .Values.floatingIP }}
       {{- end }}
     {{- end }}
 {{- end }}
