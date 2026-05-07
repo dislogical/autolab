@@ -1,25 +1,29 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices", "replacements:all"],
+  "extends": [
+    "config:best-practices",
+    "replacements:all",
+    ":automergeMinor",
+    ":automergeDigest"
+  ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true
-    },
-    {
+      "groupName": "pre-commit hooks",
+      "groupSlug": "pre-commit",
       "matchPackageNames": ["renovatebot/pre-commit-hooks"],
-      "matchUpdateTypes": ["minor"],
-      "enabled": false
+      "extends": ["schedule:earlyMondays"]
     }
   ],
-  "customManagers": [{
-    "customType": "regex",
-    "datasourceTemplate": "helm",
-    "managerFilePatterns": ["/\\.cue$/"],
-    "matchStrings": [
-      "(?:(?:#url:\\s*\"(?<registryUrl>.+?)\"|#version:\\s*\"(?<currentValue>.+?)\"|#chart:\\s*\"(?<depName>.+?)\")\\s*)+"
-    ]
-  }],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "helm",
+      "managerFilePatterns": ["/\\.cue$/"],
+      "matchStrings": [
+        "(?:(?:#url:\\s*\"(?<registryUrl>.+?)\"|#version:\\s*\"(?<currentValue>.+?)\"|#chart:\\s*\"(?<depName>.+?)\")\\s*)+"
+      ]
+    }
+  ],
   "pre-commit": {
     "commitMessageTopic": "pre-commit hook {{depName}}",
     "enabled": true,
