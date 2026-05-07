@@ -6,7 +6,7 @@ Resources: Headlamp: {
 	#HelmDeployment & {
 		#url:     "https://kubernetes-sigs.github.io/headlamp"
 		#chart:   "headlamp"
-		#version: "0.41.0"
+		#version: "0.42.0"
 		#values: {
 			config: {
 				watchPlugins: true
