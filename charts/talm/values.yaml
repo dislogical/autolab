@@ -1,0 +1,12 @@
+clusterName: ballard-prod
+endpoint: https://kube-prod.ballard.dislogi.net:6443
+advertisedSubnets:
+  - 10.0.1.0/24
+#floatingIP: 10.0.1.2
+
+# The below are defaults
+podSubnets:
+  - 10.244.0.0/16
+serviceSubnets:
+  - 10.96.0.0/12
+certSANs: []
