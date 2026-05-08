@@ -72,7 +72,7 @@ spec:
           namespacePolicy:
             from: All
           certificateRefs:
-            - name: gw-tls-certIssuer
+          - name: gw-tls-{{ .Values.certIssuer }}
     metrics:
       prometheus:
         serviceMonitor:
@@ -112,5 +112,5 @@ spec:
     - '*.services.{{ .Values.externalUrl }}'
   issuerRef:
     kind: ClusterIssuer
-    name: certIssuer
-  secretName: gw-tls-certIssuer
+    name: {{ .Values.certIssuer }}
+  secretName: gw-tls-{{ .Values.certIssuer }}
