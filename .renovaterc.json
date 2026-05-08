@@ -14,16 +14,13 @@
       "extends": ["schedule:earlyMondays"]
     }
   ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "datasourceTemplate": "helm",
-      "managerFilePatterns": ["/\\.cue$/"],
-      "matchStrings": [
-        "(?:(?:#url:\\s*\"(?<registryUrl>.+?)\"|#version:\\s*\"(?<currentValue>.+?)\"|#chart:\\s*\"(?<depName>.+?)\")\\s*)+"
-      ]
-    }
-  ],
+  "customManagers": [],
+  "flux": {
+    "managerFilePatterns": [
+      "/(?:^|/)gotk-components\\.ya?ml$/",
+      "charts/platform/templates/*.yaml"
+    ]
+  },
   "pre-commit": {
     "commitMessageTopic": "pre-commit hook {{depName}}",
     "enabled": true,
