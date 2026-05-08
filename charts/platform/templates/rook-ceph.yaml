@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rook-ceph
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  {{- include "platform.fluxDefaults" . | nindent 2 }}
+  url: https://charts.rook.io/release
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: rook-ceph-operator
+  namespace: rook-ceph
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
+spec:
+  {{- include "platform.helmReleaseDefaults" . | nindent 2 }}
+  chart:
+    spec:
+      chart: rook-ceph
+      version: v1.19.5
+      sourceRef:
+        apiVersion: source.toolkit.fluxcd.io/v1
+        kind: HelmRepository
+        name: rook-ceph
+        namespace: rook-ceph
+  values:
+    monitoring:
+      enabled: true
+    serviceMonitor:
+      enabled: true

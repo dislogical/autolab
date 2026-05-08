@@ -80,10 +80,6 @@ cluster:
       - {{ . }}
       {{- end }}
       {{- end }}
-
-  # Include the Gateway API
-  extraManifests:
-    - "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml"
   {{- end }}
 {{- end }}
 
