@@ -14,7 +14,16 @@
       "extends": ["schedule:earlyMondays"]
     }
   ],
-  "customManagers": [],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)kustomization\\.ya?ml$/"],
+      "matchStrings": [
+        "https:\\/\\/github\\.com\\/(?<packageName>[^\\/]*\\/(?<depName>[^\\/]*))\\/releases\\/download\\/(?<currentValue>[^\\/]*)"
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ],
   "flux": {
     "managerFilePatterns": [
       "/(?:^|/)gotk-components\\.ya?ml$/",
