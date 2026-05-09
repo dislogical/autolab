@@ -2,9 +2,12 @@ apiVersion: v2
 name: autolab
 type: application
 version: 0.1.0
+globalOptions:
+  talosconfig: "talosconfig"
 templateOptions:
   talosVersion: "v1.13.0"
   kubernetesVersion: "v1.36.0"
+  withSecrets: "secrets.yaml"
 applyOptions:
   preserve: true
 upgradeOptions:

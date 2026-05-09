@@ -91,11 +91,19 @@
 {{- end }}
 {{- end }}
 
+{{- /* JSON list of IPv4 addresses on the link carrying the IPv4
+       default route. Filters routes to family=inet4 because consumers
+       (cozystack and generic chart helpers) pair the returned addresses
+       with a hardcoded IPv4 destination route — selecting the first
+       default route regardless of family on a dual-stack node would
+       cascade into the IPv6 family being applied to the address filter,
+       and the node's IPv4 addresses would silently disappear from the
+       rendered config. Mirrors gateway_by_link's IPv4-only convention. */ -}}
 {{- define "talm.discovered.default_addresses_by_gateway" }}
 {{- $linkName := "" }}
 {{- $family := "" }}
 {{- range (lookup "routes" "" "").items }}
-{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") }}
+{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") (eq (.spec.family | toString) "inet4") }}
 {{- $linkName = .spec.outLinkName }}
 {{- $family = .spec.family }}
 {{- break }}
@@ -134,9 +142,20 @@
 {{- end }}
 {{- end }}
 
+{{- /* All four default_link_*_by_gateway helpers below are IPv4-only.
+       They identify the link that carries the chart's primary uplink, and
+       that uplink is the same one default_gateway / default_addresses_by_gateway
+       configure — selecting a different link here would produce a config
+       where LinkConfig.name attaches to one NIC while LinkConfig.routes /
+       addresses describe a different NIC, leaving both unconfigured.
+       Picking the IPv4 default route's outLinkName keeps the whole
+       chain pointed at the same NIC on multi-NIC dual-stack nodes
+       (typical Hetzner shape: management NIC on IPv4, public NIC on
+       IPv6, default routes on different links). Symmetric with
+       gateway_by_link / default_gateway / default_addresses_by_gateway. */ -}}
 {{- define "talm.discovered.default_link_name_by_gateway" }}
 {{- range (lookup "routes" "" "").items }}
-{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") }}
+{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") (eq (.spec.family | toString) "inet4") }}
 {{- .spec.outLinkName }}
 {{- break }}
 {{- end }}
@@ -145,7 +164,7 @@
 
 {{- define "talm.discovered.default_link_address_by_gateway" }}
 {{- range (lookup "routes" "" "").items }}
-{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") }}
+{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") (eq (.spec.family | toString) "inet4") }}
 {{- (lookup "links" "" .spec.outLinkName).spec.hardwareAddr }}
 {{- break }}
 {{- end }}
@@ -154,7 +173,7 @@
 
 {{- define "talm.discovered.default_link_bus_by_gateway" }}
 {{- range (lookup "routes" "" "").items }}
-{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") }}
+{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") (eq (.spec.family | toString) "inet4") }}
 {{- (lookup "links" "" .spec.outLinkName).spec.busPath }}
 {{- break }}
 {{- end }}
@@ -163,7 +182,7 @@
 
 {{- define "talm.discovered.default_link_selector_by_gateway" }}
 {{- range (lookup "routes" "" "").items }}
-{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") }}
+{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") (eq (.spec.family | toString) "inet4") }}
 {{- with (lookup "links" "" .spec.outLinkName) }}
 busPath: {{ .spec.busPath }}
 {{- break }}
@@ -176,9 +195,20 @@ busPath: {{ .spec.busPath }}
 {{ printf "enx%s" (lookup "links" "" . | dig "spec" "hardwareAddr" . | replace ":" "") }}
 {{- end }}
 
+{{- /* Scalar IPv4 default-route gateway (dst="", main table, family=inet4).
+       Empty if the node has no IPv4 default route. IPv4-only by convention
+       so the helper stays symmetric with gateway_by_link and so consumers
+       that pair the returned gateway with an IPv4 destination
+       (`network: 0.0.0.0/0` on the legacy schema, or no `network:` field
+       on the typed RouteConfig schema) never end up with a malformed
+       IPv4-dst + IPv6-gateway route on a dual-stack node. Talos derives
+       the route family from the gateway literal at validation time, so a
+       RouteConfig with gateway `fe80::1` and no `network:` field is
+       rejected outright — silently breaking Layer2 VIP and any other
+       feature that depends on the chart-emitted route entry. */ -}}
 {{- define "talm.discovered.default_gateway" }}
 {{- range (lookup "routes" "" "").items }}
-{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") }}
+{{- if and (eq .spec.dst "") (not (eq .spec.gateway "")) (eq .spec.table "main") (eq (.spec.family | toString) "inet4") }}
 {{- .spec.gateway }}
 {{- break }}
 {{- end }}
@@ -313,7 +343,11 @@ vlans:
 
 {{- /* JSON list of physical link names (raw NICs only — not bond/vlan masters).
        Renamed from `physical_links` to avoid collision with the older
-       `physical_links_info` helper, which renders YAML comments. */ -}}
+       `physical_links_info` helper, which renders YAML comments.
+       Bond slaves are NOT filtered by this helper — callers that need to
+       skip slaves (e.g. the multi-doc renderer that already emits the
+       master's BondConfig) must filter on spec.slaveKind themselves, or
+       use configurable_link_names below which already filters them. */ -}}
 {{- define "talm.discovered.physical_link_names" -}}
 {{- $names := list -}}
 {{- range (lookup "links" "" "").items -}}
@@ -325,13 +359,21 @@ vlans:
 {{- end -}}
 
 {{- /* JSON list of every link a user template can configure: physical NICs
-       plus bond / vlan / bridge top-level links. */ -}}
+       plus bond / vlan / bridge top-level links. Bond slaves (physical NICs
+       enrolled into a bond master) are excluded — emitting a standalone
+       LinkConfig for a slave alongside the master's BondConfig produces
+       conflicting declarations Talos will reject during controller
+       convergence. The slave-membership fact comes from spec.slaveKind
+       (set by the link controller when a physical NIC is attached to a
+       bond / bridge / team), so filtering on it covers slaves regardless
+       of whether the master is bond, bridge, or future kinds. */ -}}
 {{- define "talm.discovered.configurable_link_names" -}}
 {{- $names := list -}}
 {{- range (lookup "links" "" "").items -}}
 {{- $isPhysical := and .spec.busPath (regexMatch "^(eno|eth|enp|enx|ens)" (.metadata.id | toString)) -}}
 {{- $isVirtual := has (.spec.kind | toString) (list "bond" "vlan" "bridge") -}}
-{{- if or $isPhysical $isVirtual -}}
+{{- $isSlave := and .spec.slaveKind (ne (.spec.slaveKind | toString) "") -}}
+{{- if and (or $isPhysical $isVirtual) (not $isSlave) -}}
 {{- $names = append $names .metadata.id -}}
 {{- end -}}
 {{- end -}}
@@ -340,9 +382,14 @@ vlans:
 
 {{- /* JSON list of CIDR addresses configured on the given link, excluding
        kernel-managed scopes (host loopback, link-local, nowhere) and
-       addresses with no scope set at all. Both IPv4 and IPv6 globally-scoped
-       addresses are returned; the caller is responsible for filtering by
-       family or stripping VIPs if needed. */ -}}
+       addresses with no scope set at all. Both IPv4 and IPv6 globally-
+       scoped addresses are returned — chart consumers (cozystack /
+       generic multi-doc renderer) emit them verbatim into LinkConfig /
+       VLANConfig / BondConfig.addresses, dropping the operator-declared
+       floatingIP via an inline filter to keep the leader's transient VIP
+       out of the static config. Add a per-family helper if a future
+       caller needs IPv4- or IPv6-only output rather than tightening this
+       one. */ -}}
 {{- define "talm.discovered.addresses_by_link" -}}
 {{- $linkName := . -}}
 {{- $addresses := list -}}
@@ -427,4 +474,52 @@ vlans:
 {{- if and $link $link.spec.busPath -}}
 busPath: {{ $link.spec.busPath }}
 {{- end -}}
+{{- end -}}
+
+{{- /* Validate that a value is a well-formed DNS-1123 subdomain
+       (RFC 1035 syntax + RFC 1123 leading-digit relaxation). On
+       success returns the value verbatim so callers can pipe it
+       into `quote` or use it inline. On any violation fails the
+       render with a precise message naming the field and the
+       offending value.
+
+       Mirrors what k8s.io/apimachinery/pkg/util/validation
+       .IsDNS1123Subdomain enforces in Go-side flag validation
+       (talm init --name) so chart-rendered values agree with
+       values an operator passes through the CLI:
+
+         1. non-empty
+         2. total length <= 253 chars
+         3. matches RFC 1123 subdomain regex (lowercase, only
+            [a-z0-9-.], each label starts/ends with [a-z0-9],
+            no double dots)
+
+       Per-label length (63 chars) is NOT enforced — upstream
+       IsDNS1123Subdomain does not enforce it either, and there
+       is no Talos-side cluster-name length cap that aligns with
+       a 63-char floor. Stay symmetric with Go-side validation.
+
+       Coercion: .value is rendered through `printf "%v"` before
+       length / regex checks so an unquoted numeric YAML scalar
+       (e.g. `clusterName: 123`) becomes the string "123" instead
+       of crashing the template at `len of type int`. The eq-""
+       emptiness check also avoids treating numeric 0 as falsy.
+
+       Usage:
+           {{ include "talm.validate.dns1123subdomain"
+              (dict "value" .Values.clusterName "field" "clusterName") }}
+       */ -}}
+{{- define "talm.validate.dns1123subdomain" -}}
+{{- $field := .field -}}
+{{- $value := printf "%v" .value -}}
+{{- if eq $value "" -}}
+{{- fail (printf "values.yaml: %s must be a non-empty DNS-1123 subdomain (must be lowercase, only [a-z0-9-.], start and end with [a-z0-9], max 253 chars)" $field) -}}
+{{- end -}}
+{{- if gt (len $value) 253 -}}
+{{- fail (printf "values.yaml: %s=%q exceeds 253 characters (DNS-1123 subdomain length limit)" $field $value) -}}
+{{- end -}}
+{{- if not (regexMatch "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$" $value) -}}
+{{- fail (printf "values.yaml: %s=%q is not a valid DNS-1123 subdomain (must be lowercase, only [a-z0-9-.], start and end with [a-z0-9])" $field $value) -}}
+{{- end -}}
+{{- $value -}}
 {{- end -}}

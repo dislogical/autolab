@@ -1,5 +1,3 @@
-clusterName: ballard-prod
-
 # REQUIRED. Cluster control-plane endpoint. Left empty intentionally
 # so the chart's `required` check fires loudly on a fresh install.
 # A placeholder default would silently embed a broken endpoint in
@@ -18,11 +16,11 @@ endpoint: "https://kube-prod.ballard.dislogi.net:6443"
 # a wrong VIP — fill in only if you want a VIP. Single-node clusters
 # and external-LB topologies leave it blank.
 # Example: floatingIP: 192.168.0.1
-#floatingIP: "10.0.1.2"
+floatingIP: "10.0.1.2"
 
 # Optional override for the link Layer2VIPConfig is pinned to. When
-# left empty the chart picks the default-gateway-bearing link the
-# node already has (the VLAN sub-interface if one carries the
+# left empty the chart picks the IPv4-default-gateway-bearing link
+# the node already has (the VLAN sub-interface if one carries the
 # default route, otherwise the physical NIC). Set this when the
 # target link does not yet exist on the live system at first apply
 # — typically a VLAN sub-interface that the same template is about
@@ -38,7 +36,13 @@ endpoint: "https://kube-prod.ballard.dislogi.net:6443"
 # document brings vipLink up, Layer2VIPConfig will dangle on a
 # non-existent link and the cluster endpoint will be unreachable.
 # Example: vipLink: eth0.4000
-#vipLink: ""
+vipLink: "eno1"
+
+# Optional override for the cluster's name (defaults to Chart.Name).
+# Note that changing this value on a live cluster is considered
+# dangerous as it is baked into PKI (cert SANs) and ETCD identity at
+# bootstrap.
+clusterName: "ballard-prod"
 
 podSubnets:
   - 10.244.0.0/16
@@ -47,12 +51,14 @@ serviceSubnets:
 
 # Optional override for machine.kubelet.nodeIP.validSubnets and
 # cluster.etcd.advertisedSubnets. When left empty the chart derives
-# the value from the node's default-gateway-bearing link at render
-# time (via talm.discovered.default_addresses_by_gateway), so the
-# generated machine config matches the node's actual network without
-# any values.yaml edit. Set this only when you want to pin a specific
-# subnet — typically for multi-homed nodes where the default-gateway
-# link is not the subnet you want kubelet/etcd to use.
+# the value from the node's IPv4-default-gateway-bearing link at
+# render time (via talm.discovered.default_addresses_by_gateway), so
+# the generated machine config matches the node's actual network
+# without any values.yaml edit. Set this only when you want to pin a
+# specific subnet — typically for multi-homed nodes where the
+# IPv4-default-gateway link is not the subnet you want kubelet/etcd
+# to use, or for IPv6-only setups where the chart's IPv4 default
+# would otherwise leave validSubnets empty.
 # Example:
 #   advertisedSubnets:
 #     - "10.0.0.0/8"
