@@ -16,7 +16,7 @@ kubectl = "1.36.0"
 kind = "0.31.0"
 tilt = "0.37.3"
 prek = "0.3.13"
-flux2 = "2.8.6"
+flux2 = "2.8.7"
 "github:cozystack/talm" = "0.27.0"
 
 [tasks]
