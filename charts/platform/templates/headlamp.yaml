@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: headlamp
+  annotations:
+    "helm.sh/hook": "pre-install"
   labels:
     {{- include "platform.labels" . | nindent 4 }}
 
@@ -33,6 +35,8 @@ kind: HelmRepository
 metadata:
   name: headlamp
   namespace: headlamp
+  annotations:
+    "helm.sh/hook": "pre-install"
   labels:
     {{- include "platform.labels" . | nindent 4 }}
 spec:
@@ -45,6 +49,8 @@ kind: HelmRelease
 metadata:
   name: headlamp
   namespace: headlamp
+  annotations:
+    "helm.sh/hook": "pre-install"
   labels:
     {{- include "platform.labels" . | nindent 4 }}
 spec:

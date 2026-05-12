@@ -5,6 +5,10 @@ metadata:
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/audit: privileged
     pod-security.kubernetes.io/warn: privileged
+  annotations:
+    "helm.sh/hook": "pre-install"
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
   name: metallb-system
 ---
 apiVersion: metallb.io/v1beta1
@@ -12,6 +16,8 @@ kind: IPAddressPool
 metadata:
   name: default
   namespace: metallb-system
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
 spec:
   avoidBuggyIPs: true
   addresses:
@@ -22,6 +28,8 @@ kind: L2Advertisement
 metadata:
   name: default
   namespace: metallb-system
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
 spec:
   ipAddressPools:
     - default
@@ -31,6 +39,10 @@ kind: HelmRepository
 metadata:
   name: metallb
   namespace: metallb-system
+  annotations:
+    "helm.sh/hook": "pre-install"
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
 spec:
   interval: 1h
   url: https://metallb.github.io/metallb
@@ -40,6 +52,10 @@ kind: HelmRelease
 metadata:
   name: metallb
   namespace: metallb-system
+  annotations:
+    "helm.sh/hook": "pre-install"
+  labels:
+    {{- include "platform.labels" . | nindent 4 }}
 spec:
   chart:
     spec:
@@ -50,11 +66,11 @@ spec:
         name: metallb
         namespace: metallb-system
       version: v0.15.3
+  interval: 1h
   driftDetection:
     mode: enabled
   install:
     crds: Skip
-  interval: 1h
   upgrade:
     crds: Skip
   values:

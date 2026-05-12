@@ -4,6 +4,8 @@ kind: HelmRepository
 metadata:
   name: metrics-server
   namespace: kube-system
+  annotations:
+    "helm.sh/hook": "pre-install"
   labels:
     {{- include "platform.labels" . | nindent 4 }}
 spec:
@@ -16,6 +18,8 @@ kind: HelmRelease
 metadata:
   name: metrics-server
   namespace: kube-system
+  annotations:
+    "helm.sh/hook": "pre-install"
   labels:
     {{- include "platform.labels" . | nindent 4 }}
 spec:
