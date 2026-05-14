@@ -8,7 +8,7 @@ all_compile = false
 [tools]
 # Build tools
 "github:cue-lang/cue" = "0.16.1"
-helm = "4.1.4"
+helm = "4.2.0"
 kustomize = "5.8.1"
 kubeconform = "0.7.0"
 # Developer tools
