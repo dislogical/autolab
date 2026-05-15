@@ -18,18 +18,16 @@ tilt = "0.37.3"
 prek = "0.4.0"
 flux2 = "2.8.7"
 "github:cozystack/talm" = "0.29.0"
+helmfile = "1.5.1"
 
 [tasks]
 build.run = [
-  "cue cmd render ./... -t env=dev",
-  "cue cmd render ./... -t env=prod",
+  "helmfile template -e production > rendered.yaml",
 ]
 
 test.run = [
   "kind create cluster --config kind.yaml",
   "tilt ci --context kind-autolab",
-  "kubectl wait -A --all --for=condition=ready --timeout=5m kustomization",
-  "kubectl wait -A --all --for=condition=ready --timeout=5m helmrelease ",
   "kind delete cluster --name autolab",
 ]
 

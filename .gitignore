@@ -17,4 +17,4 @@ devenv.local.nix
 .direnv
 
 # For outputs
-/render/
+/rendered.yaml
