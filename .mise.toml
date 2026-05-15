@@ -7,18 +7,17 @@ all_compile = false
 
 [tools]
 # Build tools
-"github:cue-lang/cue" = "0.16.1"
+helmfile = "1.5.1"
 helm = "4.2.0"
 kustomize = "5.8.1"
-kubeconform = "0.7.0"
-# Developer tools
 kubectl = "1.36.1"
+"github:cozystack/talm" = "0.29.0"
+# Test Tools
 kind = "0.31.0"
 tilt = "0.37.3"
+# Dev tools
 prek = "0.4.0"
 flux2 = "2.8.7"
-"github:cozystack/talm" = "0.29.0"
-helmfile = "1.5.1"
 
 [tasks]
 build.run = [

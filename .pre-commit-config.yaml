@@ -4,8 +4,6 @@ default_install_hook_types:
   - pre-commit
   - commit-msg
 
-exclude: ^cue\.mod\/(?!module\.cue)
-
 ci:
   autofix_commit_msg: "fix(pre-commit.ci): auto fixes from pre-commit.com hooks
 
@@ -39,11 +37,11 @@ repos:
       - id: mixed-line-ending
       - id: detect-private-key
       - id: check-ast
-        types: [ tiltfile ]
+        types: [tiltfile]
       - id: check-docstring-first
-        types: [ tiltfile ]
+        types: [tiltfile]
       - id: double-quote-string-fixer
-        types: [ tiltfile ]
+        types: [tiltfile]
       - id: no-commit-to-branch
 
   - repo: https://github.com/norwoodj/helm-docs
@@ -60,7 +58,7 @@ repos:
     rev: 43.150.0
     hooks:
       - id: renovate-config-validator
-        args: [ --strict ]
+        args: [--strict]
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.16.0
