@@ -11,7 +11,7 @@ helmfile = "1.5.1"
 helm = "4.2.0"
 kustomize = "5.8.1"
 kubectl = "1.36.1"
-"github:cozystack/talm" = "0.29.0"
+"github:cozystack/talm" = "0.30.0"
 # Test Tools
 kind = "0.31.0"
 tilt = "0.37.3"
