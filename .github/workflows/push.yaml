@@ -28,5 +28,5 @@ jobs:
         with:
           experimental: true
 
-      - name: Helm Lint
-        run: helm lint ./charts/platform
+      - name: Helmfile Lint
+        run: helmfile lint
