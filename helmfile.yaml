@@ -115,7 +115,7 @@ releases:
   - name: traefik
     namespace: gateway
     chart: traefik/traefik
-    version: 40.0.0
+    version: 40.2.0
     needs:
       - /prereqs
       - monitoring/kube-prometheus-stack
