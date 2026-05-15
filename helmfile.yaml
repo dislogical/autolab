@@ -34,7 +34,8 @@ repositories:
     url: quay.io/jetstack/charts
     oci: true
   - name: cloudnative-pg
-    url: https://cloudnative-pg.github.io/charts
+    url: ghcr.io/cloudnative-pg/charts
+    oci: true
   - name: traefik
     url: https://traefik.github.io/charts
   - name: headlamp
