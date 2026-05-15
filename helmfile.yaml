@@ -50,6 +50,10 @@ releases:
     createNamespace: false
     chart: ./charts/prereqs
 
+  - name: gotk-components
+    createNamespace: false
+    chart: ./flux-system
+
   - name: kube-prometheus-stack
     namespace: monitoring
     chart: prometheus-community/kube-prometheus-stack
