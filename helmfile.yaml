@@ -61,7 +61,6 @@ releases:
 
   - name: metrics-server
     namespace: monitoring
-    createNamespace: false
     chart: metrics-server/metrics-server
     version: 3.13.0
     needs:
