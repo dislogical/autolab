@@ -52,7 +52,7 @@ releases:
     chart: ./charts/prereqs
 
   - name: gotk-components
-    createNamespace: false
+    namespace: flux-system
     chart: ./flux-system
 
   - name: kube-prometheus-stack
