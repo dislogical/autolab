@@ -52,16 +52,16 @@ releases:
     chart: ./charts/prereqs
 
   - name: gotk-components
-    createNamespace: false
+    namespace: flux-system
     chart: ./flux-system
 
   - name: kube-prometheus-stack
     namespace: monitoring
+    timeout: 600
     chart: prometheus-community/kube-prometheus-stack
 
   - name: metrics-server
     namespace: monitoring
-    createNamespace: false
     chart: metrics-server/metrics-server
     version: 3.13.0
     needs:
