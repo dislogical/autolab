@@ -4,7 +4,7 @@
 // see the documentation: gram://docs/configuring-gram#settings-files
 {
   "file_types": {
-    "YAML": ["*.yaml.gotmpl"],
+    "YAML": ["*.yaml.gotmpl", "*.yaml.tpl"],
     "Python": ["Tiltfile"],
   },
 }
