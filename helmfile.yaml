@@ -17,6 +17,7 @@ environments:
 helmDefaults:
   createNamespace: true
   wait: true
+  waitForJobs: true
   timeout: 300
 
 apiVersions:
@@ -42,6 +43,9 @@ repositories:
     url: https://kubernetes-sigs.github.io/headlamp
   - name: rook-ceph
     url: https://charts.rook.io/release
+  - name: home-operations
+    url: ghcr.io/home-operations/charts
+    oci: true
 
 # Helm releases
 releases:
@@ -203,6 +207,30 @@ releases:
           parentRefs:
             - namespace: kube-system
               name: gateway
+
+  - name: tuppr
+    namespace: kube-system
+    chart: home-operations/tuppr
+    version: 0.5.12
+    needs:
+      - monitoring/kube-prometheus-stack
+    values:
+      - securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+        monitoring:
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+          dashboards:
+            enabled: true
+
+  - name: system-upgrade
+    namespace: kube-system
+    chart: ./charts/system-upgrades
+    needs:
+      - kube-system/tuppr
 
   # - name: rook-ceph-operator
   #   namespace: rook-ceph
