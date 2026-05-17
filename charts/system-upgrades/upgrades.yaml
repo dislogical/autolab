@@ -1,0 +1,57 @@
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: talos-upgrade
+spec:
+  talos:
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
+    version: v1.13.0 # Required - target Talos version
+
+  policy:
+    placement: soft # Optional, hard|soft
+
+  # Maintenance windows (optional)
+  maintenance:
+    windows:
+      - start: "0 2 * * 0" # Cron expression (Sunday 02:00)
+        duration: "4h"
+        timezone: "America/Los_Angeles"
+
+  # Node selector (optional)
+  nodeSelector:
+    matchExpressions:
+      # Exclude control plane nodes from this specific plan
+      - { key: node-role.kubernetes.io/control-plane, operator: DoesNotExist }
+
+  # Parallelism controls how many nodes are upgraded concurrently (optional)
+  # Defaults to 1 (sequential). Must be >= 1 and <= number of matching nodes.
+  parallelism: 1
+
+  # Configure drain behavior (optional)
+  drain:
+    # Continue even if there are pods using emptyDir (local data)
+    deleteLocalData: true
+
+    # Ignore DaemonSet-managed pods
+    ignoreDaemonSets: true
+
+    # Force drain even if pods do not declare a controller
+    force: true
+
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: KubernetesUpgrade
+metadata:
+  name: kubernetes-upgrade
+spec:
+  kubernetes:
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+    version: v1.36.0 # Required - target Kubernetes version
+
+  # Maintenance windows (optional)
+  maintenance:
+    windows:
+      - start: "0 2 * * 0" # Cron expression (Sunday 02:00)
+        duration: "4h"
+        timezone: "America/Los_Angeles"

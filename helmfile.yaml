@@ -18,6 +18,7 @@ environments:
 helmDefaults:
   createNamespace: true
   wait: true
+  waitForJobs: true
   timeout: 300
 
 apiVersions:
@@ -46,6 +47,9 @@ repositories:
     oci: true
   - name: rook-ceph
     url: https://charts.rook.io/release
+  - name: home-operations
+    url: ghcr.io/home-operations/charts
+    oci: true
 
 # Helm releases
 releases:
@@ -238,3 +242,27 @@ releases:
           enabled: true
         serviceMonitor:
           enabled: true
+
+  - name: tuppr
+    namespace: system-upgrade
+    chart: home-operations/tuppr
+    version: 0.1.35
+    needs:
+      - monitoring/kube-prometheus-stack
+    values:
+      - securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+        monitoring:
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+          dashboards:
+            enabled: true
+
+  - name: system-upgrade
+    namespace: system-upgrade
+    chart: ./charts/system-upgrades
+    needs:
+      - system-upgrade/tuppr
