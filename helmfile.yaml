@@ -54,6 +54,7 @@ releases:
   - name: gotk-components
     namespace: flux-system
     chart: ./flux-system
+    takeOwnership: true # Flux might already be installed
 
   - name: kube-prometheus-stack
     namespace: monitoring
