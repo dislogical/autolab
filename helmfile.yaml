@@ -37,11 +37,13 @@ repositories:
     url: ghcr.io/cloudnative-pg/charts
     oci: true
   - name: traefik
-    url: https://traefik.github.io/charts
+    url: ghcr.io/traefik/helm
+    oci: true
   - name: headlamp
     url: https://kubernetes-sigs.github.io/headlamp
   - name: metallb
-    url: https://metallb.github.io/metallb
+    url: quay.io/metallb/chart
+    oci: true
   - name: rook-ceph
     url: https://charts.rook.io/release
 
@@ -203,7 +205,7 @@ releases:
   - name: metallb
     namespace: metallb-system
     chart: metallb/metallb
-    version: v0.15.3
+    version: 0.15.3
     createNamespace: false
     needs:
       - /prereqs
