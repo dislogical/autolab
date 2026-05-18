@@ -13,6 +13,7 @@ kustomize = "5.8.1"
 kubectl = "1.36.1"
 "github:cozystack/talm" = "0.30.0"
 # Test Tools
+kubeconform = "0.7.0"
 kind = "0.31.0"
 tilt = "0.37.3"
 # Dev tools
@@ -29,6 +30,10 @@ test.run = [
   "tilt ci --context kind-autolab",
   "kind delete cluster --name autolab",
 ]
+
+"lint:helmfile".run = "helmfile lint"
+"lint:kubeconform".run = "helmfile template | kubeconform -skip CustomResourceDefinition -schema-location default  -schema-location {{ 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' }}"
+"lint".depends = "lint:*"
 
 renovate.run = '''
   docker run --rm \

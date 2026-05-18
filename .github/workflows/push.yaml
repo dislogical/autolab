@@ -28,5 +28,5 @@ jobs:
         with:
           experimental: true
 
-      - name: Helmfile Lint
-        run: helmfile lint
+      - name: Lint
+        run: mise run --jobs 1 lint
