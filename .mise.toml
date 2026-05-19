@@ -7,11 +7,12 @@ all_compile = false
 
 [tools]
 # Build tools
+sops = "3.13.1"
 helmfile = "1.5.1"
 helm = "4.2.0"
 kustomize = "5.8.1"
 kubectl = "1.36.1"
-"github:cozystack/talm" = "0.30.0"
+"github:postfinance/topf" = "0.3.0"
 # Test Tools
 kubeconform = "0.7.0"
 kind = "0.31.0"
