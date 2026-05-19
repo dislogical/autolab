@@ -3,6 +3,8 @@
 // For a full list of overridable settings, and general information on folder-specific settings,
 // see the documentation: gram://docs/configuring-gram#settings-files
 {
+  "preferred_line_length": 120,
+  "tab_size": 2,
   "file_types": {
     "YAML": ["*.yaml.gotmpl", "*.yaml.tpl"],
     "Python": ["Tiltfile"],
