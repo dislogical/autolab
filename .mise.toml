@@ -13,7 +13,6 @@ helm = "4.2.0"
 kustomize = "5.8.1"
 kubectl = "1.36.1"
 "github:postfinance/topf" = "0.3.0"
-"github:cozystack/talm" = "0.30.0"
 # Test Tools
 kubeconform = "0.7.0"
 kind = "0.31.0"
