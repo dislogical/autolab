@@ -19,7 +19,7 @@ kind = "0.31.0"
 tilt = "0.37.3"
 # Dev tools
 prek = "0.4.1"
-flux2 = "2.8.7"
+flux2 = "2.8.8"
 
 [tasks]
 build.run = [
