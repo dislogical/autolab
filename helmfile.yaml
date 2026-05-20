@@ -207,7 +207,7 @@ releases:
   - name: metallb
     namespace: metallb-system
     chart: metallb/metallb
-    version: 0.15.3
+    version: 0.16.0
     createNamespace: false
     needs:
       - /prereqs
