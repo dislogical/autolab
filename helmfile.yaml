@@ -50,7 +50,6 @@ repositories:
 # Helm releases
 releases:
   - name: prereqs
-    createNamespace: false
     chart: ./charts/prereqs
 
   - name: gotk-components
@@ -60,6 +59,7 @@ releases:
 
   - name: kube-prometheus-stack
     namespace: monitoring
+    createNamespace: false
     timeout: 600
     chart: prometheus-community/kube-prometheus-stack
     version: 85.2.0
@@ -68,6 +68,7 @@ releases:
 
   - name: metrics-server
     namespace: monitoring
+    createNamespace: false
     chart: metrics-server/metrics-server
     version: 3.13.0
     needs:
@@ -84,6 +85,7 @@ releases:
     namespace: cert-manager
     chart: cert-manager/cert-manager
     version: v1.20.2
+    timeout: 600
     needs:
       - monitoring/kube-prometheus-stack
     values:
