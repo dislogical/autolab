@@ -5,6 +5,9 @@
 experimental = true
 all_compile = false
 
+[plugins]
+krew = "https://github.com/soupglasses/mise-krew"
+
 [tools]
 # Build tools
 sops = "3.13.1"
@@ -20,6 +23,12 @@ tilt = "0.37.3"
 # Dev tools
 prek = "0.4.1"
 flux2 = "2.8.8"
+
+# Helpful tools
+"krew:ctx" = "v0.11.0"
+"krew:ns" = "v0.11.0"
+"krew:cert-manager" = "v2.1.0"
+"krew:cnpg" = "v1.29.1"
 
 [tasks]
 build.run = [
