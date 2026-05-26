@@ -6,7 +6,7 @@ metadata:
   namespace: cnpg-system
 spec:
   configuration:
-    destinationPath: b2://colden-ballard-prod-cnpg/
+    destinationPath: b2://colden-ballard-prod-cnpg/postgres/
     endpointURL: https://s3.us-west-000.backblazeb2.com
     s3Credentials:
       accessKeyId:
