@@ -113,7 +113,7 @@ releases:
   - name: cnpg-plugin-barman-cloud
     namespace: cnpg-system
     chart: cloudnative-pg/plugin-barman-cloud
-    version: 0.6.0
+    version: 0.7.0
     needs:
       - cnpg-system/cnpg
       - cert-manager/cert-manager
