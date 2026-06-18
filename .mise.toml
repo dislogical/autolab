@@ -12,7 +12,7 @@ krew = "https://github.com/soupglasses/mise-krew"
 # Build tools
 sops = "3.13.1"
 helmfile = "1.5.5"
-helm = "4.2.0"
+helm = "4.2.2"
 kustomize = "5.8.1"
 kubectl = "1.36.2"
 "github:postfinance/topf" = "0.4.1"
