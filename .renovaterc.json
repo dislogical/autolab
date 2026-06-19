@@ -30,6 +30,14 @@
       "charts/platform/templates/*.yaml"
     ]
   },
+  "helm-values": {
+	"commitMessageTopic": "helm values image {{depName}}",
+	"managerFilePatterns": [
+		"/(^|/)values\\.yaml$/",
+		"/(^|/)helmfile\\.yaml$/"
+	],
+	"pinDigests": true
+  },
   "pre-commit": {
     "commitMessageTopic": "pre-commit hook {{depName}}",
     "enabled": true,
