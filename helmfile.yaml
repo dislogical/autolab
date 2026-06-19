@@ -118,13 +118,6 @@ releases:
       - cnpg-system/cnpg
       - cert-manager/cert-manager
 
-  - name: database
-    namespace: cnpg-system
-    chart: ./charts/database
-    needs:
-      - cnpg-system/cnpg
-      - cnpg-system/cnpg-plugin-barman-cloud
-
   - name: traefik
     namespace: gateway
     chart: traefik/traefik
