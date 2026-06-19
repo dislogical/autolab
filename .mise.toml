@@ -4,6 +4,7 @@
 [settings]
 experimental = true
 all_compile = false
+task.show_full_cmd = true
 
 [plugins]
 krew = "https://github.com/soupglasses/mise-krew"
@@ -19,10 +20,12 @@ kubectl = "1.36.2"
 # Test Tools
 kubeconform = "0.8.0"
 kind = "0.32.0"
+talosctl = "1.13.4"
 tilt = "0.37.4"
 # Dev tools
 prek = "0.4.5"
 flux2 = "2.8.8"
+yq = "latest"
 
 # Helpful tools
 "krew:ctx" = "v0.11.0"
@@ -48,22 +51,49 @@ renovate.run = '''
 '''
 
 # Testing commands
-"test:kind:setup".run = "kind create cluster --config kind.yaml"
-"test:kind:teardown".run = "kind delete cluster --name autolab"
-
-[tasks."test:run"]
-run = "tilt ci"
-
-[tasks.test]
+[task_templates."test:with_cluster_type"]
 usage = '''
 arg "<cluster-type>"  {
   help "The type of local cluster to run for testing"
-  choices "kind"
+  choices "kind" "talos-docker" "talos-qemu"
   default "kind"
 }
 '''
+
+[tasks."test:setup"]
+extends = "test:with_cluster_type"
+run = '''
+{% if usage.cluster_type == 'kind' %}
+  kind create cluster --config kind.yaml
+{% elif usage.cluster_type is starting_with('talos-') %}
+  {% set talos_type = usage.cluster_type | trim_start_matches(pat='talos-') %}
+  talos_version=v$(yq .talosVersion topf.yaml)
+  kubernetes_version=v$(yq .kubernetesVersion topf.yaml)
+
+  talosctl cluster create {{ talos_type }} --name talos-{{ talos_type }}-autolab --workers 2 --config-patch-controlplanes @talos/control-plane/01-in-cluster-access.yaml --talos-version ${talos_version} --kubernetes-version ${kubernetes_version}
+{% endif %}
+'''
+
+[tasks."test:teardown"]
+extends = "test:with_cluster_type"
+run = '''
+{% if usage.cluster_type == "kind" %}
+  kind delete cluster --name autolab
+{% elif usage.cluster_type is starting_with('talos-') %}
+  {% set talos_type = usage.cluster_type | trim_start_matches(pat='talos-') %}
+
+  talosctl cluster destroy --provisioner {{ talos_type }} --name talos-{{ talos_type }}-autolab
+{% endif %}
+'''
+
+[tasks."test:run"]
+extends = "test:with_cluster_type"
+run = "tilt ci"
+
+[tasks.test]
+extends = "test:with_cluster_type"
 run = [
-  { task = "test:{{ usage.cluster_type }}:setup" },
-  { task = "test:run" },
-  { task = "test:{{ usage.cluster_type }}:teardown" },
+  { task = "test:setup", args = ["{{ usage.cluster_type }}"] },
+  { task = "test:run", args = ["{{ usage.cluster_type }}"] },
+  { task = "test:teardown", args = ["{{ usage.cluster_type }}"] },
 ]
