@@ -6,7 +6,8 @@ talosVersion: 1.13.0
 platform: metal
 secureboot: false
 
-configDir: ./talos
+patchesDir: ./talos
+secretsPath: ./talos/secrets.yaml
 
 data:
   network:
