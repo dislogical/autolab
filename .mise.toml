@@ -31,15 +31,7 @@ flux2 = "2.8.8"
 "krew:cnpg" = "v1.29.1"
 
 [tasks]
-build.run = [
-  "helmfile template -e production > rendered.yaml",
-]
-
-test.run = [
-  "kind create cluster --config kind.yaml",
-  "tilt ci --context kind-autolab",
-  "kind delete cluster --name autolab",
-]
+build.run = ["helmfile template -e production > rendered.yaml"]
 
 "lint:helmfile".run = "helmfile lint"
 "lint:kubeconform".run = "helmfile template | kubeconform -skip CustomResourceDefinition -schema-location default  -schema-location {{ 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' }}"
@@ -54,3 +46,24 @@ renovate.run = '''
     docker.io/renovate/renovate:latest \
       --platform=local
 '''
+
+# Testing commands
+"test:kind:setup".run = "kind create cluster --config kind.yaml"
+"test:kind:teardown".run = "kind delete cluster --name autolab"
+
+[tasks."test:run"]
+run = "tilt ci"
+
+[tasks.test]
+usage = '''
+arg "<cluster-type>"  {
+  help "The type of local cluster to run for testing"
+  choices "kind"
+  default "kind"
+}
+'''
+run = [
+  { task = "test:{{ usage.cluster_type }}:setup" },
+  { task = "test:run" },
+  { task = "test:{{ usage.cluster_type }}:teardown" },
+]
