@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/basic-auth
+metadata:
+  name: cluster-test-user
+  namespace: cnpg-system
+  labels:
+    cnpg.io/reload: "true"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "00"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+stringData:
+  username: "database-test"
+  password: "testing-1234"
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: DatabaseRole
+metadata:
+  name: database-test
+  namespace: cnpg-system
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  name: database-test
+  login: true
+  cluster:
+    name: cnpg-cluster-primary
+  passwordSecret:
+    name: cluster-test-user
+  databaseRoleReclaimPolicy: delete
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: database-test
+  namespace: cnpg-system
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "20"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  name: database-test
+  owner: database-test
+  cluster:
+    name: cnpg-cluster-primary
+  databaseReclaimPolicy: delete
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: database-test-connection
+  namespace: cnpg-system
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "30"
+    "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
+spec:
+  volumes:
+    - name: secret-volume-ca
+      secret:
+        secretName: cnpg-cluster-primary-ca
+  containers:
+    - name: verify-database-password
+      image: postgres
+      command: ["pg_isready"]
+      args:
+        - "--dbname=postgresql://${USERNAME}:${PASSWORD}@cnpg-cluster-primary-r.cnpg-system.svc.cluster.local/database-test?sslrootcert=/etc/secrets/ca/ca.crt"
+      env:
+        - name: USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: cluster-test-user
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cluster-test-user
+              key: password
+      volumeMounts:
+        - name: secret-volume-ca
+          readOnly: true
+          mountPath: "/etc/secrets/ca"
+  restartPolicy: Never

@@ -98,25 +98,45 @@ releases:
           servicemonitor:
             enabled: true
 
-  - name: cnpg
+  # TODO: add this when CNPG 1.30.0 releases the helm chart
+  # - name: cnpg
+  #   namespace: cnpg-system
+  #   chart: cloudnative-pg/cloudnative-pg
+  #   version: 0.28.3
+  #   timeout: 600
+  #   needs:
+  #     - monitoring/kube-prometheus-stack
+  #   values:
+  #     - monitoring:
+  #         podMonitorEnabled: true
+  #         grafanaDashboard:
+  #           create: true
+
+  # TODO: add this when the cluster chart supports barman-cloud
+  # - name: cnpg-plugin-barman-cloud
+  #   namespace: cnpg-system
+  #   chart: cloudnative-pg/plugin-barman-cloud
+  #   version: 0.7.0
+  #   needs:
+  #     - cnpg-system/cnpg
+  #     - cert-manager/cert-manager
+
+  - name: cnpg-cluster-primary
     namespace: cnpg-system
-    chart: cloudnative-pg/cloudnative-pg
-    version: 0.28.3
+    chart: cloudnative-pg/cluster
+    version: 0.7.0
     needs:
       - monitoring/kube-prometheus-stack
+      # TODO: re-add these when CNPG 1.30.0 releases the helm chart
+      # - cnpg-system/cnpg
+      # - cnpg-system/cnpg-plugin-barman-cloud
     values:
       - cluster:
           instances: 2
-          monitoring:
+        monitoring:
+          enabled: true
+          tls:
             enabled: true
-
-  - name: cnpg-plugin-barman-cloud
-    namespace: cnpg-system
-    chart: cloudnative-pg/plugin-barman-cloud
-    version: 0.7.0
-    needs:
-      - cnpg-system/cnpg
-      - cert-manager/cert-manager
 
   - name: traefik
     namespace: gateway
@@ -233,3 +253,8 @@ releases:
           enabled: true
         serviceMonitor:
           enabled: true
+
+  - name: autolab-test
+    chart: ./charts/tests
+    needs:
+      - cnpg-system/cnpg-cluster-primary
