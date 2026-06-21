@@ -52,7 +52,11 @@ renovate.run = '''
 "test:kind:teardown".run = "kind delete cluster --name autolab"
 
 [tasks."test:run"]
-run = "tilt ci"
+run = [
+  "helmfile unittest",
+  "tilt ci",
+  "helmfile test",
+]
 
 [tasks.test]
 usage = '''
