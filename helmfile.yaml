@@ -46,6 +46,9 @@ repositories:
     oci: true
   - name: rook-ceph
     url: https://charts.rook.io/release
+  - name: pocket-id-operator
+    url: ghcr.io/aclerici38/charts
+    oci: true
 
 # Helm releases
 releases:
@@ -233,3 +236,40 @@ releases:
           enabled: true
         serviceMonitor:
           enabled: true
+
+  - name: auth-prereqs
+    namespace: auth
+    chart: ./charts/auth-prereqs
+    needs:
+      - cnpg-system/cnpg
+
+  - name: pocket-id
+    namespace: auth
+    chart: pocket-id-operator/pocket-id-operator
+    version: 0.8.0
+    needs:
+      - auth/auth-prereqs
+      - monitoring/kube-prometheus-stack
+    values:
+      - metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+          dashboard:
+            enabled: true
+        instance:
+          spec:
+            appUrl: https://auth.{{ .Values.externalUrl }}
+            fileBackend: database
+            ui:
+              appName: "DislogiAuth"
+            timezone: America/Los_Angeles
+            route:
+              enabled: true
+              name: pocket-id
+              parentRefs:
+                - kind: Gateway
+                  name: traefik-gateway
+                  namespace: gateway

@@ -29,6 +29,7 @@ flux2 = "2.8.8"
 "krew:ns" = "v0.11.0"
 "krew:cert-manager" = "v2.1.0"
 "krew:cnpg" = "v1.29.1"
+# "krew:view-secret" = "v0.16.0"
 
 [tasks]
 build.run = ["helmfile template -e production > rendered.yaml"]
