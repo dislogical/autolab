@@ -21,7 +21,7 @@ kubeconform = "0.8.0"
 kind = "0.32.0"
 tilt = "0.37.5"
 # Dev tools
-prek = "0.4.6"
+prek = "0.4.8"
 flux2 = "2.9.0"
 
 # Helpful tools
