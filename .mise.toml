@@ -22,7 +22,7 @@ kind = "0.32.0"
 tilt = "0.37.5"
 # Dev tools
 prek = "0.4.8"
-flux2 = "2.9.0"
+flux2 = "2.9.1"
 
 # Helpful tools
 "krew:ctx" = "v0.11.0"
