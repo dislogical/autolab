@@ -62,7 +62,7 @@ releases:
     createNamespace: false
     timeout: 600
     chart: prometheus-community/kube-prometheus-stack
-    version: 87.16.1
+    version: 87.17.0
     needs:
       - /prereqs
 
