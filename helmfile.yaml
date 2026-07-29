@@ -84,7 +84,7 @@ releases:
   - name: cert-manager
     namespace: cert-manager
     chart: cert-manager/cert-manager
-    version: v1.21.0
+    version: v1.21.1
     timeout: 600
     needs:
       - monitoring/kube-prometheus-stack
