@@ -14,7 +14,7 @@ sops = "3.13.3"
 helmfile = "1.7.4"
 helm = "4.2.4"
 kustomize = "5.8.1"
-kubectl = "1.36.3"
+kubectl = "1.36.4"
 "github:postfinance/topf" = "0.5.0"
 # Test Tools
 kubeconform = "0.8.0"
