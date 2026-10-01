@@ -19,7 +19,7 @@ kubectl = "1.37.1"
 # Test Tools
 kubeconform = "0.8.0"
 kind = "0.33.0"
-tilt = "0.37.7"
+tilt = "0.37.8"
 # Dev tools
 prek = "0.5.4"
 flux2 = "2.9.6"
