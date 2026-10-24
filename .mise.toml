@@ -20,15 +20,12 @@ kubectl = "1.37.1"
 kubeconform = "0.8.0"
 kind = "0.33.0"
 tilt = "0.37.8"
-# Dev tools
-prek = "0.5.7"
-flux2 = "2.9.6"
 
 # Helpful tools
-"krew:ctx" = "v0.11.0"
-"krew:ns" = "v0.11.0"
-"krew:cert-manager" = "v2.1.0"
-"krew:cnpg" = "v1.29.1"
+"krew:ctx" = "latest"
+"krew:ns" = "latest"
+"krew:cert-manager" = "latest"
+"krew:cnpg" = "latest"
 
 [tasks]
 build.run = ["helmfile template -e production > rendered.yaml"]
