@@ -199,37 +199,37 @@ releases:
                 source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_kompose
                 version: 0.1.1-beta-1
 
-  - name: metallb
-    namespace: metallb-system
-    chart: metallb/metallb
-    version: 0.16.1
-    createNamespace: false
-    needs:
-      - /prereqs
-      - monitoring/kube-prometheus-stack
-    values:
-      - crds:
-          enabled: true
-        prometheus:
-          serviceAccount: prometheus-kube-prometheus-prometheus
-          namespace: metallb-system
-          serviceMonitor:
-            enabled: true
+  # - name: metallb
+  #   namespace: metallb-system
+  #   chart: metallb/metallb
+  #   version: 0.16.1
+  #   createNamespace: false
+  #   needs:
+  #     - /prereqs
+  #     - monitoring/kube-prometheus-stack
+  #   values:
+  #     - crds:
+  #         enabled: true
+  #       prometheus:
+  #         serviceAccount: prometheus-kube-prometheus-prometheus
+  #         namespace: metallb-system
+  #         serviceMonitor:
+  #           enabled: true
 
-  - name: load-balancer
-    namespace: metallb-system
-    chart: ./charts/load-balancer
-    needs:
-      - metallb-system/metallb
+  # - name: load-balancer
+  #   namespace: metallb-system
+  #   chart: ./charts/load-balancer
+  #   needs:
+  #     - metallb-system/metallb
 
-  - name: rook-ceph-operator
-    namespace: rook-ceph
-    chart: rook-ceph/rook-ceph
-    version: v1.21.0
-    needs:
-      - monitoring/kube-prometheus-stack
-    values:
-      - monitoring:
-          enabled: true
-        serviceMonitor:
-          enabled: true
+  # - name: rook-ceph-operator
+  #   namespace: rook-ceph
+  #   chart: rook-ceph/rook-ceph
+  #   version: v1.21.0
+  #   needs:
+  #     - monitoring/kube-prometheus-stack
+  #   values:
+  #     - monitoring:
+  #         enabled: true
+  #       serviceMonitor:
+  #         enabled: true
