@@ -10,8 +10,6 @@ ci:
 
     for more information, see https://pre-commit.ci"
   autoupdate_commit_msg: "chore(deps): pre-commit autoupdate"
-  skip:
-    - renovate-config-validator
 
 repos:
   - repo: https://github.com/pre-commit-ci/pre-commit-ci-config
@@ -43,12 +41,6 @@ repos:
       - id: double-quote-string-fixer
         types: [tiltfile]
       - id: no-commit-to-branch
-
-  - repo: https://github.com/renovatebot/pre-commit-hooks
-    rev: 44.168.2
-    hooks:
-      - id: renovate-config-validator
-        args: [--strict]
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.19.2
