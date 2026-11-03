@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tls-gateway
+  namespace: kube-system
+spec:
+  dnsNames:
+    - "{{ .Values.externalUrl }}"
+    - "*.{{ .Values.externalUrl }}"
+    - "*.services.{{ .Values.externalUrl }}"
+  issuerRef:
+    kind: ClusterIssuer
+    name: "{{ .Values.certIssuer }}"
+  secretName: cert-tls-gateway

@@ -8,3 +8,4 @@ metadata:
     pod-security.kubernetes.io/warn: privileged
     pod-security.kubernetes.io/warn-version: latest
   name: monitoring
+  namespace: kube-system

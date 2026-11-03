@@ -16,20 +16,22 @@ helm = "4.3.1"
 kustomize = "5.8.3"
 kubectl = "1.37.2"
 "github:postfinance/topf" = "0.6.2"
+
 # Test Tools
 kubeconform = "0.8.0"
 kind = "0.33.0"
+talosctl = "latest"
 tilt = "0.37.8"
 
 # Helpful tools
+pitchfork = { version = "latest", workflow = "release.yml@refs/heads/main" }
+"cilium-cli" = "latest"
 "krew:ctx" = "latest"
 "krew:ns" = "latest"
 "krew:cert-manager" = "latest"
 "krew:cnpg" = "latest"
 
 [tasks]
-build.run = ["helmfile template -e production > rendered.yaml"]
-
 "lint:helmfile".run = "helmfile lint"
 "lint:kubeconform".run = "helmfile template | kubeconform -skip CustomResourceDefinition -schema-location default  -schema-location {{ 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' }}"
 "lint".depends = "lint:*"
@@ -45,26 +47,31 @@ renovate.run = '''
 '''
 
 # Testing commands
-"test:kind:setup".run = "kind create cluster --config kind.yaml"
-"test:kind:teardown".run = "kind delete cluster --name autolab"
+"test:setup".run = [
+  "talosctl cluster create docker --name talos-docker-autolab --workers 2 --config-patch-controlplanes @talos/control-plane/05-cilium-prep.yaml --config-patch-controlplanes @talos/control-plane/10-in-cluster-access.yaml --config-patch-controlplanes @talos/control-plane/20-gateway.yaml",
+]
+"test:teardown".run = [
+  "talosctl cluster destroy --name talos-docker-autolab",
+  "talosctl config remove talos-docker-autolab -y",
+  "kubectl ctx -d admin@talos-docker-autolab",
+]
 
 [tasks."test:run"]
 run = [
   "helmfile unittest",
-  "tilt ci",
+  "helmfile sync",
   "helmfile test",
 ]
 
 [tasks.test]
-usage = '''
-arg "<cluster-type>"  {
-  help "The type of local cluster to run for testing"
-  choices "kind"
-  default "kind"
-}
-'''
 run = [
-  { task = "test:{{ usage.cluster_type }}:setup" },
+  { task = "test:setup" },
   { task = "test:run" },
-  { task = "test:{{ usage.cluster_type }}:teardown" },
+  { task = "test:teardown" },
+]
+
+[tasks.tilt]
+run = [
+  { task = "test:setup" },
+  "tilt up",
 ]

@@ -9,4 +9,20 @@
     "YAML": ["*.yaml.gotmpl", "*.yaml.tpl"],
     "Python": ["Tiltfile"],
   },
+  "languages": {
+    "YAML": {
+      "formatter": "language_server",
+    },
+  },
+  "lsp": {
+    "yaml-language-server": {
+      "settings": {
+        "yaml": {
+          "format": {
+            "bracketSpacing": false,
+          },
+        },
+      },
+    },
+  },
 }

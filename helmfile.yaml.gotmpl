@@ -7,12 +7,13 @@ environments:
   default:
     values:
       - externalUrl: "localhost"
-        certIssuer: "self-signed"
+        certIssuer: self-signed
+        gatewayHostNetwork: true
   production:
     values:
       - externalUrl: dislogi.net
         certIssuer: acme-prod
-
+        gatewayHostNetwork: false
 ---
 # Common Helm defaults applied to all releases
 helmDefaults:
@@ -25,6 +26,9 @@ apiVersions:
 
 # Helm chart repositories
 repositories:
+  - name: cilium
+    url: quay.io/cilium/charts
+    oci: true
   - name: prometheus-community
     url: ghcr.io/prometheus-community/charts
     oci: true
@@ -36,35 +40,33 @@ repositories:
   - name: cloudnative-pg
     url: ghcr.io/cloudnative-pg/charts
     oci: true
-  - name: traefik
-    url: ghcr.io/traefik/helm
-    oci: true
   - name: headlamp
     url: https://kubernetes-sigs.github.io/headlamp
-  - name: metallb
-    url: quay.io/metallb/chart
-    oci: true
   - name: rook-ceph
     url: https://charts.rook.io/release
 
 # Helm releases
 releases:
-  - name: prereqs
-    chart: ./charts/prereqs
+  - name: monitoring-namespace
+    createNamespace: false
+    chart: ./charts/monitoring-namespace
 
-  - name: gotk-components
-    namespace: flux-system
-    chart: ./flux-system
-    takeOwnership: true # Flux might already be installed
+  - name: prometheus-crds
+    chart: prometheus-community/prometheus-operator-crds
+    namespace: monitoring
+    createNamespace: false
+    version: "32.0.2"
+    needs:
+      - /monitoring-namespace
 
   - name: kube-prometheus-stack
     namespace: monitoring
     createNamespace: false
-    timeout: 600
     chart: prometheus-community/kube-prometheus-stack
     version: 92.17.1
+    disableValidation: true
     needs:
-      - /prereqs
+      - monitoring/prometheus-crds
 
   - name: metrics-server
     namespace: monitoring
@@ -72,7 +74,7 @@ releases:
     chart: metrics-server/metrics-server
     version: 3.14.0
     needs:
-      - monitoring/kube-prometheus-stack
+      - monitoring/prometheus-crds
     values:
       - args:
           - --kubelet-insecure-tls
@@ -81,13 +83,48 @@ releases:
         serviceMonitor:
           enabled: true
 
+  - name: cilium
+    chart: cilium/cilium
+    namespace: kube-system
+    version: 1.20.4
+    values:
+      - ipam:
+          mode: kubernetes
+        kubeProxyReplacement: true
+        k8sServiceHost: localhost
+        k8sServicePort: 7445
+        gatewayAPI:
+          enabled: true
+          enableAppProtocol: true
+          enableAlpn: true
+          hostNetwork:
+            enabled: {{.Values.gatewayHostNetwork}}
+        securityContext:
+          capabilities:
+            ciliumAgent:
+              - CHOWN
+              - KILL
+              - NET_ADMIN
+              - NET_RAW
+              - IPC_LOCK
+              - SYS_ADMIN
+              - SYS_RESOURCE
+              - DAC_OVERRIDE
+              - FOWNER
+              - SETGID
+              - SETUID
+            cleanCiliumState:
+              - NET_ADMIN
+              - SYS_ADMIN
+              - SYS_RESOURCE
+
   - name: cert-manager
     namespace: cert-manager
     chart: cert-manager/cert-manager
     version: v1.21.3
     timeout: 600
     needs:
-      - monitoring/kube-prometheus-stack
+      - monitoring/prometheus-crds
     values:
       - crds:
           enabled: true
@@ -98,12 +135,19 @@ releases:
           servicemonitor:
             enabled: true
 
+  - name: gateway
+    namespace: kube-system
+    chart: ./charts/gateway
+    needs:
+      - kube-system/cilium
+      - cert-manager/cert-manager
+
   - name: cnpg
     namespace: cnpg-system
     chart: cloudnative-pg/cloudnative-pg
     version: 0.29.1
     needs:
-      - monitoring/kube-prometheus-stack
+      - monitoring/prometheus-crds
     values:
       - cluster:
           instances: 2
@@ -118,67 +162,15 @@ releases:
       - cnpg-system/cnpg
       - cert-manager/cert-manager
 
-  - name: traefik
-    namespace: gateway
-    chart: traefik/traefik
-    version: 42.3.0
-    needs:
-      - /prereqs
-      - monitoring/kube-prometheus-stack
-    values:
-      - providers:
-          kubernetesIngress:
-            enabled: false
-          kubernetesCRD:
-            enabled: false
-          kubernetesGateway:
-            enabled: true
-            statusAddress:
-              service:
-                enabled: true
-        service:
-          annotations:
-            metallb.io/loadBalancerIPs: 10.0.1.3
-            tilt.dev/port-forward: "8080:80"
-        ports:
-          web:
-            http:
-              redirections:
-                entryPoint:
-                  to: websecure
-                  scheme: https
-          websecure:
-            asDefault: true
-        gateway:
-          listeners:
-            web:
-              namespacePolicy:
-                from: All
-            websecure:
-              port: 8443
-              protocol: HTTPS
-              namespacePolicy:
-                from: All
-              certificateRefs:
-                - name: cert-tls-gateway
-        metrics:
-          prometheus:
-            serviceMonitor:
-              enabled: true
-
-  - name: gateway
-    namespace: gateway
-    chart: ./charts/gateway
-    needs:
-      - gateway/traefik
-      - cert-manager/cert-manager
-
   - name: headlamp
     namespace: headlamp
     chart: headlamp/headlamp
     version: 0.46.0
+    needs:
+      - monitoring/kube-prometheus-stack
     values:
       - config:
+          enableHelm: true
           watchPlugins: true
           extraArgs:
             - -otlp-endpoint=''
@@ -189,38 +181,20 @@ releases:
               parallel: true
               maxConcurrent: 2
             plugins:
-              - name: flux
-                source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_flux
-                version: 0.6.0
               - name: cert-manager
                 source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_cert-manager
-                version: 0.1.0
+                version: 0.1.1
               - name: kompose
                 source: https://artifacthub.io/packages/headlamp/headlamp-plugins/headlamp_kompose
                 version: 0.1.1-beta-1
-
-  # - name: metallb
-  #   namespace: metallb-system
-  #   chart: metallb/metallb
-  #   version: 0.16.1
-  #   createNamespace: false
-  #   needs:
-  #     - /prereqs
-  #     - monitoring/kube-prometheus-stack
-  #   values:
-  #     - crds:
-  #         enabled: true
-  #       prometheus:
-  #         serviceAccount: prometheus-kube-prometheus-prometheus
-  #         namespace: metallb-system
-  #         serviceMonitor:
-  #           enabled: true
-
-  # - name: load-balancer
-  #   namespace: metallb-system
-  #   chart: ./charts/load-balancer
-  #   needs:
-  #     - metallb-system/metallb
+        httpRoute:
+          enabled: true
+          hostnames:
+            - headlamp.dislogi.net
+            - headlamp.localhost
+          parentRefs:
+            - namespace: kube-system
+              name: gateway
 
   # - name: rook-ceph-operator
   #   namespace: rook-ceph
