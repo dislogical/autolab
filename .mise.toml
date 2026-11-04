@@ -24,8 +24,6 @@ talosctl = "latest"
 tilt = "0.37.8"
 
 # Helpful tools
-pitchfork = { version = "latest", workflow = "release.yml@refs/heads/main" }
-"cilium-cli" = "latest"
 "krew:ctx" = "latest"
 "krew:ns" = "latest"
 "krew:cert-manager" = "latest"
