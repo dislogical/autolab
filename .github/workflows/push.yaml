@@ -3,22 +3,17 @@ on:
   - push
 
 jobs:
-  tilt-ci:
-    name: Tilt CI - ${{ matrix.runtime.name }}
+  test:
+    name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        runtime:
-          - name: Kind
-            arg: kind
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
         with:
           experimental: true
 
-      - name: Run Tilt CI
-        run: mise run test ${{ matrix.runtime.arg }}
+      - name: Run Tests
+        run: mise run test
 
   lint:
     name: Lint

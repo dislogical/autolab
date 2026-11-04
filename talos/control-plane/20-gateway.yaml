@@ -1,0 +1,5 @@
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api
+url: https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.7.0/standard-install.yaml

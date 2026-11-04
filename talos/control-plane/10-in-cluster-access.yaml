@@ -1,0 +1,9 @@
+---
+apiVersion: v1alpha1
+kind: KubeTalosAPIAccessConfig
+# The list of Talos API roles which can be granted for access from Kubernetes pods.
+allowedRoles:
+  - os:admin
+# The list of Kubernetes namespaces Talos API access is available from.
+allowedKubernetesNamespaces:
+  - kube-system

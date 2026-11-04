@@ -1,7 +1,10 @@
-machine:
-  kubelet:
-    nodeIP:
-      validSubnets:
+---
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+# The `nodeIP` field is used to configure `--node-ip` flag for the kubelet.
+nodeIP:
+    # The `validSubnets` field configures the networks to pick kubelet node IP from.
+    validSubnets:
         - 10.0.1.0/24
 ---
 apiVersion: v1alpha1
