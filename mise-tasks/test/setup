@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+if talosctl cluster show --name talos-docker-autolab | grep https; then
+  exit 0
+fi
+
+talosctl cluster create docker --name talos-docker-autolab --workers 2 \
+  --config-patch-controlplanes @talos/control-plane/05-cilium-prep.yaml \
+  --config-patch-controlplanes @talos/control-plane/10-in-cluster-access.yaml \
+  --config-patch-controlplanes @talos/control-plane/20-gateway.yaml

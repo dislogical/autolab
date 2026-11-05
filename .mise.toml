@@ -34,33 +34,6 @@ tilt = "0.37.8"
 "lint:kubeconform".run = "helmfile template | kubeconform -skip CustomResourceDefinition -schema-location default  -schema-location {{ 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' }}"
 "lint".depends = "lint:*"
 
-renovate.run = '''
-  docker run --rm \
-    --volume .:/usr/src/app \
-    --user $UID:$GID \
-    -e LOG_LEVEL=debug \
-    -e RENOVATE_GITHUB_COM_TOKEN=$(gh auth token) \
-    docker.io/renovate/renovate:latest \
-      --platform=local
-'''
-
-# Testing commands
-"test:setup".run = [
-  "talosctl cluster create docker --name talos-docker-autolab --workers 2 --config-patch-controlplanes @talos/control-plane/05-cilium-prep.yaml --config-patch-controlplanes @talos/control-plane/10-in-cluster-access.yaml --config-patch-controlplanes @talos/control-plane/20-gateway.yaml",
-]
-"test:teardown".run = [
-  "talosctl cluster destroy --name talos-docker-autolab",
-  "talosctl config remove talos-docker-autolab -y",
-  "kubectl ctx -d admin@talos-docker-autolab",
-]
-
-[tasks."test:run"]
-run = [
-  "helmfile unittest",
-  "helmfile sync",
-  "helmfile test",
-]
-
 [tasks.test]
 run = [
   { task = "test:setup" },
