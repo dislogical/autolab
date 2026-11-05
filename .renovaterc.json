@@ -1,11 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:best-practices",
-    "replacements:all",
-    ":automergeMinor",
-    ":automergeDigest"
-  ],
+  "extends": ["config:best-practices", "replacements:all", ":automergeMinor", ":automergeDigest"],
   "packageRules": [
     {
       "groupName": "pre-commit hooks",
@@ -17,26 +12,28 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/.yaml$/"],
+      "managerFilePatterns": ["/\\.yaml$/"],
       "matchStrings": [
         "https:\\/\\/github\\.com\\/(?<packageName>[^\\/]*\\/(?<depName>[^\\/]*))\\/releases\\/download\\/(?<currentValue>[^\\/]*)"
       ],
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/\\.yaml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+)\\s*depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\s*\\S+?:\\s*(?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
     }
   ],
   "flux": {
-    "managerFilePatterns": [
-      "/(?:^|/)gotk-components\\.ya?ml$/",
-      "charts/platform/templates/*.yaml"
-    ]
+    "managerFilePatterns": ["/(?:^|/)gotk-components\\.ya?ml$/", "charts/platform/templates/*.yaml"]
   },
   "helm-values": {
-	"commitMessageTopic": "helm values image {{depName}}",
-	"managerFilePatterns": [
-		"/(^|/)values\\.yaml$/",
-		"/(^|/)helmfile\\.yaml$/"
-	],
-	"pinDigests": true
+    "commitMessageTopic": "helm values image {{depName}}",
+    "managerFilePatterns": ["/(^|/)values\\.yaml$/", "/(^|/)helmfile\\.yaml$/"],
+    "pinDigests": true
   },
   "pre-commit": {
     "commitMessageTopic": "pre-commit hook {{depName}}",
