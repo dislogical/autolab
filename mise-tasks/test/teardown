@@ -4,5 +4,7 @@ set -e
 if talosctl cluster show --name talos-docker-autolab | grep https; then
   talosctl cluster destroy --name talos-docker-autolab
   talosctl config remove talos-docker-autolab -y
-  kubectl ctx -d admin@talos-docker-autolab
+  kubectl config delete-cluster talos-docker-autolab
+  kubectl config delete-user admin@talos-docker-autolab
+  kubectl config delete-context admin@talos-docker-autolab
 fi
