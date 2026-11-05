@@ -208,29 +208,29 @@ releases:
             - namespace: kube-system
               name: gateway
 
-  - name: tuppr
-    namespace: kube-system
-    chart: home-operations/tuppr
-    version: 0.5.12
-    needs:
-      - monitoring/kube-prometheus-stack
-    values:
-      - securityContext:
-          seccompProfile:
-            type: RuntimeDefault
-        monitoring:
-          serviceMonitor:
-            enabled: true
-          prometheusRule:
-            enabled: true
-          dashboards:
-            enabled: true
+  # - name: tuppr
+  #   namespace: kube-system
+  #   chart: home-operations/tuppr
+  #   version: 0.5.12
+  #   needs:
+  #     - monitoring/kube-prometheus-stack
+  #   values:
+  #     - securityContext:
+  #         seccompProfile:
+  #           type: RuntimeDefault
+  #       monitoring:
+  #         serviceMonitor:
+  #           enabled: true
+  #         prometheusRule:
+  #           enabled: true
+  #         dashboards:
+  #           enabled: true
 
-  - name: system-upgrade
-    namespace: kube-system
-    chart: ./charts/system-upgrades
-    needs:
-      - kube-system/tuppr
+  # - name: system-upgrade
+  #   namespace: kube-system
+  #   chart: ./charts/system-upgrades
+  #   needs:
+  #     - kube-system/tuppr
 
   # - name: rook-ceph-operator
   #   namespace: rook-ceph
