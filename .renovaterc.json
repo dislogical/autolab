@@ -17,7 +17,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/(^|/)kustomization\\.ya?ml$/"],
+      "managerFilePatterns": ["/.yaml$/"],
       "matchStrings": [
         "https:\\/\\/github\\.com\\/(?<packageName>[^\\/]*\\/(?<depName>[^\\/]*))\\/releases\\/download\\/(?<currentValue>[^\\/]*)"
       ],
