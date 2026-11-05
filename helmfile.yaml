@@ -8,12 +8,10 @@ environments:
     values:
       - externalUrl: "localhost"
         certIssuer: self-signed
-        gatewayHostNetwork: true
   production:
     values:
       - externalUrl: dislogi.net
         certIssuer: acme-prod
-        gatewayHostNetwork: false
 ---
 # Common Helm defaults applied to all releases
 helmDefaults:
@@ -97,8 +95,6 @@ releases:
           enabled: true
           enableAppProtocol: true
           enableAlpn: true
-          hostNetwork:
-            enabled: {{.Values.gatewayHostNetwork}}
         securityContext:
           capabilities:
             ciliumAgent:

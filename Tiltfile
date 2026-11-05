@@ -1,9 +1,10 @@
-args = []
-if k8s_context() != '':
-  args += ['--kube-context', k8s_context()]
+allow_k8s_contexts('admin@talos-docker-autolab')
 
-local_resource(
-    name='helmfile',
-    cmd='helmfile {} sync'.format(' '.join(args)),
-    deps=['helmfile.yaml', 'charts/'],
+k8s_yaml(local('helmfile template'))
+
+k8s_resource(
+  workload='headlamp',
+  port_forwards=[
+    port_forward(8080, name='headlamp'),
+  ],
 )
