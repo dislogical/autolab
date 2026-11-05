@@ -1,0 +1,37 @@
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: talos-upgrade
+spec:
+  talos:
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
+    version: v1.14.5 # Required - target Talos version
+
+  policy:
+    placement: soft # Optional, hard|soft
+
+  # Maintenance windows (optional)
+  # maintenance:
+  #   windows:
+  #     - start: "0 2 * * 0" # Cron expression (Sunday 02:00)
+  #       duration: "8h"
+  #       timezone: "America/Los_Angeles"
+
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: KubernetesUpgrade
+metadata:
+  name: kubernetes-upgrade
+spec:
+  kubernetes:
+    # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
+    version: v1.37.1 # Required - target Kubernetes version
+
+
+  # Maintenance windows (optional)
+  # maintenance:
+  #   windows:
+  #     - start: "0 2 * * 0" # Cron expression (Sunday 02:00)
+  #       duration: "8h"
+  #       timezone: "America/Los_Angeles"
