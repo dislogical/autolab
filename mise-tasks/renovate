@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+docker run --rm \
+  --volume .:/usr/src/app \
+  --user $UID:$GID \
+  -e LOG_LEVEL=debug \
+  -e RENOVATE_GITHUB_COM_TOKEN=$(gh auth token) \
+  docker.io/renovate/renovate:latest \
+    --platform=local

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+
+helmfile unittest
+helmfile sync
+helmfile test
