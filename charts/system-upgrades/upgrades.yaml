@@ -5,7 +5,6 @@ metadata:
   name: talos-upgrade
 spec:
   talos:
-    # renovate: datasource=docker depName=ghcr.io/siderolabs/installer
     version: v1.14.5 # Required - target Talos version
 
   policy:
@@ -25,7 +24,6 @@ metadata:
   name: kubernetes-upgrade
 spec:
   kubernetes:
-    # renovate: datasource=docker depName=ghcr.io/siderolabs/kubelet
     version: v1.37.2 # Required - target Kubernetes version
 
 
