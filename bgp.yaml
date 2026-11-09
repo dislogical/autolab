@@ -1,0 +1,59 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: ballard-ucg-fiber
+  namespace: kube-system
+spec:
+  gracefulRestart:
+    enabled: true
+  families:
+    - afi: ipv4
+      safi: unicast
+      advertisements:
+        matchLabels:
+          bgp.cilium.io/advertise: loadbalancer-services
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-unifi
+  namespace: kube-system
+spec:
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/control-plane: ""
+  bgpInstances:
+    - name: ballard-prod
+      localASN: 421010001
+      peers:
+        - name: "ballard-ucg-fiber"
+          peerASN: 421001000
+          peerAddress: 10.10.10.1
+          peerConfigRef:
+            name: ballard-ucg-fiber
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: bgp-lb-pool
+  namespace: kube-system
+spec:
+  blocks:
+    - start: 10.10.10.101
+      stop: 10.10.10.150
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: loadbalancer-services
+  namespace: kube-system
+  labels:
+    bgp.cilium.io/advertise: loadbalancer-services
+spec:
+  advertisements:
+    - advertisementType: Service
+      service:
+        addresses:
+          - LoadBalancerIP
+      selector: {}
