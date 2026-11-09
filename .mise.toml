@@ -28,6 +28,7 @@ tilt = "0.37.8"
 "krew:ns" = "latest"
 "krew:cert-manager" = "latest"
 "krew:cnpg" = "latest"
+cilium-cli = "latest"
 
 [tasks]
 "lint:helmfile".run = "helmfile lint"
