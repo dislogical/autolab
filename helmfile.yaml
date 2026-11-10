@@ -77,6 +77,8 @@ releases:
             podMonitorSelectorNilUsesHelmValues: false
             probeSelectorNilUsesHelmValues: false
             scrapeConfigSelectorNilUsesHelmValues: false
+      - kubeProxy:
+          enabled: false
 
   - name: metrics-server
     namespace: monitoring
