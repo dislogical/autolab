@@ -50,6 +50,7 @@ repositories:
 # Helm releases
 releases:
   - name: monitoring-namespace
+    namespace: kube-system
     createNamespace: false
     chart: ./charts/monitoring-namespace
 
@@ -59,7 +60,7 @@ releases:
     createNamespace: false
     version: "33.0.1"
     needs:
-      - /monitoring-namespace
+      - kube-system/monitoring-namespace
 
   - name: kube-prometheus-stack
     namespace: monitoring
