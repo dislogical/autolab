@@ -73,6 +73,7 @@ releases:
       - prometheus:
           prometheusSpec:
             # Disable these to allow collecting from all monitors
+            ruleSelectorNilUsesHelmValues: false
             serviceMonitorSelectorNilUsesHelmValues: false
             podMonitorSelectorNilUsesHelmValues: false
             probeSelectorNilUsesHelmValues: false
