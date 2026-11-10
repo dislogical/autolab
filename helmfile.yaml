@@ -69,6 +69,14 @@ releases:
     disableValidation: true
     needs:
       - monitoring/prometheus-crds
+    values:
+      - prometheus:
+          prometheusSpec:
+            # Disable these to allow collecting from all monitors
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            probeSelectorNilUsesHelmValues: false
+            scrapeConfigSelectorNilUsesHelmValues: false
 
   - name: metrics-server
     namespace: monitoring
