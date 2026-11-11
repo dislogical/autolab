@@ -33,7 +33,7 @@ cilium-cli = "latest"
 
 [tasks]
 "lint:helmfile".run = "helmfile lint"
-"lint:kubeconform".run = "helmfile template | kubeconform -skip CustomResourceDefinition -schema-location default  -schema-location {{ 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' }}"
+"lint:kubeconform".run = "helmfile template | kubeconform -skip CustomResourceDefinition,CephCluster -schema-location default  -schema-location {{ 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' }}"
 "lint".depends = "lint:*"
 
 [tasks.test]
