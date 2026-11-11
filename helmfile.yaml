@@ -66,7 +66,7 @@ releases:
     namespace: monitoring
     createNamespace: false
     chart: prometheus-community/kube-prometheus-stack
-    version: 93.2.0
+    version: 93.2.2
     disableValidation: true
     needs:
       - monitoring/prometheus-crds
