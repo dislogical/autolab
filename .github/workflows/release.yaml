@@ -21,6 +21,8 @@ on:
           - beta
           - rc
 
+permissions: {}
+
 jobs:
   publish-release:
     name: Publish Release
@@ -29,6 +31,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v7.0.1
         with:
+          persist-credentials: false
           ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Bump Version
@@ -45,7 +48,6 @@ jobs:
         run: git push && git push --tags
 
       - name: Publish Release
-        uses: softprops/action-gh-release@v3.0.4
-        with:
-          body_path: release.md
-          tag_name: v${{ steps.cz.outputs.version }}
+        run: gh release create v${STEPS_CZ_OUTPUTS_VERSION} -F release.md
+        env:
+          STEPS_CZ_OUTPUTS_VERSION: ${{ steps.cz.outputs.version }}
