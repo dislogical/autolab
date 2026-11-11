@@ -43,6 +43,8 @@ repositories:
     url: https://kubernetes-sigs.github.io/headlamp
   - name: rook-ceph
     url: https://charts.rook.io/release
+  - name: ceph-csi-operator
+    url: https://ceph.github.io/ceph-csi-operator
   - name: home-operations
     url: ghcr.io/home-operations/charts
     oci: true
@@ -246,14 +248,52 @@ releases:
   #   needs:
   #     - kube-system/tuppr
 
-  # - name: rook-ceph-operator
-  #   namespace: rook-ceph
-  #   chart: rook-ceph/rook-ceph
-  #   version: v1.21.0
-  #   needs:
-  #     - monitoring/kube-prometheus-stack
-  #   values:
-  #     - monitoring:
-  #         enabled: true
-  #       serviceMonitor:
-  #         enabled: true
+  - name: rook-ceph
+    namespace: rook-ceph
+    createNamespace: false
+    chart: rook-ceph/rook-ceph
+    version: v1.21.2
+    needs:
+      - kube-system/monitoring-namespace
+      - monitoring/kube-prometheus-stack
+    values:
+      - monitoring:
+          enabled: true
+
+  - name: rook-ceph-csi-drivers
+    namespace: rook-ceph
+    createNamespace: false
+    chart: ceph-csi-operator/ceph-csi-drivers
+    version: v1.1.0
+    needs:
+      - rook-ceph/rook-ceph
+    values:
+      - https://raw.githubusercontent.com/rook/rook/v1.21.2/deploy/charts/ceph-csi-drivers/values.yaml
+      - drivers:
+          rbd:
+            cephFsClientType: autodetect
+          cephfs:
+            cephFsClientType: autodetect
+
+  - name: rook-ceph-cluster
+    namespace: rook-ceph
+    chart: rook-ceph/rook-ceph-cluster
+    version: v1.21.2
+    needs:
+      - rook-ceph/rook-ceph
+    values:
+      - monitoring:
+          enabled: true
+          createPrometheusRules: true
+        cephClusterSpec:
+          dashboard:
+            enabled: false
+          storage:
+            useAllDevices: false
+            deviceFilter: nvme0n1
+
+          # TODO: remove when more nodes
+          mon:
+            count: 1
+          mgr:
+            count: 1

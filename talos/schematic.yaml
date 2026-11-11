@@ -1,2 +1,5 @@
 customization:
   bootloader: sd-boot
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/fuse3
