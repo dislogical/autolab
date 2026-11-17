@@ -161,7 +161,7 @@ releases:
   - name: cnpg
     namespace: cnpg-system
     chart: cloudnative-pg/cloudnative-pg
-    version: 0.29.1
+    version: 0.29.2
     needs:
       - monitoring/prometheus-crds
     values:
