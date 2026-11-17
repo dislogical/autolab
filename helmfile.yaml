@@ -102,7 +102,7 @@ releases:
   - name: cilium
     chart: cilium/cilium
     namespace: kube-system
-    version: 1.20.4
+    version: 1.20.5
     values:
       - ipam:
           mode: kubernetes
