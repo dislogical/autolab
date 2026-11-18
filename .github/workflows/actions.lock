@@ -5,7 +5,7 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/push.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'jdx/mise-action@v5.2.9'
+        - 'jdx/mise-action@v5.2.10'
         - 'zizmorcore/zizmor-action@v0.8.1'
     '.github/workflows/release.yaml':
         - 'actions/checkout@v7.0.1'
@@ -26,9 +26,9 @@ dependencies:
         commit: 'sha1-9b3254085494b55a0f7c4c2b3d2d52cc712ce370'
         owner_id: 9919
         repo_id: 259445878
-    'jdx/mise-action@v5.2.9':
-        ref: 'v5.2.9'
-        commit: 'sha1-236a21c3b91f5db6d4e174b348674a0f0caac06d'
+    'jdx/mise-action@v5.2.10':
+        ref: 'v5.2.10'
+        commit: 'sha1-90f833d396d0cc3674b631d2d225e306476c303a'
         owner_id: 216188
         repo_id: 738284564
     'zizmorcore/zizmor-action@v0.8.1':
