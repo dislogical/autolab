@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-helmfile unittest
-helmfile sync
-helmfile test
+helmfile unittest --kube-context admin@talos-docker-autolab
+helmfile sync --kube-context admin@talos-docker-autolab
+helmfile test --kube-context admin@talos-docker-autolab
