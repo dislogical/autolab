@@ -24,8 +24,8 @@
       "fileFormat": "yaml",
       "matchStrings": ["spec.talos.{ 'currentValue': version }", "{ 'currentValue': talosVersion }"],
       "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/siderolabs/installer",
-      "packageNameTemplate": "talos"
+      "packageNameTemplate": "ghcr.io/siderolabs/installer",
+      "depNameTemplate": "talos"
     },
     {
       "customType": "jsonata",
@@ -33,8 +33,8 @@
       "fileFormat": "yaml",
       "matchStrings": ["spec.kubernetes.{ 'currentValue': version }", "{ 'currentValue': kubernetesVersion }"],
       "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/siderolabs/kubelet",
-      "packageNameTemplate": "kubernetes"
+      "packageNameTemplate": "ghcr.io/siderolabs/kubelet",
+      "depNameTemplate": "kubernetes"
     }
   ],
   "flux": {
