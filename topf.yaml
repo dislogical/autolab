@@ -1,4 +1,4 @@
-kubernetesVersion: v1.37.2
+kubernetesVersion: v1.37.3
 clusterEndpoint: https://kube-prod.ballard.dislogi.net:6443
 clusterName: ballard-prod
 
