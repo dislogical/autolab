@@ -278,7 +278,7 @@ releases:
   - name: rook-ceph-cluster
     namespace: rook-ceph
     chart: rook-ceph/rook-ceph-cluster
-    version: v1.21.2
+    version: v1.21.3
     needs:
       - rook-ceph/rook-ceph
     values:
