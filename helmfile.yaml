@@ -252,7 +252,7 @@ releases:
     namespace: rook-ceph
     createNamespace: false
     chart: rook-ceph/rook-ceph
-    version: v1.21.2
+    version: v1.21.3
     needs:
       - kube-system/monitoring-namespace
       - monitoring/kube-prometheus-stack
